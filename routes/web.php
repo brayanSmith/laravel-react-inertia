@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
@@ -11,6 +12,11 @@ Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+        Route::get('clientes', [ClienteController::class, 'index'])->name('clientes.index');
+        Route::post('clientes', [ClienteController::class, 'store'])->name('clientes.store');
+        Route::patch('clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
+        Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
     });
 
 Route::middleware(['auth'])->group(function () {
