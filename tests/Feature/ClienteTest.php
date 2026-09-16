@@ -4,6 +4,7 @@ use App\Enums\TeamRole;
 use App\Models\Cliente;
 use App\Models\Team;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 function attachTeamMember(Team $team, User $user, TeamRole $role = TeamRole::Owner): void
 {
@@ -30,6 +31,10 @@ test('team members can view the clientes index page', function () {
         ->get(route('clientes.index', $team));
 
     $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('clientes/index')
+        ->has('clientes', 3),
+    );
 });
 
 test('users who are not team members cannot view clientes', function () {

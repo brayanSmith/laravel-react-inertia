@@ -1,17 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import ClientesTable from '@/components/clientes-table';
 import CreateClienteModal from '@/components/create-cliente-modal';
 import DeleteClienteModal from '@/components/delete-cliente-modal';
 import EditClienteModal from '@/components/edit-cliente-modal';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { index } from '@/routes/clientes';
 import type { Cliente } from '@/types';
 
@@ -61,73 +56,11 @@ export default function ClientesIndex({ clientes }: Props) {
                     </CreateClienteModal>
                 </div>
 
-                <div className="space-y-3">
-                    {clientes.map((cliente) => (
-                        <div
-                            key={cliente.id}
-                            data-test="cliente-row"
-                            className="flex items-center justify-between gap-4 rounded-lg border p-4"
-                        >
-                            <div>
-                                <div className="font-medium">
-                                    {cliente.nombre} {cliente.apellido}
-                                </div>
-                                <div className="text-muted-foreground text-sm">
-                                    {cliente.n_documento} · {cliente.email}
-                                    {cliente.telefono
-                                        ? ` · ${cliente.telefono}`
-                                        : ''}
-                                </div>
-                            </div>
-
-                            <TooltipProvider>
-                                <div className="flex items-center gap-2">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                data-test="cliente-edit-button"
-                                                onClick={() =>
-                                                    openEditDialog(cliente)
-                                                }
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Editar cliente</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                data-test="cliente-delete-button"
-                                                onClick={() =>
-                                                    openDeleteDialog(cliente)
-                                                }
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Eliminar cliente</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </div>
-                            </TooltipProvider>
-                        </div>
-                    ))}
-
-                    {clientes.length === 0 ? (
-                        <p className="text-muted-foreground py-8 text-center">
-                            Todavía no tienes clientes registrados.
-                        </p>
-                    ) : null}
-                </div>
+                <ClientesTable
+                    clientes={clientes}
+                    onEdit={openEditDialog}
+                    onDelete={openDeleteDialog}
+                />
             </div>
 
             <EditClienteModal
