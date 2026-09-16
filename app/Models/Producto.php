@@ -11,6 +11,8 @@ class Producto extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'categoria_id',
+        'sub_categoria_id',
         'codigo',
         'nombre',
         'descripcion',
@@ -37,5 +39,15 @@ class Producto extends Model
     public function stockBodegas()
     {
         return $this->hasMany(StockBodega::class);
+    }
+
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class);
+    }
+
+    public function subCategoria()
+    {
+        return $this->belongsTo(SubCategoria::class, 'sub_categoria_id');
     }
 }

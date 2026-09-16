@@ -1,5 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Package, Users } from 'lucide-react';
+import {
+    BookOpen,
+    FolderGit2,
+    LayoutGrid,
+    Package,
+    Tags,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,6 +22,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as categoriasIndex } from '@/routes/categorias';
 import { index as clientesIndex } from '@/routes/clientes';
 import { index as productosIndex } from '@/routes/productos';
 import type { NavItem } from '@/types';
@@ -29,6 +37,9 @@ export function AppSidebar() {
         : '/';
     const productosUrl = page.props.currentTeam
         ? productosIndex(page.props.currentTeam.slug)
+        : '/';
+    const categoriasUrl = page.props.currentTeam
+        ? categoriasIndex(page.props.currentTeam.slug)
         : '/';
 
     const mainNavItems: NavItem[] = [
@@ -46,6 +57,11 @@ export function AppSidebar() {
             title: 'Productos',
             href: productosUrl,
             icon: Package,
+        },
+        {
+            title: 'Categorías',
+            href: categoriasUrl,
+            icon: Tags,
         },
     ];
 

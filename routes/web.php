@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\SubCategoriaController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +25,15 @@ Route::prefix('{current_team}')
         Route::post('productos', [ProductoController::class, 'store'])->name('productos.store');
         Route::patch('productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
         Route::delete('productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
+
+        Route::get('categorias', [CategoriaController::class, 'index'])->name('categorias.index');
+        Route::post('categorias', [CategoriaController::class, 'store'])->name('categorias.store');
+        Route::patch('categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
+        Route::delete('categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');
+
+        Route::post('categorias/{categoria}/subcategorias', [SubCategoriaController::class, 'store'])->name('categorias.subcategorias.store');
+        Route::patch('categorias/{categoria}/subcategorias/{subcategoria}', [SubCategoriaController::class, 'update'])->name('categorias.subcategorias.update');
+        Route::delete('categorias/{categoria}/subcategorias/{subcategoria}', [SubCategoriaController::class, 'destroy'])->name('categorias.subcategorias.destroy');
     });
 
 Route::middleware(['auth'])->group(function () {

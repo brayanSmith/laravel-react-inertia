@@ -8,13 +8,14 @@ import Heading from '@/components/heading';
 import ProductosTable from '@/components/productos-table';
 import { Button } from '@/components/ui/button';
 import { index } from '@/routes/productos';
-import type { Producto } from '@/types';
+import type { CategoriaWithSubCategorias, Producto } from '@/types';
 
 type Props = {
     productos: Producto[];
+    categorias: CategoriaWithSubCategorias[];
 };
 
-export default function ProductosIndex({ productos }: Props) {
+export default function ProductosIndex({ productos, categorias }: Props) {
     const { currentTeam } = usePage().props;
     const currentTeamSlug = currentTeam?.slug ?? '';
 
@@ -51,7 +52,10 @@ export default function ProductosIndex({ productos }: Props) {
                         description="Administra el inventario de productos de tu equipo"
                     />
 
-                    <CreateProductoModal currentTeamSlug={currentTeamSlug}>
+                    <CreateProductoModal
+                        currentTeamSlug={currentTeamSlug}
+                        categorias={categorias}
+                    >
                         <Button data-test="productos-new-producto-button">
                             <Plus /> Nuevo producto
                         </Button>
@@ -68,6 +72,7 @@ export default function ProductosIndex({ productos }: Props) {
             <EditProductoModal
                 currentTeamSlug={currentTeamSlug}
                 producto={productoEditing}
+                categorias={categorias}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
             />

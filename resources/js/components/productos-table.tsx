@@ -78,6 +78,14 @@ export default function ProductosTable({ productos, onEdit, onDelete }: Props) {
         () => [
             columnHelper.accessor('codigo', { header: 'Código' }),
             columnHelper.accessor('nombre', { header: 'Nombre' }),
+            columnHelper.accessor('categoria_nombre', {
+                header: 'Categoría',
+                cell: (info) => info.getValue() ?? '—',
+            }),
+            columnHelper.accessor('sub_categoria_nombre', {
+                header: 'Subcategoría',
+                cell: (info) => info.getValue() ?? '—',
+            }),
             columnHelper.accessor('costo', {
                 header: 'Costo',
                 cell: (info) => currencyFormatter.format(info.getValue()),

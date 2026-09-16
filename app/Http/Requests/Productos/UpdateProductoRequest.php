@@ -21,6 +21,12 @@ class UpdateProductoRequest extends FormRequest
         $producto = $this->route('producto');
 
         return [
+            'categoria_id' => ['required', 'integer', 'exists:categorias,id'],
+            'sub_categoria_id' => [
+                'required',
+                'integer',
+                Rule::exists('sub_categorias', 'id')->where('categoria_id', $this->input('categoria_id')),
+            ],
             'codigo' => ['required', 'string', 'max:255', Rule::unique('productos', 'codigo')->ignore($producto->id)],
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string'],

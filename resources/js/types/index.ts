@@ -1,4 +1,5 @@
 export type * from './auth';
+export type * from './categorias';
 export type * from './clientes';
 export type * from './navigation';
 export type * from './productos';

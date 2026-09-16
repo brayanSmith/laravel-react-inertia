@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Producto;
+use App\Models\SubCategoria;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -48,10 +49,13 @@ test('productos can be created', function () {
     $user = User::factory()->create();
     $team = Team::factory()->create();
     attachTeamMember($team, $user);
+    $subCategoria = SubCategoria::factory()->create();
 
     $response = $this
         ->actingAs($user)
         ->post(route('productos.store', $team), [
+            'categoria_id' => $subCategoria->categoria_id,
+            'sub_categoria_id' => $subCategoria->id,
             'codigo' => 'PRD-00001',
             'nombre' => 'Martillo',
             'descripcion' => 'Martillo de acero',
@@ -75,10 +79,13 @@ test('producto creation requires a unique code', function () {
     attachTeamMember($team, $user);
 
     Producto::factory()->create(['codigo' => 'PRD-00001']);
+    $subCategoria = SubCategoria::factory()->create();
 
     $response = $this
         ->actingAs($user)
         ->post(route('productos.store', $team), [
+            'categoria_id' => $subCategoria->categoria_id,
+            'sub_categoria_id' => $subCategoria->id,
             'codigo' => 'PRD-00001',
             'nombre' => 'Martillo',
             'costo' => 10,
@@ -100,6 +107,8 @@ test('productos can be updated', function () {
     $response = $this
         ->actingAs($user)
         ->patch(route('productos.update', ['current_team' => $team, 'producto' => $producto]), [
+            'categoria_id' => $producto->categoria_id,
+            'sub_categoria_id' => $producto->sub_categoria_id,
             'codigo' => $producto->codigo,
             'nombre' => 'Actualizado',
             'costo' => $producto->costo,
@@ -126,6 +135,8 @@ test('a producto can keep its own code when updated', function () {
     $response = $this
         ->actingAs($user)
         ->patch(route('productos.update', ['current_team' => $team, 'producto' => $producto]), [
+            'categoria_id' => $producto->categoria_id,
+            'sub_categoria_id' => $producto->sub_categoria_id,
             'codigo' => $producto->codigo,
             'nombre' => $producto->nombre,
             'costo' => $producto->costo,
@@ -145,10 +156,13 @@ test('a producto image can be uploaded when created', function () {
     attachTeamMember($team, $user);
 
     $image = UploadedFile::fake()->image('producto.jpg');
+    $subCategoria = SubCategoria::factory()->create();
 
     $response = $this
         ->actingAs($user)
         ->post(route('productos.store', $team), [
+            'categoria_id' => $subCategoria->categoria_id,
+            'sub_categoria_id' => $subCategoria->id,
             'codigo' => 'PRD-00001',
             'nombre' => 'Martillo',
             'costo' => 10,
@@ -181,6 +195,8 @@ test('replacing a producto image removes the previous file', function () {
     $response = $this
         ->actingAs($user)
         ->patch(route('productos.update', ['current_team' => $team, 'producto' => $producto]), [
+            'categoria_id' => $producto->categoria_id,
+            'sub_categoria_id' => $producto->sub_categoria_id,
             'codigo' => $producto->codigo,
             'nombre' => $producto->nombre,
             'costo' => $producto->costo,
@@ -209,6 +225,8 @@ test('a producto image can be removed', function () {
     $response = $this
         ->actingAs($user)
         ->patch(route('productos.update', ['current_team' => $team, 'producto' => $producto]), [
+            'categoria_id' => $producto->categoria_id,
+            'sub_categoria_id' => $producto->sub_categoria_id,
             'codigo' => $producto->codigo,
             'nombre' => $producto->nombre,
             'costo' => $producto->costo,

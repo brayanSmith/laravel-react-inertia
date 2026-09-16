@@ -4,6 +4,7 @@ namespace App\Http\Requests\Productos;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 
 class StoreProductoRequest extends FormRequest
@@ -16,6 +17,12 @@ class StoreProductoRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'categoria_id' => ['required', 'integer', 'exists:categorias,id'],
+            'sub_categoria_id' => [
+                'required',
+                'integer',
+                Rule::exists('sub_categorias', 'id')->where('categoria_id', $this->input('categoria_id')),
+            ],
             'codigo' => ['required', 'string', 'max:255', 'unique:productos,codigo'],
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string'],

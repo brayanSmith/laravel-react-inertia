@@ -1,5 +1,5 @@
 import { Form } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ImageDropCropper from '@/components/image-drop-cropper';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -14,13 +14,21 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { update } from '@/routes/productos';
-import type { Producto } from '@/types';
+import type { CategoriaWithSubCategorias, Producto } from '@/types';
 
 type Props = {
     currentTeamSlug: string;
     producto: Producto | null;
+    categorias: CategoriaWithSubCategorias[];
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
@@ -28,11 +36,23 @@ type Props = {
 export default function EditProductoModal({
     currentTeamSlug,
     producto,
+    categorias,
     open,
     onOpenChange,
 }: Props) {
     const [imagenFile, setImagenFile] = useState<File | null>(null);
     const [imagenRemoved, setImagenRemoved] = useState(false);
+    const [categoriaId, setCategoriaId] = useState('');
+    const [subCategoriaId, setSubCategoriaId] = useState('');
+
+    useEffect(() => {
+        setCategoriaId(producto ? String(producto.categoria_id) : '');
+        setSubCategoriaId(producto ? String(producto.sub_categoria_id) : '');
+    }, [producto]);
+
+    const selectedCategoria = categorias.find(
+        (categoria) => String(categoria.id) === categoriaId,
+    );
 
     const handleOpenChange = (nextOpen: boolean) => {
         onOpenChange(nextOpen);
@@ -85,6 +105,85 @@ export default function EditProductoModal({
                                     onChange={handleImageChange}
                                     error={errors.imagen}
                                 />
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="edit-categoria_id">
+                                            Categoría
+                                        </Label>
+                                        <Select
+                                            name="categoria_id"
+                                            value={categoriaId}
+                                            onValueChange={(value) => {
+                                                setCategoriaId(value);
+                                                setSubCategoriaId('');
+                                            }}
+                                            required
+                                        >
+                                            <SelectTrigger
+                                                id="edit-categoria_id"
+                                                data-test="edit-producto-categoria"
+                                                className="w-full"
+                                            >
+                                                <SelectValue placeholder="Selecciona una categoría" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {categorias.map((categoria) => (
+                                                    <SelectItem
+                                                        key={categoria.id}
+                                                        value={String(
+                                                            categoria.id,
+                                                        )}
+                                                    >
+                                                        {categoria.nombre}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError
+                                            message={errors.categoria_id}
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="edit-sub_categoria_id">
+                                            Subcategoría
+                                        </Label>
+                                        <Select
+                                            name="sub_categoria_id"
+                                            value={subCategoriaId}
+                                            onValueChange={setSubCategoriaId}
+                                            disabled={!selectedCategoria}
+                                            required
+                                        >
+                                            <SelectTrigger
+                                                id="edit-sub_categoria_id"
+                                                data-test="edit-producto-sub-categoria"
+                                                className="w-full"
+                                            >
+                                                <SelectValue placeholder="Selecciona una subcategoría" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {(
+                                                    selectedCategoria?.sub_categorias ??
+                                                    []
+                                                ).map((subCategoria) => (
+                                                    <SelectItem
+                                                        key={subCategoria.id}
+                                                        value={String(
+                                                            subCategoria.id,
+                                                        )}
+                                                    >
+                                                        {subCategoria.nombre}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError
+                                            message={errors.sub_categoria_id}
+                                        />
+                                    </div>
+                                </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="grid gap-2">

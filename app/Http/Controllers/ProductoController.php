@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Productos\StoreProductoRequest;
 use App\Http\Requests\Productos\UpdateProductoRequest;
+use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
@@ -25,10 +26,15 @@ class ProductoController extends Controller
     {
         return Inertia::render('productos/index', [
             'productos' => Producto::query()
+                ->with(['categoria:id,nombre', 'subCategoria:id,nombre'])
                 ->orderBy('nombre')
-                ->get(['id', 'codigo', 'nombre', 'descripcion', 'costo', 'precio_detal', 'precio_mayorista', 'precio_especial', 'imagen'])
+                ->get(['id', 'categoria_id', 'sub_categoria_id', 'codigo', 'nombre', 'descripcion', 'costo', 'precio_detal', 'precio_mayorista', 'precio_especial', 'imagen'])
                 ->map(fn (Producto $producto) => [
                     'id' => $producto->id,
+                    'categoria_id' => $producto->categoria_id,
+                    'sub_categoria_id' => $producto->sub_categoria_id,
+                    'categoria_nombre' => $producto->categoria?->nombre,
+                    'sub_categoria_nombre' => $producto->subCategoria?->nombre,
                     'codigo' => $producto->codigo,
                     'nombre' => $producto->nombre,
                     'descripcion' => $producto->descripcion,
@@ -38,6 +44,10 @@ class ProductoController extends Controller
                     'precio_especial' => $producto->precio_especial,
                     'imagen' => $producto->imagen ? Storage::disk(self::IMAGE_DISK)->url($producto->imagen) : null,
                 ]),
+            'categorias' => Categoria::query()
+                ->with('subCategorias:id,categoria_id,nombre')
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']),
         ]);
     }
 

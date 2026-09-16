@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Producto;
+use App\Models\SubCategoria;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,8 +19,11 @@ class ProductoFactory extends Factory
     public function definition(): array
     {
         $costo = fake()->randomFloat(2, 5, 500);
+        $subCategoria = SubCategoria::factory()->create();
 
         return [
+            'categoria_id' => $subCategoria->categoria_id,
+            'sub_categoria_id' => $subCategoria->id,
             'codigo' => fake()->unique()->bothify('PRD-#####'),
             'nombre' => fake()->words(3, true),
             'descripcion' => fake()->optional()->sentence(),
