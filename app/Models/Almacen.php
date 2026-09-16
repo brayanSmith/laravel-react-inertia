@@ -4,15 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Cliente extends Model
+class Almacen extends Model
 {
-    //    
+    //
     protected $fillable = [
         'nombre',
-        'apellido',
-        'n_documento',
         'direccion',
-        'email',
-        'telefono',
     ];
+
+    public function stockBodegas()
+    {
+        return $this->hasMany(StockBodega::class);
+    }
 }

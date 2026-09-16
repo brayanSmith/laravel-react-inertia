@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('codigo')->unique();
             $table->string('nombre');
             $table->text('descripcion')->nullable();            
-            $table->decimal('precio', 8, 2);            
+            $table->decimal('precio_detal', 8, 2);
+            $table->decimal('precio_mayorista', 8, 2);
+            $table->decimal('precio_especial', 8, 2);                                                
             $table->decimal('costo', 8, 2);
             $table->text('imagen')->nullable();
             $table->softDeletes();
