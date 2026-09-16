@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Producto extends Model
 {
-    //
+    use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'codigo',
         'nombre',
@@ -17,6 +20,19 @@ class Producto extends Model
         'precio_especial',
         'imagen',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'costo' => 'float',
+            'precio_detal' => 'float',
+            'precio_mayorista' => 'float',
+            'precio_especial' => 'float',
+        ];
+    }
 
     public function stockBodegas()
     {

@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\TeamRole;
+use App\Models\Team;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +50,9 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function attachTeamMember(Team $team, User $user, TeamRole $role = TeamRole::Owner): void
+{
+    $team->members()->attach($user, ['role' => $role->value]);
 }

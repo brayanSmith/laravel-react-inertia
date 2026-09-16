@@ -1,15 +1,9 @@
 <?php
 
-use App\Enums\TeamRole;
 use App\Models\Cliente;
 use App\Models\Team;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
-
-function attachTeamMember(Team $team, User $user, TeamRole $role = TeamRole::Owner): void
-{
-    $team->members()->attach($user, ['role' => $role->value]);
-}
 
 test('guests cannot access clientes', function () {
     $team = Team::factory()->create();
