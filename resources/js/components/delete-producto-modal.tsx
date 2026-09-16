@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -34,9 +35,12 @@ export default function DeleteProductoModal({
         }
 
         router.visit(destroy([currentTeamSlug, producto.id]), {
-            onStart: () => setProcessing(true),
+            onStart: () => {
+                setProcessing(true);
+                onOpenChange(false);
+            },
             onFinish: () => setProcessing(false),
-            onSuccess: () => onOpenChange(false),
+            onError: () => toast.error('No se pudo eliminar el producto.'),
         });
     };
 

@@ -1,5 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import ImageDropCropper from '@/components/image-drop-cropper';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -83,7 +84,13 @@ export default function EditProductoModal({
                                 : {}),
                         })}
                         className="space-y-6"
-                        onSuccess={() => handleOpenChange(false)}
+                        onStart={() => handleOpenChange(false)}
+                        onError={(errors) => {
+                            const message =
+                                Object.values(errors)[0] ??
+                                'No se pudo actualizar el producto.';
+                            toast.error(message);
+                        }}
                     >
                         {({ errors, processing }) => (
                             <>

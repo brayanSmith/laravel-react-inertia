@@ -19,7 +19,7 @@ class ProductoFactory extends Factory
     public function definition(): array
     {
         $costo = fake()->randomFloat(2, 5, 500);
-        $subCategoria = SubCategoria::factory()->create();
+        $subCategoria = SubCategoria::inRandomOrder()->first() ?? SubCategoria::factory()->create();
 
         return [
             'categoria_id' => $subCategoria->categoria_id,

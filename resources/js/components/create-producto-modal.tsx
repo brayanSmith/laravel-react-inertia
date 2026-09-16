@@ -1,6 +1,7 @@
 import { Form } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import ImageDropCropper from '@/components/image-drop-cropper';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -67,7 +68,13 @@ export default function CreateProductoModal({
                         imagenFile ? { ...data, imagen: imagenFile } : data
                     }
                     className="space-y-6"
-                    onSuccess={() => handleOpenChange(false)}
+                    onStart={() => handleOpenChange(false)}
+                    onError={(errors) => {
+                        const message =
+                            Object.values(errors)[0] ??
+                            'No se pudo crear el producto.';
+                        toast.error(message);
+                    }}
                 >
                     {({ errors, processing }) => (
                         <>
