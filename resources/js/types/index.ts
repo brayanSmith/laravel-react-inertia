@@ -1,4 +1,5 @@
 export type * from './auth';
+export type * from './clientes';
 export type * from './navigation';
 export type * from './roles';
 export type * from './teams';
