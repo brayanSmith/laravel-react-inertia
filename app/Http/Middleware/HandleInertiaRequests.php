@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
             'teams' => fn () => $user?->toUserTeams(includeCurrent: true) ?? [],
             'canViewClientes' => fn () => $user?->can('clientes.view') ?? false,
+            'canViewUsuarios' => fn () => $user?->can('usuarios.view') ?? false,
         ];
     }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
+use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,11 @@ Route::prefix('{current_team}')
         Route::post('clientes', [ClienteController::class, 'store'])->name('clientes.store');
         Route::patch('clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
         Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
+
+        Route::get('usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
+        Route::post('usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
+        Route::patch('usuarios/{usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
+        Route::delete('usuarios/{usuario}', [UsuarioController::class, 'destroy'])->name('usuarios.destroy');
     });
 
 Route::middleware(['auth'])->group(function () {

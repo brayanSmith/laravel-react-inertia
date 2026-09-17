@@ -4,6 +4,7 @@ import {
     FolderGit2,
     LayoutGrid,
     Shield,
+    UserCog,
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -23,6 +24,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as clientesIndex } from '@/routes/clientes';
 import { index as rolesIndex } from '@/routes/teams/roles';
+import { index as usuariosIndex } from '@/routes/usuarios';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -46,6 +48,15 @@ export function AppSidebar() {
                       title: 'Clientes',
                       href: clientesIndex(page.props.currentTeam.slug),
                       icon: Users,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewUsuarios && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Usuarios',
+                      href: usuariosIndex(page.props.currentTeam.slug),
+                      icon: UserCog,
                   },
               ]
             : []),
