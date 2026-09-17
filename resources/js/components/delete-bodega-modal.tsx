@@ -47,8 +47,8 @@ export default function DeleteBodegaModal({
                     <DialogTitle>Eliminar bodega</DialogTitle>
                     <DialogDescription>
                         ¿Estás seguro de eliminar{' '}
-                        <strong>"{bodega?.nombre_bodega}"</strong>? Esta
-                        acción no se puede deshacer.
+                        <strong>"{bodega?.nombre_bodega}"</strong>? Esta acción
+                        no se puede deshacer.
                     </DialogDescription>
                 </DialogHeader>
 

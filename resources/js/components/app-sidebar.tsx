@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     BookOpen,
+    Building2,
     Calculator,
     FolderGit2,
     LayoutGrid,
@@ -28,6 +29,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as bodegasIndex } from '@/routes/bodegas';
 import { index as clientesIndex } from '@/routes/clientes';
+import { edit as empresaEdit } from '@/routes/empresa';
 import { index as marcasIndex } from '@/routes/marcas';
 import { index as proveedoresIndex } from '@/routes/proveedores';
 import { index as pucsIndex } from '@/routes/pucs';
@@ -101,6 +103,15 @@ export function AppSidebar() {
                       title: 'PUC',
                       href: pucsIndex(page.props.currentTeam.slug),
                       icon: Calculator,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewEmpresa && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Empresa',
+                      href: empresaEdit(page.props.currentTeam.slug),
+                      icon: Building2,
                   },
               ]
             : []),

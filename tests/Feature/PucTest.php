@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TeamRole;
 use App\Models\Bodega;
 use App\Models\Cliente;
 use App\Models\Puc;
@@ -19,7 +18,7 @@ beforeEach(function () {
 test('owners can view, create, update and delete pucs without a custom role', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $this->actingAs($owner)->get(route('pucs.index', $team))->assertOk();
 
@@ -52,7 +51,7 @@ test('owners can view, create, update and delete pucs without a custom role', fu
 test('members without permission cannot view pucs', function () {
     $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $member, 'Member');
 
     $this->actingAs($member)->get(route('pucs.index', $team))->assertForbidden();
 });
@@ -60,7 +59,7 @@ test('members without permission cannot view pucs', function () {
 test('tipo must be one of the valid puc classes', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $this->actingAs($owner)->post(route('pucs.store', $team), [
         'tipo' => '99',
@@ -73,7 +72,7 @@ test('tipo must be one of the valid puc classes', function () {
 test('subcuenta must be unique', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     Puc::factory()->create(['subcuenta' => '1105']);
 
@@ -88,7 +87,7 @@ test('subcuenta must be unique', function () {
 test('a puc with associated abonos cannot be deleted', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $puc = Puc::factory()->create();
     $cliente = Cliente::factory()->create();

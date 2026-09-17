@@ -87,18 +87,13 @@ export default function ClientesIndex({ clientes, permissions }: Props) {
                     </TableHeader>
                     <TableBody>
                         {clientes.map((cliente) => (
-                            <TableRow
-                                key={cliente.id}
-                                data-test="cliente-row"
-                            >
+                            <TableRow key={cliente.id} data-test="cliente-row">
                                 <TableCell>{cliente.razon_social}</TableCell>
                                 <TableCell>
                                     {cliente.tipo_documento}{' '}
                                     {cliente.numero_documento}
                                 </TableCell>
-                                <TableCell>
-                                    {cliente.telefono ?? '—'}
-                                </TableCell>
+                                <TableCell>{cliente.telefono ?? '—'}</TableCell>
                                 <TableCell>{cliente.ciudad ?? '—'}</TableCell>
                                 <TableCell>{cliente.email ?? '—'}</TableCell>
                                 <TableCell>
@@ -109,9 +104,7 @@ export default function ClientesIndex({ clientes, permissions }: Props) {
                                                 : 'secondary'
                                         }
                                     >
-                                        {cliente.activo
-                                            ? 'Activo'
-                                            : 'Inactivo'}
+                                        {cliente.activo ? 'Activo' : 'Inactivo'}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">

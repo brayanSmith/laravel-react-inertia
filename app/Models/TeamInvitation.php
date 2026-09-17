@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\TeamRole;
 use Database\Factories\TeamInvitationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +15,7 @@ use Illuminate\Support\Str;
  * @property string $code
  * @property int $team_id
  * @property string $email
- * @property TeamRole $role
+ * @property string $role Team tier role name ("Owner"/"Admin"/"Member").
  * @property int $invited_by
  * @property Carbon|null $expires_at
  * @property Carbon|null $accepted_at
@@ -97,7 +96,6 @@ class TeamInvitation extends Model
     protected function casts(): array
     {
         return [
-            'role' => TeamRole::class,
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
         ];

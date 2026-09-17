@@ -2,20 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TeamRole;
 use App\Http\Requests\Usuarios\StoreUsuarioRequest;
 use App\Http\Requests\Usuarios\UpdateUsuarioRequest;
-use App\Models\Membership;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamRoles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 
 class UsuarioController extends Controller
 {
@@ -28,26 +25,25 @@ class UsuarioController extends Controller
 
         $team = Team::where('slug', $current_team)->firstOrFail();
 
-        $usuarios = $team->members()->get()->map(function (User $member) {
-            /** @var Membership $membership */
-            $membership = $member->getRelation('pivot');
+        $usuarios = $team->members()->get()->map(function (User $member) use ($team) {
+            $tier = TeamRoles::tierRole($member, $team);
 
             return [
                 'id' => $member->id,
                 'name' => $member->name,
                 'email' => $member->email,
-                'team_role' => $membership->role->value,
-                'team_role_label' => $membership->role->label(),
-                'roles' => $member->roles->pluck('id')->values(),
-                'is_owner' => $membership->role === TeamRole::Owner,
+                'team_role' => $tier ? strtolower($tier->name) : null,
+                'team_role_label' => $tier?->name,
+                'roles' => $member->roles->whereNotIn('name', TeamRoles::TIERS)->pluck('id')->values(),
+                'is_owner' => $tier?->name === 'Owner',
             ];
         });
 
         return Inertia::render('usuarios/index', [
             'team' => ['slug' => $team->slug],
             'usuarios' => $usuarios,
-            'availableTeamRoles' => TeamRole::assignable(),
-            'availableRoles' => Role::where('team_id', $team->id)->orderBy('name')->get(['id', 'name']),
+            'availableTeamRoles' => TeamRoles::toRoleOptions(TeamRoles::assignableTierRoles($team)),
+            'availableRoles' => TeamRoles::customRolesQuery($team)->orderBy('name')->get(['id', 'name']),
             'permissions' => [
                 'canCreate' => $request->user()->can('usuarios.create'),
                 'canUpdate' => $request->user()->can('usuarios.update'),
@@ -74,18 +70,15 @@ class UsuarioController extends Controller
 
             $usuario->forceFill(['email_verified_at' => now()])->save();
 
-            $team->memberships()->create([
-                'user_id' => $usuario->id,
-                'role' => TeamRole::from($request->validated('team_role')),
-            ]);
+            $team->memberships()->create(['user_id' => $usuario->id]);
 
-            app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
+            TeamRoles::assignTier($usuario, $team, ucfirst($request->validated('team_role')));
 
-            $roles = Role::where('team_id', $team->id)
+            $roles = TeamRoles::customRolesQuery($team)
                 ->whereIn('id', $request->validated('roles', []))
                 ->get();
 
-            $usuario->syncRoles($roles);
+            TeamRoles::syncCustomRoles($usuario, $team, $roles);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario created.')]);
@@ -104,11 +97,11 @@ class UsuarioController extends Controller
 
         abort_unless($usuario->belongsToTeam($team), 404);
 
-        $membership = $team->memberships()->where('user_id', $usuario->id)->firstOrFail();
+        $tier = TeamRoles::tierRole($usuario, $team);
 
-        abort_if($membership->role === TeamRole::Owner, 403, __('The team owner cannot be edited here.'));
+        abort_if($tier?->name === 'Owner', 403, __('The team owner cannot be edited here.'));
 
-        DB::transaction(function () use ($request, $team, $usuario, $membership) {
+        DB::transaction(function () use ($request, $team, $usuario) {
             $data = [
                 'name' => $request->validated('name'),
                 'email' => $request->validated('email'),
@@ -120,15 +113,13 @@ class UsuarioController extends Controller
 
             $usuario->update($data);
 
-            $membership->update(['role' => TeamRole::from($request->validated('team_role'))]);
+            TeamRoles::assignTier($usuario, $team, ucfirst($request->validated('team_role')));
 
-            app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
-
-            $roles = Role::where('team_id', $team->id)
+            $roles = TeamRoles::customRolesQuery($team)
                 ->whereIn('id', $request->validated('roles', []))
                 ->get();
 
-            $usuario->syncRoles($roles);
+            TeamRoles::syncCustomRoles($usuario, $team, $roles);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario updated.')]);
@@ -150,8 +141,7 @@ class UsuarioController extends Controller
         abort_if($team->owner()?->is($usuario), 403, __('The team owner cannot be removed.'));
 
         DB::transaction(function () use ($team, $usuario) {
-            app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
-            $usuario->syncRoles([]);
+            TeamRoles::clearAllRoles($usuario, $team);
 
             $team->memberships()->where('user_id', $usuario->id)->delete();
         });

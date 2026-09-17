@@ -3,6 +3,7 @@
 use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\PucController;
@@ -47,6 +48,9 @@ Route::prefix('{current_team}')
         Route::post('pucs', [PucController::class, 'store'])->name('pucs.store');
         Route::patch('pucs/{puc}', [PucController::class, 'update'])->name('pucs.update');
         Route::delete('pucs/{puc}', [PucController::class, 'destroy'])->name('pucs.destroy');
+
+        Route::get('empresa', [EmpresaController::class, 'edit'])->name('empresa.edit');
+        Route::patch('empresa', [EmpresaController::class, 'update'])->name('empresa.update');
     });
 
 Route::middleware(['auth'])->group(function () {

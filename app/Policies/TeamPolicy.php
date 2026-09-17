@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\TeamPermission;
 use App\Models\Team;
 use App\Models\User;
 
@@ -37,7 +36,7 @@ class TeamPolicy
      */
     public function update(User $user, Team $team): bool
     {
-        return $user->hasTeamPermission($team, TeamPermission::UpdateTeam);
+        return $user->can('team.update');
     }
 
     /**
@@ -55,7 +54,7 @@ class TeamPolicy
      */
     public function addMember(User $user, Team $team): bool
     {
-        return $user->hasTeamPermission($team, TeamPermission::AddMember);
+        return $user->can('team.member.add');
     }
 
     /**
@@ -63,7 +62,7 @@ class TeamPolicy
      */
     public function updateMember(User $user, Team $team): bool
     {
-        return $user->hasTeamPermission($team, TeamPermission::UpdateMember);
+        return $user->can('team.member.update');
     }
 
     /**
@@ -71,7 +70,7 @@ class TeamPolicy
      */
     public function removeMember(User $user, Team $team): bool
     {
-        return $user->hasTeamPermission($team, TeamPermission::RemoveMember);
+        return $user->can('team.member.remove');
     }
 
     /**
@@ -79,7 +78,7 @@ class TeamPolicy
      */
     public function inviteMember(User $user, Team $team): bool
     {
-        return $user->hasTeamPermission($team, TeamPermission::CreateInvitation);
+        return $user->can('team.invitation.create');
     }
 
     /**
@@ -87,7 +86,7 @@ class TeamPolicy
      */
     public function cancelInvitation(User $user, Team $team): bool
     {
-        return $user->hasTeamPermission($team, TeamPermission::CancelInvitation);
+        return $user->can('team.invitation.cancel');
     }
 
     /**
@@ -95,6 +94,6 @@ class TeamPolicy
      */
     public function delete(User $user, Team $team): bool
     {
-        return ! $team->is_personal && $user->hasTeamPermission($team, TeamPermission::DeleteTeam);
+        return ! $team->is_personal && $user->can('team.delete');
     }
 }

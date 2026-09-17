@@ -21,6 +21,7 @@ declare module '@inertiajs/core' {
             canViewProveedores: boolean;
             canViewMarcas: boolean;
             canViewPucs: boolean;
+            canViewEmpresa: boolean;
             [key: string]: unknown;
         };
     }

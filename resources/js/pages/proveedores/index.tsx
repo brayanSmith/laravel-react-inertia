@@ -95,9 +95,7 @@ export default function ProveedoresIndex({ proveedores, permissions }: Props) {
                                 <TableCell>
                                     {proveedor.nombre_proveedor}
                                 </TableCell>
-                                <TableCell>
-                                    {proveedor.nit_proveedor}
-                                </TableCell>
+                                <TableCell>{proveedor.nit_proveedor}</TableCell>
                                 <TableCell>
                                     <Badge variant="secondary">
                                         {proveedor.tipo_proveedor}

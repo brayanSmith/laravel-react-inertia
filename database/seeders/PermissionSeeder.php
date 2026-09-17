@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\TeamRoles;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
@@ -20,6 +21,7 @@ class PermissionSeeder extends Seeder
         'proveedores' => ['view', 'create', 'update', 'delete'],
         'marcas' => ['view', 'create', 'update', 'delete'],
         'puc' => ['view', 'create', 'update', 'delete'],
+        'empresa' => ['view', 'update'],
     ];
 
     /**
@@ -31,6 +33,10 @@ class PermissionSeeder extends Seeder
             foreach ($actions as $action) {
                 Permission::firstOrCreate(['name' => "{$resource}.{$action}"]);
             }
+        }
+
+        foreach (TeamRoles::TEAM_PERMISSIONS as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
         }
     }
 }

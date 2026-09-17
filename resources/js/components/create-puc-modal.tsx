@@ -119,9 +119,7 @@ export default function CreatePucModal({ teamSlug, children }: Props) {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="subcuenta">
-                                        Subcuenta
-                                    </Label>
+                                    <Label htmlFor="subcuenta">Subcuenta</Label>
                                     <Input
                                         id="subcuenta"
                                         name="subcuenta"
@@ -150,9 +148,7 @@ export default function CreatePucModal({ teamSlug, children }: Props) {
                                         id="descripcion"
                                         name="descripcion"
                                     />
-                                    <InputError
-                                        message={errors.descripcion}
-                                    />
+                                    <InputError message={errors.descripcion} />
                                 </div>
                             </div>
 

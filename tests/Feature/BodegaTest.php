@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TeamRole;
 use App\Models\Bodega;
 use App\Models\Team;
 use App\Models\User;
@@ -17,7 +16,7 @@ beforeEach(function () {
 test('owners can view, create, update and delete bodegas without a custom role', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $this->actingAs($owner)->get(route('bodegas.index', $team))->assertOk();
 
@@ -44,7 +43,7 @@ test('owners can view, create, update and delete bodegas without a custom role',
 test('members without permission cannot view bodegas', function () {
     $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $member, 'Member');
 
     $this->actingAs($member)->get(route('bodegas.index', $team))->assertForbidden();
 });
@@ -52,7 +51,7 @@ test('members without permission cannot view bodegas', function () {
 test('nombre_bodega must be unique', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     Bodega::factory()->create(['nombre_bodega' => 'Bodega Norte']);
 
@@ -64,7 +63,7 @@ test('nombre_bodega must be unique', function () {
 test('a bodega with associated stock cannot be deleted', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $bodega = Bodega::factory()->create();
 

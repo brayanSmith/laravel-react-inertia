@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\Teams;
 
 use App\Actions\Teams\CreateTeam;
-use App\Enums\TeamRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\DeleteTeamRequest;
 use App\Http\Requests\Teams\SaveTeamRequest;
-use App\Models\Membership;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamRoles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class TeamController extends Controller
 {
@@ -57,17 +57,16 @@ class TeamController extends Controller
                 'slug' => $team->slug,
                 'isPersonal' => $team->is_personal,
             ],
-            'members' => $team->members()->get()->map(function (User $member) {
-                /** @var Membership $membership */
-                $membership = $member->getRelation('pivot');
+            'members' => $team->members()->get()->map(function (User $member) use ($team) {
+                $role = TeamRoles::tierRole($member, $team);
 
                 return [
                     'id' => $member->id,
                     'name' => $member->name,
                     'email' => $member->email,
                     'avatar' => $member->avatar ?? null,
-                    'role' => $membership->role->value,
-                    'role_label' => $membership->role->label(),
+                    'role' => $role ? strtolower($role->name) : null,
+                    'role_label' => $role?->name,
                 ];
             }),
             'invitations' => $team->invitations()
@@ -76,12 +75,12 @@ class TeamController extends Controller
                 ->map(fn ($invitation) => [
                     'code' => $invitation->code,
                     'email' => $invitation->email,
-                    'role' => $invitation->role->value,
-                    'role_label' => $invitation->role->label(),
+                    'role' => strtolower($invitation->role),
+                    'role_label' => $invitation->role,
                     'created_at' => $invitation->created_at->toISOString(),
                 ]),
             'permissions' => $user->toTeamPermissions($team),
-            'availableRoles' => TeamRole::assignable(),
+            'availableRoles' => TeamRoles::toRoleOptions(TeamRoles::assignableTierRoles($team)),
         ]);
     }
 
@@ -158,6 +157,7 @@ class TeamController extends Controller
                 ->where('id', '!=', $user->id)
                 ->each(fn (User $affectedUser) => $affectedUser->switchTeam($affectedUser->personalTeam()));
 
+            Role::where('team_id', $team->id)->delete();
             $team->invitations()->delete();
             $team->memberships()->delete();
             $team->delete();

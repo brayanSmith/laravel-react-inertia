@@ -23,12 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { update } from '@/routes/usuarios';
-import type {
-    RoleOption,
-    TeamRole,
-    Usuario,
-    UsuarioRoleOption,
-} from '@/types';
+import type { RoleOption, TeamRole, Usuario, UsuarioRoleOption } from '@/types';
 
 type Props = {
     teamSlug: string;
@@ -85,8 +80,8 @@ export default function EditUsuarioModal({
                             <DialogHeader>
                                 <DialogTitle>Editar usuario</DialogTitle>
                                 <DialogDescription>
-                                    Actualiza la información y los permisos
-                                    de este usuario.
+                                    Actualiza la información y los permisos de
+                                    este usuario.
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -158,16 +153,14 @@ export default function EditUsuarioModal({
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {availableTeamRoles.map(
-                                                (role) => (
-                                                    <SelectItem
-                                                        key={role.value}
-                                                        value={role.value}
-                                                    >
-                                                        {role.label}
-                                                    </SelectItem>
-                                                ),
-                                            )}
+                                            {availableTeamRoles.map((role) => (
+                                                <SelectItem
+                                                    key={role.value}
+                                                    value={role.value}
+                                                >
+                                                    {role.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <input

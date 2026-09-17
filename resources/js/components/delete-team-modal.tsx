@@ -58,8 +58,8 @@ export default function DeleteTeamModal({ team, open, onOpenChange }: Props) {
                             <div className="space-y-4 py-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="confirmation-name">
-                                        Escribe <strong>"{team.name}"</strong> para
-                                        confirmar
+                                        Escribe <strong>"{team.name}"</strong>{' '}
+                                        para confirmar
                                     </Label>
                                     <Input
                                         id="confirmation-name"
@@ -80,7 +80,9 @@ export default function DeleteTeamModal({ team, open, onOpenChange }: Props) {
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancelar</Button>
+                                    <Button variant="secondary">
+                                        Cancelar
+                                    </Button>
                                 </DialogClose>
 
                                 <Button

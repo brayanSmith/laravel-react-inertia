@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
@@ -15,7 +14,7 @@ beforeEach(function () {
 test('owners can create a custom role with permissions', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $response = $this
         ->actingAs($owner)
@@ -35,7 +34,7 @@ test('owners can create a custom role with permissions', function () {
 test('members cannot create a custom role', function () {
     $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $member, 'Member');
 
     $response = $this
         ->actingAs($member)
@@ -51,8 +50,8 @@ test('a role from another team cannot be updated', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
     $otherTeam = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
-    $otherTeam->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
+    attachTeamMember($otherTeam, $owner, 'Owner');
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($otherTeam->id);
     $roleInOtherTeam = Role::create(['name' => 'Vendedor', 'team_id' => $otherTeam->id]);
@@ -71,8 +70,8 @@ test('assigning a role grants its permissions to the member within that team', f
     $owner = User::factory()->create();
     $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $owner, 'Owner');
+    attachTeamMember($team, $member, 'Member');
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
     $role = Role::create(['name' => 'Vendedor', 'team_id' => $team->id]);
@@ -96,9 +95,9 @@ test('member permissions do not carry over to a different team', function () {
     $member = User::factory()->create();
     $team = Team::factory()->create();
     $otherTeam = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
-    $otherTeam->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $owner, 'Owner');
+    attachTeamMember($team, $member, 'Member');
+    attachTeamMember($otherTeam, $member, 'Member');
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
     $role = Role::create(['name' => 'Vendedor', 'team_id' => $team->id]);
@@ -113,8 +112,8 @@ test('deleting a role removes it from members who had it', function () {
     $owner = User::factory()->create();
     $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $owner, 'Owner');
+    attachTeamMember($team, $member, 'Member');
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
     $role = Role::create(['name' => 'Vendedor', 'team_id' => $team->id]);

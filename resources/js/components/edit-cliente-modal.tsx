@@ -161,9 +161,7 @@ export default function EditClienteModal({
                                         defaultValue={cliente.razon_social}
                                         required
                                     />
-                                    <InputError
-                                        message={errors.razon_social}
-                                    />
+                                    <InputError message={errors.razon_social} />
                                 </div>
 
                                 <div className="grid gap-2">
@@ -191,9 +189,7 @@ export default function EditClienteModal({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="edit_ciudad">
-                                        Ciudad
-                                    </Label>
+                                    <Label htmlFor="edit_ciudad">Ciudad</Label>
                                     <Input
                                         id="edit_ciudad"
                                         name="ciudad"

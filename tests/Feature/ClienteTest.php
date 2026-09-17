@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TeamRole;
 use App\Models\Cliente;
 use App\Models\Team;
 use App\Models\User;
@@ -18,7 +17,7 @@ beforeEach(function () {
 test('owners can view, create, update and delete clientes without a custom role', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
     $owner->switchTeam($team);
 
     $this->actingAs($owner)->get(route('clientes.index'))->assertOk();
@@ -49,7 +48,7 @@ test('owners can view, create, update and delete clientes without a custom role'
 test('members without a role cannot view clientes', function () {
     $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $member, 'Member');
     $member->switchTeam($team);
 
     $this->actingAs($member)->get(route('clientes.index'))->assertForbidden();
@@ -58,7 +57,7 @@ test('members without a role cannot view clientes', function () {
 test('members with a role granting clientes.view can see the list but not create', function () {
     $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $member, 'Member');
     $member->switchTeam($team);
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);

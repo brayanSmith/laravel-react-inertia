@@ -48,8 +48,7 @@ export default function EditProveedorModal({
         useState<TipoProveedor>('REMISIONADO');
     const [categoriaProveedor, setCategoriaProveedor] =
         useState<CategoriaProveedor>('NO_DECLARANTE');
-    const [tipoCuenta, setTipoCuenta] =
-        useState<TipoCuentaProveedor>('AHORRO');
+    const [tipoCuenta, setTipoCuenta] = useState<TipoCuentaProveedor>('AHORRO');
     const [flete, setFlete] = useState(false);
     const [removeImage, setRemoveImage] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);

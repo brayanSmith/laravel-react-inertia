@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamRoles;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -48,9 +48,10 @@ class UserFactory extends Factory
                 'name' => $user->name."'s Team",
             ]);
 
-            $team->members()->attach($user, [
-                'role' => TeamRole::Owner->value,
-            ]);
+            $team->members()->attach($user);
+
+            TeamRoles::provisionDefaultRoles($team);
+            TeamRoles::assignTier($user, $team, 'Owner');
 
             $user->switchTeam($team);
         });

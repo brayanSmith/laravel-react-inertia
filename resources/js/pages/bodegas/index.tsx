@@ -33,9 +33,7 @@ export default function BodegasIndex({ bodegas, permissions }: Props) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [bodegaToEdit, setBodegaToEdit] = useState<Bodega | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [bodegaToDelete, setBodegaToDelete] = useState<Bodega | null>(
-        null,
-    );
+    const [bodegaToDelete, setBodegaToDelete] = useState<Bodega | null>(null);
 
     const teamSlug = currentTeam?.slug ?? '';
 

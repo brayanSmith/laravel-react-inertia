@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Usuarios;
 
 use App\Concerns\ProfileValidationRules;
-use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamRoles;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -30,7 +30,7 @@ class UpdateUsuarioRequest extends FormRequest
         return [
             ...$this->profileRules($usuario->id),
             'password' => ['nullable', 'string', Password::default(), 'confirmed'],
-            'team_role' => ['required', 'string', Rule::in(array_column(TeamRole::assignable(), 'value'))],
+            'team_role' => ['required', 'string', Rule::in(TeamRoles::assignableTierRoles($team)->map(fn ($role) => strtolower($role->name))->all())],
             'roles' => ['array'],
             'roles.*' => ['integer', Rule::exists('roles', 'id')->where('team_id', $team->id)],
         ];

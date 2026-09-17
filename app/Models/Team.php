@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Concerns\GeneratesUniqueTeamSlugs;
-use App\Enums\TeamRole;
 use Database\Factories\TeamFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Permission\Models\Role;
 
 /**
  * @property int $id
@@ -55,11 +55,11 @@ class Team extends Model
     /**
      * Get the team owner.
      */
-    public function owner(): ?Model
+    public function owner(): ?User
     {
-        return $this->members()
-            ->wherePivot('role', TeamRole::Owner->value)
-            ->first();
+        $ownerRole = Role::where('team_id', $this->id)->where('name', 'Owner')->first();
+
+        return $ownerRole?->users()->first();
     }
 
     /**
@@ -71,7 +71,6 @@ class Team extends Model
     {
         return $this->belongsToMany(User::class, 'team_members', 'team_id', 'user_id')
             ->using(Membership::class)
-            ->withPivot(['role'])
             ->withTimestamps();
     }
 

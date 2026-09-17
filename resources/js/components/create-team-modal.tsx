@@ -54,7 +54,9 @@ export default function CreateTeamModal({ children }: PropsWithChildren) {
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancelar</Button>
+                                    <Button variant="secondary">
+                                        Cancelar
+                                    </Button>
                                 </DialogClose>
 
                                 <Button

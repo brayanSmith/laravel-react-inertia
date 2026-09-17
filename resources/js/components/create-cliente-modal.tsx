@@ -80,8 +80,8 @@ export default function CreateClienteModal({ teamSlug, children }: Props) {
                             <DialogHeader>
                                 <DialogTitle>Nuevo cliente</DialogTitle>
                                 <DialogDescription>
-                                    Crea un nuevo cliente con su información
-                                    de facturación.
+                                    Crea un nuevo cliente con su información de
+                                    facturación.
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -148,19 +148,12 @@ export default function CreateClienteModal({ teamSlug, children }: Props) {
                                         data-test="create-cliente-razon-social"
                                         required
                                     />
-                                    <InputError
-                                        message={errors.razon_social}
-                                    />
+                                    <InputError message={errors.razon_social} />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="direccion">
-                                        Dirección
-                                    </Label>
-                                    <Input
-                                        id="direccion"
-                                        name="direccion"
-                                    />
+                                    <Label htmlFor="direccion">Dirección</Label>
+                                    <Input id="direccion" name="direccion" />
                                     <InputError message={errors.direccion} />
                                 </div>
 

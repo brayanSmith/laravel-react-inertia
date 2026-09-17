@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\SaveTeamRoleRequest;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamRoles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -22,7 +23,7 @@ class TeamRoleController extends Controller
     {
         Gate::authorize('update', $team);
 
-        $roles = Role::where('team_id', $team->id)
+        $roles = TeamRoles::customRolesQuery($team)
             ->with('permissions')
             ->orderBy('name')
             ->get()
@@ -75,6 +76,7 @@ class TeamRoleController extends Controller
         Gate::authorize('update', $team);
 
         abort_unless($role->getAttribute('team_id') === $team->id, 404);
+        abort_if(in_array($role->name, TeamRoles::TIERS, true), 403);
 
         $role->update(['name' => $request->validated('name')]);
         $role->syncPermissions($request->validated('permissions', []));
@@ -92,6 +94,7 @@ class TeamRoleController extends Controller
         Gate::authorize('update', $team);
 
         abort_unless($role->getAttribute('team_id') === $team->id, 404);
+        abort_if(in_array($role->name, TeamRoles::TIERS, true), 403);
 
         $role->delete();
 

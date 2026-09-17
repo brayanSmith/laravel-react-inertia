@@ -77,7 +77,9 @@ export default function Security(props: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">Nueva contraseña</Label>
+                                <Label htmlFor="password">
+                                    Nueva contraseña
+                                </Label>
 
                                 <PasswordInput
                                     id="password"

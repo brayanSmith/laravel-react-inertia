@@ -77,16 +77,13 @@ export default function CreateUsuarioModal({
                             <DialogHeader>
                                 <DialogTitle>Nuevo usuario</DialogTitle>
                                 <DialogDescription>
-                                    Crea una cuenta de acceso para un
-                                    empleado.
+                                    Crea una cuenta de acceso para un empleado.
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="grid gap-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="usuario_name">
-                                        Nombre
-                                    </Label>
+                                    <Label htmlFor="usuario_name">Nombre</Label>
                                     <Input
                                         id="usuario_name"
                                         name="name"
@@ -97,9 +94,7 @@ export default function CreateUsuarioModal({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="usuario_email">
-                                        Email
-                                    </Label>
+                                    <Label htmlFor="usuario_email">Email</Label>
                                     <Input
                                         id="usuario_email"
                                         name="email"
@@ -150,16 +145,14 @@ export default function CreateUsuarioModal({
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {availableTeamRoles.map(
-                                                (role) => (
-                                                    <SelectItem
-                                                        key={role.value}
-                                                        value={role.value}
-                                                    >
-                                                        {role.label}
-                                                    </SelectItem>
-                                                ),
-                                            )}
+                                            {availableTeamRoles.map((role) => (
+                                                <SelectItem
+                                                    key={role.value}
+                                                    value={role.value}
+                                                >
+                                                    {role.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <input

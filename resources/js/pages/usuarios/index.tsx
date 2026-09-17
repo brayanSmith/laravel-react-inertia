@@ -100,8 +100,8 @@ export default function UsuariosIndex({
                     </TableHeader>
                     <TableBody>
                         {usuarios.map((usuario) => {
-                            const usuarioRoles = availableRoles.filter(
-                                (role) => usuario.roles.includes(role.id),
+                            const usuarioRoles = availableRoles.filter((role) =>
+                                usuario.roles.includes(role.id),
                             );
 
                             return (
@@ -182,9 +182,7 @@ export default function UsuariosIndex({
                                                                 </Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent>
-                                                                <p>
-                                                                    Eliminar
-                                                                </p>
+                                                                <p>Eliminar</p>
                                                             </TooltipContent>
                                                         </Tooltip>
                                                     ) : null}

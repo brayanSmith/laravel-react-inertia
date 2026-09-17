@@ -47,9 +47,8 @@ export default function DeleteUsuarioModal({
                     <DialogTitle>Eliminar usuario</DialogTitle>
                     <DialogDescription>
                         ¿Estás seguro de quitar a{' '}
-                        <strong>"{usuario?.name}"</strong> de este equipo?
-                        Su cuenta no se elimina, solo pierde acceso a este
-                        equipo.
+                        <strong>"{usuario?.name}"</strong> de este equipo? Su
+                        cuenta no se elimina, solo pierde acceso a este equipo.
                     </DialogDescription>
                 </DialogHeader>
 

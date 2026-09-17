@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
@@ -19,7 +18,7 @@ test('login screen can be rendered', function () {
 test('login screen includes team invitation context', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create(['name' => 'Laravel Team']);
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $invitation = TeamInvitation::factory()->create([
         'team_id' => $team->id,

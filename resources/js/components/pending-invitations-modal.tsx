@@ -65,8 +65,8 @@ export default function PendingInvitationsModal({
                                     {invitation.team.name}
                                 </p>
                                 <p className="text-muted-foreground text-sm">
-                                    {invitation.inviterName} te invitó a unirte a
-                                    este equipo.
+                                    {invitation.inviterName} te invitó a unirte
+                                    a este equipo.
                                 </p>
                             </div>
 

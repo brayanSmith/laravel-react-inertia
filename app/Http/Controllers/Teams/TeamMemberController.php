@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Teams;
 
-use App\Enums\TeamRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\UpdateTeamMemberRequest;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamRoles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -20,12 +20,7 @@ class TeamMemberController extends Controller
     {
         Gate::authorize('updateMember', $team);
 
-        $newRole = TeamRole::from($request->validated('role'));
-
-        $team->memberships()
-            ->where('user_id', $user->id)
-            ->firstOrFail()
-            ->update(['role' => $newRole]);
+        TeamRoles::assignTier($user, $team, ucfirst($request->validated('role')));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Member role updated.')]);
 
@@ -40,6 +35,8 @@ class TeamMemberController extends Controller
         Gate::authorize('removeMember', $team);
 
         abort_if($team->owner()?->is($user), 403, __('The team owner cannot be removed.'));
+
+        TeamRoles::clearAllRoles($user, $team);
 
         $team->memberships()
             ->where('user_id', $user->id)

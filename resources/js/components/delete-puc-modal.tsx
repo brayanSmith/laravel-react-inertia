@@ -47,11 +47,8 @@ export default function DeletePucModal({
                     <DialogTitle>Eliminar cuenta PUC</DialogTitle>
                     <DialogDescription>
                         ¿Estás seguro de eliminar{' '}
-                        <strong>
-                            "{puc?.concatenar_subcuenta_concepto}"
-                        </strong>
-                        ? Solo se puede eliminar si no tiene abonos
-                        asociados.
+                        <strong>"{puc?.concatenar_subcuenta_concepto}"</strong>?
+                        Solo se puede eliminar si no tiene abonos asociados.
                     </DialogDescription>
                 </DialogHeader>
 

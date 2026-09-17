@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TeamRole;
 use App\Models\Marca;
 use App\Models\Team;
 use App\Models\User;
@@ -17,13 +16,13 @@ beforeEach(function () {
 test('owners can view, create, update and delete marcas without a custom role', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $this->actingAs($owner)->get(route('marcas.index', $team))->assertOk();
 
     $this->actingAs($owner)->post(route('marcas.store', $team), [
         'marca' => 'Marca Uno',
-        'descripcion_marca' => 'Descripción',
+        'descripcion_marca' => 'DescripciÃ³n',
     ])->assertRedirect();
 
     $marca = Marca::firstOrFail();
@@ -43,7 +42,7 @@ test('owners can view, create, update and delete marcas without a custom role', 
 test('members without permission cannot view marcas', function () {
     $member = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+    attachTeamMember($team, $member, 'Member');
 
     $this->actingAs($member)->get(route('marcas.index', $team))->assertForbidden();
 });
@@ -51,7 +50,7 @@ test('members without permission cannot view marcas', function () {
 test('marca name must be unique', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     Marca::factory()->create(['marca' => 'Marca Norte']);
 
@@ -63,7 +62,7 @@ test('marca name must be unique', function () {
 test('a marca with associated products cannot be deleted', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
-    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    attachTeamMember($team, $owner, 'Owner');
 
     $marca = Marca::factory()->create();
 

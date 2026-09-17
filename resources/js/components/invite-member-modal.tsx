@@ -58,15 +58,20 @@ export default function InviteMemberModal({
                     {({ errors, processing }) => (
                         <>
                             <DialogHeader>
-                                <DialogTitle>Invitar a un miembro del equipo</DialogTitle>
+                                <DialogTitle>
+                                    Invitar a un miembro del equipo
+                                </DialogTitle>
                                 <DialogDescription>
-                                    Envía una invitación para unirse a este equipo.
+                                    Envía una invitación para unirse a este
+                                    equipo.
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="grid gap-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Correo electrónico</Label>
+                                    <Label htmlFor="email">
+                                        Correo electrónico
+                                    </Label>
                                     <Input
                                         id="email"
                                         name="email"
@@ -110,7 +115,9 @@ export default function InviteMemberModal({
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancelar</Button>
+                                    <Button variant="secondary">
+                                        Cancelar
+                                    </Button>
                                 </DialogClose>
 
                                 <Button

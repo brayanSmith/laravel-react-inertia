@@ -47,8 +47,8 @@ export default function DeleteClienteModal({
                     <DialogTitle>Eliminar cliente</DialogTitle>
                     <DialogDescription>
                         ¿Estás seguro de eliminar a{' '}
-                        <strong>"{cliente?.razon_social}"</strong>? Esta
-                        acción se puede revertir solo desde la base de datos.
+                        <strong>"{cliente?.razon_social}"</strong>? Esta acción
+                        se puede revertir solo desde la base de datos.
                     </DialogDescription>
                 </DialogHeader>
 

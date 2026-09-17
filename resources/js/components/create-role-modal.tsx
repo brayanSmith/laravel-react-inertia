@@ -2,8 +2,8 @@ import { Form } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
+import PermissionsFieldset from '@/components/permissions-fieldset';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogClose,
@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { groupPermissionsByResource } from '@/lib/permissions';
 import { store } from '@/routes/teams/roles';
 import type { Team } from '@/types';
 
@@ -33,14 +32,6 @@ export default function CreateRoleModal({
     const [open, setOpen] = useState(false);
     const [selected, setSelected] = useState<string[]>([]);
 
-    const togglePermission = (permission: string, checked: boolean) => {
-        setSelected((current) =>
-            checked
-                ? [...current, permission]
-                : current.filter((name) => name !== permission),
-        );
-    };
-
     const handleOpenChange = (nextOpen: boolean) => {
         setOpen(nextOpen);
 
@@ -49,12 +40,10 @@ export default function CreateRoleModal({
         }
     };
 
-    const groups = groupPermissionsByResource(permissions);
-
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-xl">
                 <Form
                     key={String(open)}
                     {...store.form(team.slug)}
@@ -72,7 +61,9 @@ export default function CreateRoleModal({
                             </DialogHeader>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="role-name">Nombre del rol</Label>
+                                <Label htmlFor="role-name">
+                                    Nombre del rol
+                                </Label>
                                 <Input
                                     id="role-name"
                                     name="name"
@@ -83,59 +74,26 @@ export default function CreateRoleModal({
                                 <InputError message={errors.name} />
                             </div>
 
-                            <div className="space-y-4">
-                                {Object.entries(groups).map(
-                                    ([resource, resourcePermissions]) => (
-                                        <div
-                                            key={resource}
-                                            className="space-y-2"
-                                        >
-                                            <div className="text-sm font-medium capitalize">
-                                                {resource}
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {resourcePermissions.map(
-                                                    (permission) => (
-                                                        <label
-                                                            key={permission}
-                                                            className="flex items-center gap-2 text-sm"
-                                                        >
-                                                            <Checkbox
-                                                                checked={selected.includes(
-                                                                    permission,
-                                                                )}
-                                                                onCheckedChange={(
-                                                                    checked,
-                                                                ) =>
-                                                                    togglePermission(
-                                                                        permission,
-                                                                        checked ===
-                                                                            true,
-                                                                    )
-                                                                }
-                                                            />
-                                                            {permission}
-                                                        </label>
-                                                    ),
-                                                )}
-                                            </div>
-                                        </div>
-                                    ),
-                                )}
+                            <PermissionsFieldset
+                                permissions={permissions}
+                                selected={selected}
+                                onChange={setSelected}
+                            />
 
-                                {selected.map((permission) => (
-                                    <input
-                                        key={permission}
-                                        type="hidden"
-                                        name="permissions[]"
-                                        value={permission}
-                                    />
-                                ))}
-                            </div>
+                            {selected.map((permission) => (
+                                <input
+                                    key={permission}
+                                    type="hidden"
+                                    name="permissions[]"
+                                    value={permission}
+                                />
+                            ))}
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancelar</Button>
+                                    <Button variant="secondary">
+                                        Cancelar
+                                    </Button>
                                 </DialogClose>
 
                                 <Button

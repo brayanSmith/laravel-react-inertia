@@ -70,8 +70,8 @@ export default function PasskeyItem({ passkey, onDelete }: Props) {
                 <DialogContent>
                     <DialogTitle>Eliminar clave de acceso</DialogTitle>
                     <DialogDescription>
-                        ¿Seguro que quieres eliminar la clave de acceso
-                        "{passkey.name}"? Ya no podrás utilizarla para iniciar
+                        ¿Seguro que quieres eliminar la clave de acceso "
+                        {passkey.name}"? Ya no podrás utilizarla para iniciar
                         sesión.
                     </DialogDescription>
                     <DialogFooter className="gap-2">

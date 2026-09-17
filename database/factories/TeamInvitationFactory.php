@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
@@ -23,7 +22,7 @@ class TeamInvitationFactory extends Factory
         return [
             'team_id' => Team::factory(),
             'email' => fake()->unique()->safeEmail(),
-            'role' => TeamRole::Member,
+            'role' => 'Member',
             'invited_by' => User::factory(),
             'expires_at' => null,
             'accepted_at' => null,

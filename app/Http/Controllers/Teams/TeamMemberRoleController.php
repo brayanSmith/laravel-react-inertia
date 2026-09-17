@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\UpdateMemberRolesRequest;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamRoles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Role;
 
 class TeamMemberRoleController extends Controller
 {
@@ -22,11 +22,11 @@ class TeamMemberRoleController extends Controller
 
         abort_unless($user->belongsToTeam($team), 404);
 
-        $roles = Role::where('team_id', $team->id)
+        $roles = TeamRoles::customRolesQuery($team)
             ->whereIn('id', $request->validated('roles', []))
             ->get();
 
-        $user->syncRoles($roles);
+        TeamRoles::syncCustomRoles($user, $team, $roles);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Member roles updated.')]);
 

@@ -42,8 +42,7 @@ export default function CreateProveedorModal({ teamSlug, children }: Props) {
         useState<TipoProveedor>('REMISIONADO');
     const [categoriaProveedor, setCategoriaProveedor] =
         useState<CategoriaProveedor>('NO_DECLARANTE');
-    const [tipoCuenta, setTipoCuenta] =
-        useState<TipoCuentaProveedor>('AHORRO');
+    const [tipoCuenta, setTipoCuenta] = useState<TipoCuentaProveedor>('AHORRO');
     const [flete, setFlete] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,8 +86,8 @@ export default function CreateProveedorModal({ teamSlug, children }: Props) {
                             <DialogHeader>
                                 <DialogTitle>Nuevo proveedor</DialogTitle>
                                 <DialogDescription>
-                                    Crea un nuevo proveedor con su
-                                    información fiscal y bancaria.
+                                    Crea un nuevo proveedor con su información
+                                    fiscal y bancaria.
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -202,9 +201,7 @@ export default function CreateProveedorModal({ teamSlug, children }: Props) {
                                             value={categoriaProveedor}
                                         />
                                         <InputError
-                                            message={
-                                                errors.categoria_proveedor
-                                            }
+                                            message={errors.categoria_proveedor}
                                         />
                                     </div>
                                 </div>

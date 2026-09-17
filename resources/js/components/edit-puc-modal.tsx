@@ -113,9 +113,7 @@ export default function EditPucModal({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="edit_cuenta">
-                                        Cuenta
-                                    </Label>
+                                    <Label htmlFor="edit_cuenta">Cuenta</Label>
                                     <Input
                                         id="edit_cuenta"
                                         name="cuenta"
@@ -163,9 +161,7 @@ export default function EditPucModal({
                                         name="descripcion"
                                         defaultValue={puc.descripcion ?? ''}
                                     />
-                                    <InputError
-                                        message={errors.descripcion}
-                                    />
+                                    <InputError message={errors.descripcion} />
                                 </div>
                             </div>
 

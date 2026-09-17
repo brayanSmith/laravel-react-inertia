@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Teams;
 
 use App\Models\Team;
+use App\Support\TeamRoles;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,7 @@ class SaveTeamRoleRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
+                Rule::notIn(TeamRoles::TIERS),
                 Rule::unique('roles', 'name')
                     ->where('team_id', $team->id)
                     ->where('guard_name', 'web')

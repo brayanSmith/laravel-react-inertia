@@ -93,9 +93,7 @@ export default function PucsIndex({ pucs, permissions }: Props) {
                                 <TableCell>{puc.cuenta}</TableCell>
                                 <TableCell>{puc.subcuenta}</TableCell>
                                 <TableCell>{puc.concepto}</TableCell>
-                                <TableCell>
-                                    {puc.descripcion ?? '—'}
-                                </TableCell>
+                                <TableCell>{puc.descripcion ?? '—'}</TableCell>
                                 <TableCell className="text-right">
                                     <TooltipProvider>
                                         <div className="flex justify-end gap-2">

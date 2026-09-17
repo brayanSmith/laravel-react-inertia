@@ -1,8 +1,8 @@
 <?php
 
-use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamRoles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -52,7 +52,11 @@ function something()
     // ..
 }
 
-function attachTeamMember(Team $team, User $user, TeamRole $role = TeamRole::Owner): void
+function attachTeamMember(Team $team, User $user, string $role = 'Owner'): void
 {
-    $team->members()->attach($user, ['role' => $role->value]);
+    TeamRoles::provisionDefaultRoles($team);
+
+    $team->memberships()->firstOrCreate(['user_id' => $user->id]);
+
+    TeamRoles::assignTier($user, $team, $role);
 }
