@@ -6,6 +6,7 @@ import {
     Shield,
     UserCog,
     Users,
+    Warehouse,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -22,6 +23,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as bodegasIndex } from '@/routes/bodegas';
 import { index as clientesIndex } from '@/routes/clientes';
 import { index as rolesIndex } from '@/routes/teams/roles';
 import { index as usuariosIndex } from '@/routes/usuarios';
@@ -57,6 +59,15 @@ export function AppSidebar() {
                       title: 'Usuarios',
                       href: usuariosIndex(page.props.currentTeam.slug),
                       icon: UserCog,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewBodegas && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Bodegas',
+                      href: bodegasIndex(page.props.currentTeam.slug),
+                      icon: Warehouse,
                   },
               ]
             : []),

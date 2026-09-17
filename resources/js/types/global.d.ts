@@ -17,6 +17,7 @@ declare module '@inertiajs/core' {
             teams: Team[];
             canViewClientes: boolean;
             canViewUsuarios: boolean;
+            canViewBodegas: boolean;
             [key: string]: unknown;
         };
     }

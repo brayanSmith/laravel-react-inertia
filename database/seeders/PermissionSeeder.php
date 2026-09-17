@@ -16,6 +16,7 @@ class PermissionSeeder extends Seeder
     protected array $catalog = [
         'clientes' => ['view', 'create', 'update', 'delete'],
         'usuarios' => ['view', 'create', 'update', 'delete'],
+        'bodegas' => ['view', 'create', 'update', 'delete'],
     ];
 
     /**

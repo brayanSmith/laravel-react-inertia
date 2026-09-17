@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
@@ -23,6 +24,11 @@ Route::prefix('{current_team}')
         Route::post('usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
         Route::patch('usuarios/{usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
         Route::delete('usuarios/{usuario}', [UsuarioController::class, 'destroy'])->name('usuarios.destroy');
+
+        Route::get('bodegas', [BodegaController::class, 'index'])->name('bodegas.index');
+        Route::post('bodegas', [BodegaController::class, 'store'])->name('bodegas.store');
+        Route::patch('bodegas/{bodega}', [BodegaController::class, 'update'])->name('bodegas.update');
+        Route::delete('bodegas/{bodega}', [BodegaController::class, 'destroy'])->name('bodegas.destroy');
     });
 
 Route::middleware(['auth'])->group(function () {
