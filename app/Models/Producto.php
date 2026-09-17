@@ -8,46 +8,70 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Producto extends Model
 {
-    use HasFactory, SoftDeletes;
+    //
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
-        'categoria_id',
-        'sub_categoria_id',
-        'codigo',
-        'nombre',
-        'descripcion',
-        'costo',
-        'precio_detal',
-        'precio_mayorista',
-        'precio_especial',
-        'imagen',
+        'categoria',
+        'tipo',
+        'inventariable',
+        'ancho',
+        'perfil',
+        'construccion',
+        'rin',
+        'tipo_vehiculo',
+        'diametro',
+        'marca_id',
+        'referencia_producto',
+        'descripcion_producto',
+        'costo_producto',
+        'valor_detal',
+        'valor_mayorista',
+        'valor_sin_instalacion',
+        'imagen_producto',
+        'concatenar_codigo_nombre',
+        'codigo_appsheet',
+        'sku'
     ];
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    public function marca()
     {
-        return [
-            'costo' => 'float',
-            'precio_detal' => 'float',
-            'precio_mayorista' => 'float',
-            'precio_especial' => 'float',
-        ];
+        return $this->belongsTo(Marca::class, 'marca_id');
+    }
+    public function detalleCompras()
+    {
+        return $this->hasMany(DetalleCompra::class);
+    }
+
+    public function detallePedidos()
+    {
+        return $this->hasMany(DetallePedido::class);
+    }
+
+    public function traslados()
+    {
+        return $this->hasMany(Traslado::class);
     }
 
     public function stockBodegas()
     {
         return $this->hasMany(StockBodega::class);
     }
-
-    public function categoria()
+    public function stockIniciales()
     {
-        return $this->belongsTo(Categoria::class);
+        return $this->hasMany(StockInicial::class);
     }
 
-    public function subCategoria()
+    public function enStock(float|int $cantidad): bool
     {
-        return $this->belongsTo(SubCategoria::class, 'sub_categoria_id');
+        // cantidad inválida
+        if ($cantidad <= 0) {
+            return false;
+        }
+
+        $stock = (float) ($this->stock ?? 0);
+
+        return $stock >= (float) $cantidad;
     }
+
 }

@@ -3,9 +3,6 @@ import {
     BookOpen,
     FolderGit2,
     LayoutGrid,
-    Package,
-    Tags,
-    Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -22,9 +19,6 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { index as categoriasIndex } from '@/routes/categorias';
-import { index as clientesIndex } from '@/routes/clientes';
-import { index as productosIndex } from '@/routes/productos';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -32,36 +26,12 @@ export function AppSidebar() {
     const dashboardUrl = page.props.currentTeam
         ? dashboard(page.props.currentTeam.slug)
         : '/';
-    const clientesUrl = page.props.currentTeam
-        ? clientesIndex(page.props.currentTeam.slug)
-        : '/';
-    const productosUrl = page.props.currentTeam
-        ? productosIndex(page.props.currentTeam.slug)
-        : '/';
-    const categoriasUrl = page.props.currentTeam
-        ? categoriasIndex(page.props.currentTeam.slug)
-        : '/';
 
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
             href: dashboardUrl,
             icon: LayoutGrid,
-        },
-        {
-            title: 'Clientes',
-            href: clientesUrl,
-            icon: Users,
-        },
-        {
-            title: 'Productos',
-            href: productosUrl,
-            icon: Package,
-        },
-        {
-            title: 'Categorías',
-            href: categoriasUrl,
-            icon: Tags,
         },
     ];
 

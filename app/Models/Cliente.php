@@ -8,14 +8,25 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Cliente extends Model
 {
-    use HasFactory, SoftDeletes;
-
+    //
+    use HasFactory;
+    use SoftDeletes;
     protected $fillable = [
-        'nombre',
-        'apellido',
-        'n_documento',
+        'tipo_documento',
+        'numero_documento',
+        'razon_social',
         'direccion',
-        'email',
         'telefono',
+        'ciudad',
+        'email',
+        'activo',
+        'novedad',
+        'rut_imagen',
+        'retenedor_fuente',
     ];
+
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class);
+    }
 }
