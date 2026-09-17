@@ -18,6 +18,7 @@ declare module '@inertiajs/core' {
             canViewClientes: boolean;
             canViewUsuarios: boolean;
             canViewBodegas: boolean;
+            canViewProveedores: boolean;
             [key: string]: unknown;
         };
     }

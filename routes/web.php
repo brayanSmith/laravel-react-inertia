@@ -3,6 +3,7 @@
 use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureTeamMembership;
@@ -29,6 +30,11 @@ Route::prefix('{current_team}')
         Route::post('bodegas', [BodegaController::class, 'store'])->name('bodegas.store');
         Route::patch('bodegas/{bodega}', [BodegaController::class, 'update'])->name('bodegas.update');
         Route::delete('bodegas/{bodega}', [BodegaController::class, 'destroy'])->name('bodegas.destroy');
+
+        Route::get('proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
+        Route::post('proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
+        Route::patch('proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
+        Route::delete('proveedores/{proveedor}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
     });
 
 Route::middleware(['auth'])->group(function () {
