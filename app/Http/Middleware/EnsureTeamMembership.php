@@ -7,10 +7,16 @@ use App\Models\Team;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureTeamMembership
 {
+    public function __construct(private PermissionRegistrar $permissionRegistrar)
+    {
+        //
+    }
+
     /**
      * Handle an incoming request.
      *
@@ -21,6 +27,8 @@ class EnsureTeamMembership
         [$user, $team] = [$request->user(), $this->team($request)];
 
         abort_if(! $user || ! $team || ! $user->belongsToTeam($team), 403);
+
+        $this->permissionRegistrar->setPermissionsTeamId($team->id);
 
         $this->ensureTeamMemberHasRequiredRole($user, $team, $minimumRole);
 

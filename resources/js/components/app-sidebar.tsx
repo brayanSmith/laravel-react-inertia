@@ -3,6 +3,7 @@ import {
     BookOpen,
     FolderGit2,
     LayoutGrid,
+    Shield,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -19,6 +20,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as rolesIndex } from '@/routes/teams/roles';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -26,6 +28,9 @@ export function AppSidebar() {
     const dashboardUrl = page.props.currentTeam
         ? dashboard(page.props.currentTeam.slug)
         : '/';
+    const canManageRoles =
+        page.props.currentTeam?.role === 'owner' ||
+        page.props.currentTeam?.role === 'admin';
 
     const mainNavItems: NavItem[] = [
         {
@@ -33,6 +38,15 @@ export function AppSidebar() {
             href: dashboardUrl,
             icon: LayoutGrid,
         },
+        ...(canManageRoles && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Roles and permissions',
+                      href: rolesIndex(page.props.currentTeam.slug),
+                      icon: Shield,
+                  },
+              ]
+            : []),
     ];
 
     const footerNavItems: NavItem[] = [

@@ -1,5 +1,5 @@
-import { Form, Head, router } from '@inertiajs/react';
-import { ChevronDown, Mail, UserPlus, X } from 'lucide-react';
+import { Form, Head, Link, router } from '@inertiajs/react';
+import { ChevronDown, Mail, Shield, UserPlus, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import CancelInvitationModal from '@/components/cancel-invitation-modal';
 import DeleteTeamModal from '@/components/delete-team-modal';
@@ -27,6 +27,7 @@ import {
 import { useInitials } from '@/hooks/use-initials';
 import { edit, index, update } from '@/routes/teams';
 import { update as updateMember } from '@/routes/teams/members';
+import { index as rolesIndex } from '@/routes/teams/roles';
 import type {
     RoleOption,
     Team,
@@ -156,14 +157,27 @@ export default function TeamEdit({
                             }
                         />
 
-                        {permissions.canCreateInvitation ? (
-                            <Button
-                                data-test="invite-member-button"
-                                onClick={() => setInviteDialogOpen(true)}
-                            >
-                                <UserPlus /> Invite member
-                            </Button>
-                        ) : null}
+                        <div className="flex items-center gap-2">
+                            {permissions.canUpdateTeam ? (
+                                <Button variant="outline" asChild>
+                                    <Link
+                                        href={rolesIndex(team.slug)}
+                                        data-test="manage-roles-button"
+                                    >
+                                        <Shield /> Roles and permissions
+                                    </Link>
+                                </Button>
+                            ) : null}
+
+                            {permissions.canCreateInvitation ? (
+                                <Button
+                                    data-test="invite-member-button"
+                                    onClick={() => setInviteDialogOpen(true)}
+                                >
+                                    <UserPlus /> Invite member
+                                </Button>
+                            ) : null}
+                        </div>
                     </div>
 
                     <div className="space-y-3">

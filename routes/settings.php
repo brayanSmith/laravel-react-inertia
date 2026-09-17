@@ -5,6 +5,8 @@ use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Teams\TeamController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\Teams\TeamMemberController;
+use App\Http\Controllers\Teams\TeamMemberRoleController;
+use App\Http\Controllers\Teams\TeamRoleController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +46,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('settings/teams/{team}/invitations', [TeamInvitationController::class, 'store'])->name('teams.invitations.store');
         Route::delete('settings/teams/{team}/invitations/{invitation}', [TeamInvitationController::class, 'destroy'])->name('teams.invitations.destroy');
+
+        Route::get('settings/teams/{team}/roles', [TeamRoleController::class, 'index'])->name('teams.roles.index');
+        Route::post('settings/teams/{team}/roles', [TeamRoleController::class, 'store'])->name('teams.roles.store');
+        Route::patch('settings/teams/{team}/roles/{role}', [TeamRoleController::class, 'update'])->name('teams.roles.update');
+        Route::delete('settings/teams/{team}/roles/{role}', [TeamRoleController::class, 'destroy'])->name('teams.roles.destroy');
+
+        Route::patch('settings/teams/{team}/members/{user}/roles', [TeamMemberRoleController::class, 'update'])->name('teams.members.roles.update');
     });
 });
 
