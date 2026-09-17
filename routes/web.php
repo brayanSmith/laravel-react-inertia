@@ -3,6 +3,7 @@
 use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\UsuarioController;
@@ -35,6 +36,11 @@ Route::prefix('{current_team}')
         Route::post('proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
         Route::patch('proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
         Route::delete('proveedores/{proveedor}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
+
+        Route::get('marcas', [MarcaController::class, 'index'])->name('marcas.index');
+        Route::post('marcas', [MarcaController::class, 'store'])->name('marcas.store');
+        Route::patch('marcas/{marca}', [MarcaController::class, 'update'])->name('marcas.update');
+        Route::delete('marcas/{marca}', [MarcaController::class, 'destroy'])->name('marcas.destroy');
     });
 
 Route::middleware(['auth'])->group(function () {

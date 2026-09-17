@@ -1,6 +1,7 @@
 export type * from './auth';
 export type * from './bodegas';
 export type * from './clientes';
+export type * from './marcas';
 export type * from './navigation';
 export type * from './proveedores';
 export type * from './roles';

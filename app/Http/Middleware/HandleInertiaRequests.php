@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
             'canViewUsuarios' => fn () => $user?->can('usuarios.view') ?? false,
             'canViewBodegas' => fn () => $user?->can('bodegas.view') ?? false,
             'canViewProveedores' => fn () => $user?->can('proveedores.view') ?? false,
+            'canViewMarcas' => fn () => $user?->can('marcas.view') ?? false,
         ];
     }
 }

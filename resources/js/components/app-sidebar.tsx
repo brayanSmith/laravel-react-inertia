@@ -4,6 +4,7 @@ import {
     FolderGit2,
     LayoutGrid,
     Shield,
+    Tags,
     Truck,
     UserCog,
     Users,
@@ -26,6 +27,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as bodegasIndex } from '@/routes/bodegas';
 import { index as clientesIndex } from '@/routes/clientes';
+import { index as marcasIndex } from '@/routes/marcas';
 import { index as proveedoresIndex } from '@/routes/proveedores';
 import { index as rolesIndex } from '@/routes/teams/roles';
 import { index as usuariosIndex } from '@/routes/usuarios';
@@ -79,6 +81,15 @@ export function AppSidebar() {
                       title: 'Proveedores',
                       href: proveedoresIndex(page.props.currentTeam.slug),
                       icon: Truck,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewMarcas && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Marcas',
+                      href: marcasIndex(page.props.currentTeam.slug),
+                      icon: Tags,
                   },
               ]
             : []),
