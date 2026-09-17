@@ -20,6 +20,7 @@ declare module '@inertiajs/core' {
             canViewBodegas: boolean;
             canViewProveedores: boolean;
             canViewMarcas: boolean;
+            canViewPucs: boolean;
             [key: string]: unknown;
         };
     }

@@ -58,28 +58,28 @@ export default function InviteMemberModal({
                     {({ errors, processing }) => (
                         <>
                             <DialogHeader>
-                                <DialogTitle>Invite a team member</DialogTitle>
+                                <DialogTitle>Invitar a un miembro del equipo</DialogTitle>
                                 <DialogDescription>
-                                    Send an invitation to join this team.
+                                    Envía una invitación para unirse a este equipo.
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="grid gap-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
+                                    <Label htmlFor="email">Correo electrónico</Label>
                                     <Input
                                         id="email"
                                         name="email"
                                         type="email"
                                         data-test="invite-email"
-                                        placeholder="colleague@example.com"
+                                        placeholder="compañero@ejemplo.com"
                                         required
                                     />
                                     <InputError message={errors.email} />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="role">Role</Label>
+                                    <Label htmlFor="role">Rol</Label>
                                     <Select
                                         name="role"
                                         data-test="invite-role"
@@ -91,7 +91,7 @@ export default function InviteMemberModal({
                                         }
                                     >
                                         <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select a role" />
+                                            <SelectValue placeholder="Selecciona un rol" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {availableRoles.map((role) => (
@@ -110,7 +110,7 @@ export default function InviteMemberModal({
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancel</Button>
+                                    <Button variant="secondary">Cancelar</Button>
                                 </DialogClose>
 
                                 <Button
@@ -118,7 +118,7 @@ export default function InviteMemberModal({
                                     data-test="invite-submit"
                                     disabled={processing}
                                 >
-                                    Send invitation
+                                    Enviar invitación
                                 </Button>
                             </DialogFooter>
                         </>

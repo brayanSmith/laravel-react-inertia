@@ -27,12 +27,12 @@ export default function Login({
 }: Props) {
     return (
         <>
-            <Head title="Log in" />
+            <Head title="Iniciar sesión" />
 
             {teamInvitation && (
                 <TeamInvitationAlert
                     invitation={teamInvitation}
-                    action="Log in"
+                    action="Iniciar sesión"
                 />
             )}
 
@@ -47,7 +47,7 @@ export default function Login({
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">Correo electrónico</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -56,21 +56,21 @@ export default function Login({
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
-                                    placeholder="email@example.com"
+                                    placeholder="correo@ejemplo.com"
                                 />
                                 <InputError message={errors.email} />
                             </div>
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password">Contraseña</Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
                                             className="ml-auto text-sm"
                                             tabIndex={5}
                                         >
-                                            Forgot password?
+                                            ¿Olvidaste tu contraseña?
                                         </TextLink>
                                     )}
                                 </div>
@@ -80,7 +80,7 @@ export default function Login({
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Password"
+                                    placeholder="Contraseña"
                                 />
                                 <InputError message={errors.password} />
                             </div>
@@ -91,7 +91,7 @@ export default function Login({
                                     name="remember"
                                     tabIndex={3}
                                 />
-                                <Label htmlFor="remember">Remember me</Label>
+                                <Label htmlFor="remember">Recordarme</Label>
                             </div>
 
                             <Button
@@ -102,12 +102,12 @@ export default function Login({
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
-                                Log in
+                                Iniciar sesión
                             </Button>
                         </div>
 
                         <div className="text-muted-foreground text-center text-sm">
-                            Don't have an account?{' '}
+                            ¿No tienes una cuenta?{' '}
                             <TextLink
                                 href={register({
                                     query: {
@@ -117,7 +117,7 @@ export default function Login({
                                 data-test="register-link"
                                 tabIndex={5}
                             >
-                                Sign up
+                                Regístrate
                             </TextLink>
                         </div>
                     </>
@@ -134,6 +134,6 @@ export default function Login({
 }
 
 Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
+    title: 'Inicia sesión en tu cuenta',
+    description: 'Ingresa tu correo y contraseña abajo para iniciar sesión',
 };

@@ -44,17 +44,17 @@ export default function DeleteRoleModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Delete role</DialogTitle>
+                    <DialogTitle>Eliminar rol</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to delete the role{' '}
-                        <strong>"{role?.name}"</strong>? Members who have this
-                        role will lose the permissions it grants.
+                        ¿Seguro que quieres eliminar el rol{' '}
+                        <strong>"{role?.name}"</strong>? Los miembros que lo
+                        tengan perderán los permisos que otorga.
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter className="gap-2">
                     <DialogClose asChild>
-                        <Button variant="secondary">Cancel</Button>
+                        <Button variant="secondary">Cancelar</Button>
                     </DialogClose>
 
                     <Button
@@ -63,7 +63,7 @@ export default function DeleteRoleModal({
                         disabled={processing}
                         onClick={deleteRole}
                     >
-                        Delete role
+                        Eliminar rol
                     </Button>
                 </DialogFooter>
             </DialogContent>

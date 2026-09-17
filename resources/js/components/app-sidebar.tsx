@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     BookOpen,
+    Calculator,
     FolderGit2,
     LayoutGrid,
     Shield,
@@ -29,6 +30,7 @@ import { index as bodegasIndex } from '@/routes/bodegas';
 import { index as clientesIndex } from '@/routes/clientes';
 import { index as marcasIndex } from '@/routes/marcas';
 import { index as proveedoresIndex } from '@/routes/proveedores';
+import { index as pucsIndex } from '@/routes/pucs';
 import { index as rolesIndex } from '@/routes/teams/roles';
 import { index as usuariosIndex } from '@/routes/usuarios';
 import type { NavItem } from '@/types';
@@ -44,7 +46,7 @@ export function AppSidebar() {
 
     const mainNavItems: NavItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Panel',
             href: dashboardUrl,
             icon: LayoutGrid,
         },
@@ -93,10 +95,19 @@ export function AppSidebar() {
                   },
               ]
             : []),
+        ...(page.props.canViewPucs && page.props.currentTeam
+            ? [
+                  {
+                      title: 'PUC',
+                      href: pucsIndex(page.props.currentTeam.slug),
+                      icon: Calculator,
+                  },
+              ]
+            : []),
         ...(canManageRoles && page.props.currentTeam
             ? [
                   {
-                      title: 'Roles and permissions',
+                      title: 'Roles y permisos',
                       href: rolesIndex(page.props.currentTeam.slug),
                       icon: Shield,
                   },
@@ -106,12 +117,12 @@ export function AppSidebar() {
 
     const footerNavItems: NavItem[] = [
         {
-            title: 'Repository',
+            title: 'Repositorio',
             href: 'https://github.com/laravel/react-starter-kit',
             icon: FolderGit2,
         },
         {
-            title: 'Documentation',
+            title: 'Documentación',
             href: 'https://laravel.com/docs/starter-kits#react',
             icon: BookOpen,
         },

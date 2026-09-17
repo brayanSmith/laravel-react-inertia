@@ -64,15 +64,15 @@ export default function CreateRoleModal({
                     {({ errors, processing }) => (
                         <>
                             <DialogHeader>
-                                <DialogTitle>Create a new role</DialogTitle>
+                                <DialogTitle>Crear un nuevo rol</DialogTitle>
                                 <DialogDescription>
-                                    Create a custom role and choose which
-                                    permissions it grants.
+                                    Crea un rol personalizado y elige qué
+                                    permisos otorgará.
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="role-name">Role name</Label>
+                                <Label htmlFor="role-name">Nombre del rol</Label>
                                 <Input
                                     id="role-name"
                                     name="name"
@@ -135,7 +135,7 @@ export default function CreateRoleModal({
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancel</Button>
+                                    <Button variant="secondary">Cancelar</Button>
                                 </DialogClose>
 
                                 <Button
@@ -143,7 +143,7 @@ export default function CreateRoleModal({
                                     data-test="create-role-submit"
                                     disabled={processing}
                                 >
-                                    Create role
+                                    Crear rol
                                 </Button>
                             </DialogFooter>
                         </>

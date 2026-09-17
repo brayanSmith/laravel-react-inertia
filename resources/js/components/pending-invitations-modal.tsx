@@ -47,10 +47,9 @@ export default function PendingInvitationsModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent data-test="pending-invitations-modal">
                 <DialogHeader>
-                    <DialogTitle>Pending team invitations</DialogTitle>
+                    <DialogTitle>Invitaciones de equipo pendientes</DialogTitle>
                     <DialogDescription>
-                        Accept or decline the teams you have been invited to
-                        join.
+                        Acepta o rechaza los equipos a los que te han invitado.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -66,8 +65,8 @@ export default function PendingInvitationsModal({
                                     {invitation.team.name}
                                 </p>
                                 <p className="text-muted-foreground text-sm">
-                                    {invitation.inviterName} invited you to join
-                                    this team.
+                                    {invitation.inviterName} te invitó a unirte a
+                                    este equipo.
                                 </p>
                             </div>
 
@@ -82,7 +81,7 @@ export default function PendingInvitationsModal({
                                         declineInvitation(invitation)
                                     }
                                 >
-                                    Decline
+                                    Rechazar
                                 </Button>
 
                                 <Button
@@ -92,7 +91,7 @@ export default function PendingInvitationsModal({
                                     }
                                     onClick={() => acceptInvitation(invitation)}
                                 >
-                                    Accept
+                                    Aceptar
                                 </Button>
                             </div>
                         </div>

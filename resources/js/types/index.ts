@@ -4,6 +4,7 @@ export type * from './clientes';
 export type * from './marcas';
 export type * from './navigation';
 export type * from './proveedores';
+export type * from './pucs';
 export type * from './roles';
 export type * from './teams';
 export type * from './ui';

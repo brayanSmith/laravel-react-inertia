@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nombre_bodega')->unique();
             $table->string('ubicacion_bodega')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

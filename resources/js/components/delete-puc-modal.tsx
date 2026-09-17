@@ -10,30 +10,30 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { destroy as destroyInvitation } from '@/routes/teams/invitations';
-import type { Team, TeamInvitation } from '@/types';
+import { destroy } from '@/routes/pucs';
+import type { Puc } from '@/types';
 
 type Props = {
-    team: Team;
-    invitation: TeamInvitation | null;
+    teamSlug: string;
+    puc: Puc | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
-export default function CancelInvitationModal({
-    team,
-    invitation,
+export default function DeletePucModal({
+    teamSlug,
+    puc,
     open,
     onOpenChange,
 }: Props) {
     const [processing, setProcessing] = useState(false);
 
-    const cancelInvitation = () => {
-        if (!invitation) {
+    const deletePuc = () => {
+        if (!puc) {
             return;
         }
 
-        router.visit(destroyInvitation([team.slug, invitation.code]), {
+        router.visit(destroy([teamSlug, puc.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),
@@ -44,25 +44,29 @@ export default function CancelInvitationModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Cancelar invitación</DialogTitle>
+                    <DialogTitle>Eliminar cuenta PUC</DialogTitle>
                     <DialogDescription>
-                        ¿Seguro que quieres cancelar la invitación para{' '}
-                        <strong>{invitation?.email}</strong>?
+                        ¿Estás seguro de eliminar{' '}
+                        <strong>
+                            "{puc?.concatenar_subcuenta_concepto}"
+                        </strong>
+                        ? Solo se puede eliminar si no tiene abonos
+                        asociados.
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter className="gap-2">
                     <DialogClose asChild>
-                        <Button variant="secondary">Mantener invitación</Button>
+                        <Button variant="secondary">Cancelar</Button>
                     </DialogClose>
 
                     <Button
                         variant="destructive"
-                        data-test="cancel-invitation-confirm"
+                        data-test="delete-puc-confirm"
                         disabled={processing}
-                        onClick={cancelInvitation}
+                        onClick={deletePuc}
                     >
-                        Cancelar invitación
+                        Eliminar cuenta
                     </Button>
                 </DialogFooter>
             </DialogContent>

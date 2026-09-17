@@ -5,6 +5,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\ProveedorController;
+use App\Http\Controllers\PucController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureTeamMembership;
@@ -41,6 +42,11 @@ Route::prefix('{current_team}')
         Route::post('marcas', [MarcaController::class, 'store'])->name('marcas.store');
         Route::patch('marcas/{marca}', [MarcaController::class, 'update'])->name('marcas.update');
         Route::delete('marcas/{marca}', [MarcaController::class, 'destroy'])->name('marcas.destroy');
+
+        Route::get('pucs', [PucController::class, 'index'])->name('pucs.index');
+        Route::post('pucs', [PucController::class, 'store'])->name('pucs.store');
+        Route::patch('pucs/{puc}', [PucController::class, 'update'])->name('pucs.update');
+        Route::delete('pucs/{puc}', [PucController::class, 'destroy'])->name('pucs.destroy');
     });
 
 Route::middleware(['auth'])->group(function () {

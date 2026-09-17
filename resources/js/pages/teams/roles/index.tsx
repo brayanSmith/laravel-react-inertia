@@ -64,20 +64,20 @@ export default function TeamRolesIndex({
         <>
             <Head title={`Roles - ${team.name}`} />
 
-            <h1 className="sr-only">Roles for {team.name}</h1>
+            <h1 className="sr-only">Roles para {team.name}</h1>
 
             <div className="flex flex-col space-y-10">
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
                         <Heading
                             variant="small"
-                            title="Custom roles"
-                            description="Create roles and choose which permissions each one grants"
+                            title="Roles personalizados"
+                            description="Crea roles y elige qué permisos otorga cada uno"
                         />
 
                         <CreateRoleModal team={team} permissions={permissions}>
                             <Button data-test="create-role-button">
-                                <Plus /> Create role
+                                <Plus /> Crear rol
                             </Button>
                         </CreateRoleModal>
                     </div>
@@ -129,7 +129,7 @@ export default function TeamRolesIndex({
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                <p>Edit role</p>
+                                                <p>Editar rol</p>
                                             </TooltipContent>
                                         </Tooltip>
 
@@ -147,7 +147,7 @@ export default function TeamRolesIndex({
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                <p>Delete role</p>
+                                                <p>Eliminar rol</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </div>
@@ -157,7 +157,7 @@ export default function TeamRolesIndex({
 
                         {roles.length === 0 ? (
                             <p className="text-muted-foreground py-8 text-center">
-                                No custom roles yet.
+                                Aún no hay roles personalizados.
                             </p>
                         ) : null}
                     </div>
@@ -166,8 +166,8 @@ export default function TeamRolesIndex({
                 <div className="space-y-6">
                     <Heading
                         variant="small"
-                        title="Assign roles to members"
-                        description="Grant members custom roles to control what they can access"
+                        title="Asignar roles a miembros"
+                        description="Otorga roles personalizados para controlar lo que cada miembro puede acceder"
                     />
 
                     <div className="space-y-3">
@@ -217,7 +217,7 @@ export default function TeamRolesIndex({
 
                                     {roles.length === 0 ? (
                                         <span className="text-muted-foreground text-sm">
-                                            Create a role above to assign it
+                                            Crea un rol arriba para asignarlo
                                         </span>
                                     ) : null}
                                 </div>

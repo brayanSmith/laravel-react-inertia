@@ -65,15 +65,15 @@ export default function EditRoleModal({
                     {({ errors, processing }) => (
                         <>
                             <DialogHeader>
-                                <DialogTitle>Edit role</DialogTitle>
+                                <DialogTitle>Editar rol</DialogTitle>
                                 <DialogDescription>
-                                    Update the role name and its permissions.
+                                    Actualiza el nombre del rol y sus permisos.
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-role-name">
-                                    Role name
+                                    Nombre del rol
                                 </Label>
                                 <Input
                                     id="edit-role-name"
@@ -137,7 +137,7 @@ export default function EditRoleModal({
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancel</Button>
+                                    <Button variant="secondary">Cancelar</Button>
                                 </DialogClose>
 
                                 <Button
@@ -145,7 +145,7 @@ export default function EditRoleModal({
                                     data-test="edit-role-submit"
                                     disabled={processing}
                                 >
-                                    Save changes
+                                    Guardar cambios
                                 </Button>
                             </DialogFooter>
                         </>
