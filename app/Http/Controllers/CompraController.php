@@ -28,7 +28,9 @@ class CompraController extends Controller
         Gate::authorize('compras.view');
 
         return Inertia::render('compras/index', [
-            'compras' => Compra::with('proveedor')->orderByDesc('fecha')->get(),
+            'compras' => Compra::with(['proveedor', 'detallesCompra.producto', 'detallesCompra.bodega'])
+                ->orderByDesc('fecha')
+                ->get(),
             'permissions' => $this->permissions($request),
         ]);
     }
