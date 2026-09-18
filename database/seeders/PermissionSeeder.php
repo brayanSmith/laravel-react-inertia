@@ -29,6 +29,7 @@ class PermissionSeeder extends Seeder
         'pedidos-mayoristas' => ['view', 'create', 'update', 'delete'],
         'stock-iniciales' => ['view', 'create', 'update', 'delete'],
         'stock-bodegas' => ['view'],
+        'cotizador' => ['view'],
         'traslados' => ['view', 'create', 'update', 'delete'],
     ];
 

@@ -10,6 +10,7 @@ import {
     FolderGit2,
     LayoutGrid,
     Package,
+    Quote,
     Receipt,
     Shield,
     ShoppingCart,
@@ -37,6 +38,7 @@ import { dashboard } from '@/routes';
 import { index as bodegasIndex } from '@/routes/bodegas';
 import { index as clientesIndex } from '@/routes/clientes';
 import { index as comprasIndex } from '@/routes/compras';
+import { index as cotizadorIndex } from '@/routes/cotizador';
 import { edit as empresaEdit } from '@/routes/empresa';
 import { index as gastosIndex } from '@/routes/gastos';
 import { index as marcasIndex } from '@/routes/marcas';
@@ -118,6 +120,15 @@ export function AppSidebar() {
                       title: 'PUC',
                       href: pucsIndex(page.props.currentTeam.slug),
                       icon: Calculator,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewCotizador && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Cotizador',
+                      href: cotizadorIndex(page.props.currentTeam.slug),
+                      icon: Quote,
                   },
               ]
             : []),

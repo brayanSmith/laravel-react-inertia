@@ -2,6 +2,7 @@ export type * from './auth';
 export type * from './bodegas';
 export type * from './clientes';
 export type * from './compras';
+export type * from './cotizador';
 export type * from './empresa';
 export type * from './gastos';
 export type * from './marcas';

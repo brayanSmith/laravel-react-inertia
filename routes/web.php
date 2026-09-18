@@ -4,6 +4,7 @@ use App\Http\Controllers\AbonoController;
 use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CompraController;
+use App\Http\Controllers\CotizadorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GastoController;
@@ -61,6 +62,8 @@ Route::prefix('{current_team}')
         Route::post('gastos', [GastoController::class, 'store'])->name('gastos.store');
         Route::patch('gastos/{gasto}', [GastoController::class, 'update'])->name('gastos.update');
         Route::delete('gastos/{gasto}', [GastoController::class, 'destroy'])->name('gastos.destroy');
+
+        Route::get('cotizador', [CotizadorController::class, 'index'])->name('cotizador.index');
 
         Route::get('compras', [CompraController::class, 'index'])->name('compras.index');
         Route::get('compras/crear', [CompraController::class, 'create'])->name('compras.create');
