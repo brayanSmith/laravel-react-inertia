@@ -1,19 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CreateBodegaModal from '@/components/create-bodega-modal';
+import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteBodegaModal from '@/components/delete-bodega-modal';
 import EditBodegaModal from '@/components/edit-bodega-modal';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Tooltip,
     TooltipContent,
@@ -47,6 +40,75 @@ export default function BodegasIndex({ bodegas, permissions }: Props) {
         setDeleteDialogOpen(true);
     };
 
+    const columns = useMemo<DataTableColumn<Bodega>[]>(
+        () => [
+            {
+                key: 'nombre',
+                label: 'Nombre',
+                getValue: (bodega) => bodega.nombre_bodega,
+                render: (bodega) => bodega.nombre_bodega,
+            },
+            {
+                key: 'ubicacion',
+                label: 'Ubicación',
+                getValue: (bodega) => bodega.ubicacion_bodega ?? '',
+                render: (bodega) => bodega.ubicacion_bodega ?? '—',
+            },
+            {
+                key: 'acciones',
+                label: 'Acciones',
+                align: 'right',
+                filter: 'none',
+                render: (bodega) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissions.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-bodega-button"
+                                            onClick={() =>
+                                                openEditDialog(bodega)
+                                            }
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+
+                            {permissions.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-bodega-button"
+                                            onClick={() =>
+                                                openDeleteDialog(bodega)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
+            },
+        ],
+        [permissions],
+    );
+
     return (
         <>
             <Head title="Bodegas" />
@@ -68,82 +130,14 @@ export default function BodegasIndex({ bodegas, permissions }: Props) {
                     ) : null}
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Ubicación</TableHead>
-                            <TableHead className="text-right">
-                                Acciones
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {bodegas.map((bodega) => (
-                            <TableRow key={bodega.id} data-test="bodega-row">
-                                <TableCell>{bodega.nombre_bodega}</TableCell>
-                                <TableCell>
-                                    {bodega.ubicacion_bodega ?? '—'}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <TooltipProvider>
-                                        <div className="flex justify-end gap-2">
-                                            {permissions.canUpdate ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="edit-bodega-button"
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    bodega,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Editar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-
-                                            {permissions.canDelete ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="delete-bodega-button"
-                                                            onClick={() =>
-                                                                openDeleteDialog(
-                                                                    bodega,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Eliminar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-                                        </div>
-                                    </TooltipProvider>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-                {bodegas.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center">
-                        No hay bodegas registradas.
-                    </p>
-                ) : null}
+                <DataTable
+                    data={bodegas}
+                    columns={columns}
+                    getRowId={(bodega) => bodega.id}
+                    dataTestPrefix="bodega"
+                    searchPlaceholder="Buscar bodegas..."
+                    emptyMessage="No hay bodegas registradas."
+                />
             </div>
 
             <EditBodegaModal

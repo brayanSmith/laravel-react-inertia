@@ -1,20 +1,13 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CreateClienteModal from '@/components/create-cliente-modal';
+import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteClienteModal from '@/components/delete-cliente-modal';
 import EditClienteModal from '@/components/edit-cliente-modal';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Tooltip,
     TooltipContent,
@@ -50,6 +43,113 @@ export default function ClientesIndex({ clientes, permissions }: Props) {
         setDeleteDialogOpen(true);
     };
 
+    const columns = useMemo<DataTableColumn<Cliente>[]>(
+        () => [
+            {
+                key: 'razon_social',
+                label: 'Razón social',
+                getValue: (cliente) => cliente.razon_social,
+                render: (cliente) => cliente.razon_social,
+            },
+            {
+                key: 'documento',
+                label: 'Documento',
+                getValue: (cliente) =>
+                    `${cliente.tipo_documento} ${cliente.numero_documento}`,
+                render: (cliente) =>
+                    `${cliente.tipo_documento} ${cliente.numero_documento}`,
+            },
+            {
+                key: 'telefono',
+                label: 'Teléfono',
+                getValue: (cliente) => cliente.telefono ?? '',
+                render: (cliente) => cliente.telefono ?? '—',
+            },
+            {
+                key: 'ciudad',
+                label: 'Ciudad',
+                getValue: (cliente) => cliente.ciudad ?? '',
+                render: (cliente) => cliente.ciudad ?? '—',
+            },
+            {
+                key: 'email',
+                label: 'Email',
+                getValue: (cliente) => cliente.email ?? '',
+                render: (cliente) => cliente.email ?? '—',
+            },
+            {
+                key: 'estado',
+                label: 'Estado',
+                filter: 'select',
+                selectOptions: [
+                    { value: 'activo', label: 'Activo' },
+                    { value: 'inactivo', label: 'Inactivo' },
+                ],
+                getValue: (cliente) =>
+                    cliente.activo ? 'activo' : 'inactivo',
+                render: (cliente) => (
+                    <Badge
+                        variant={cliente.activo ? 'default' : 'secondary'}
+                    >
+                        {cliente.activo ? 'Activo' : 'Inactivo'}
+                    </Badge>
+                ),
+            },
+            {
+                key: 'acciones',
+                label: 'Acciones',
+                align: 'right',
+                filter: 'none',
+                render: (cliente) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissions.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-cliente-button"
+                                            onClick={() =>
+                                                openEditDialog(cliente)
+                                            }
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+
+                            {permissions.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-cliente-button"
+                                            onClick={() =>
+                                                openDeleteDialog(cliente)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
+            },
+        ],
+        [permissions],
+    );
+
     return (
         <>
             <Head title="Clientes" />
@@ -71,101 +171,14 @@ export default function ClientesIndex({ clientes, permissions }: Props) {
                     ) : null}
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Razón social</TableHead>
-                            <TableHead>Documento</TableHead>
-                            <TableHead>Teléfono</TableHead>
-                            <TableHead>Ciudad</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Estado</TableHead>
-                            <TableHead className="text-right">
-                                Acciones
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {clientes.map((cliente) => (
-                            <TableRow key={cliente.id} data-test="cliente-row">
-                                <TableCell>{cliente.razon_social}</TableCell>
-                                <TableCell>
-                                    {cliente.tipo_documento}{' '}
-                                    {cliente.numero_documento}
-                                </TableCell>
-                                <TableCell>{cliente.telefono ?? '—'}</TableCell>
-                                <TableCell>{cliente.ciudad ?? '—'}</TableCell>
-                                <TableCell>{cliente.email ?? '—'}</TableCell>
-                                <TableCell>
-                                    <Badge
-                                        variant={
-                                            cliente.activo
-                                                ? 'default'
-                                                : 'secondary'
-                                        }
-                                    >
-                                        {cliente.activo ? 'Activo' : 'Inactivo'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <TooltipProvider>
-                                        <div className="flex justify-end gap-2">
-                                            {permissions.canUpdate ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="edit-cliente-button"
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    cliente,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Editar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-
-                                            {permissions.canDelete ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="delete-cliente-button"
-                                                            onClick={() =>
-                                                                openDeleteDialog(
-                                                                    cliente,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Eliminar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-                                        </div>
-                                    </TooltipProvider>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-                {clientes.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center">
-                        No hay clientes registrados.
-                    </p>
-                ) : null}
+                <DataTable
+                    data={clientes}
+                    columns={columns}
+                    getRowId={(cliente) => cliente.id}
+                    dataTestPrefix="cliente"
+                    searchPlaceholder="Buscar clientes..."
+                    emptyMessage="No hay clientes registrados."
+                />
             </div>
 
             <EditClienteModal

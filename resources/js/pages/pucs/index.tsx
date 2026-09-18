@@ -1,20 +1,13 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CreatePucModal from '@/components/create-puc-modal';
+import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeletePucModal from '@/components/delete-puc-modal';
 import EditPucModal from '@/components/edit-puc-modal';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Tooltip,
     TooltipContent,
@@ -48,6 +41,93 @@ export default function PucsIndex({ pucs, permissions }: Props) {
         setDeleteDialogOpen(true);
     };
 
+    const columns = useMemo<DataTableColumn<Puc>[]>(
+        () => [
+            {
+                key: 'tipo',
+                label: 'Tipo',
+                getValue: (puc) => puc.tipo,
+                render: (puc) => <Badge variant="secondary">{puc.tipo}</Badge>,
+            },
+            {
+                key: 'cuenta',
+                label: 'Cuenta',
+                getValue: (puc) => puc.cuenta,
+                render: (puc) => puc.cuenta,
+            },
+            {
+                key: 'subcuenta',
+                label: 'Subcuenta',
+                getValue: (puc) => puc.subcuenta,
+                render: (puc) => puc.subcuenta,
+            },
+            {
+                key: 'concepto',
+                label: 'Concepto',
+                getValue: (puc) => puc.concepto,
+                render: (puc) => puc.concepto,
+            },
+            {
+                key: 'descripcion',
+                label: 'Descripción',
+                getValue: (puc) => puc.descripcion ?? '',
+                render: (puc) => puc.descripcion ?? '—',
+            },
+            {
+                key: 'acciones',
+                label: 'Acciones',
+                align: 'right',
+                filter: 'none',
+                render: (puc) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissions.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-puc-button"
+                                            onClick={() =>
+                                                openEditDialog(puc)
+                                            }
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+
+                            {permissions.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-puc-button"
+                                            onClick={() =>
+                                                openDeleteDialog(puc)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
+            },
+        ],
+        [permissions],
+    );
+
     return (
         <>
             <Head title="PUC" />
@@ -69,90 +149,14 @@ export default function PucsIndex({ pucs, permissions }: Props) {
                     ) : null}
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Tipo</TableHead>
-                            <TableHead>Cuenta</TableHead>
-                            <TableHead>Subcuenta</TableHead>
-                            <TableHead>Concepto</TableHead>
-                            <TableHead>Descripción</TableHead>
-                            <TableHead className="text-right">
-                                Acciones
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {pucs.map((puc) => (
-                            <TableRow key={puc.id} data-test="puc-row">
-                                <TableCell>
-                                    <Badge variant="secondary">
-                                        {puc.tipo}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{puc.cuenta}</TableCell>
-                                <TableCell>{puc.subcuenta}</TableCell>
-                                <TableCell>{puc.concepto}</TableCell>
-                                <TableCell>{puc.descripcion ?? '—'}</TableCell>
-                                <TableCell className="text-right">
-                                    <TooltipProvider>
-                                        <div className="flex justify-end gap-2">
-                                            {permissions.canUpdate ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="edit-puc-button"
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    puc,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Editar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-
-                                            {permissions.canDelete ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="delete-puc-button"
-                                                            onClick={() =>
-                                                                openDeleteDialog(
-                                                                    puc,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Eliminar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-                                        </div>
-                                    </TooltipProvider>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-                {pucs.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center">
-                        No hay cuentas registradas.
-                    </p>
-                ) : null}
+                <DataTable
+                    data={pucs}
+                    columns={columns}
+                    getRowId={(puc) => puc.id}
+                    dataTestPrefix="puc"
+                    searchPlaceholder="Buscar cuentas..."
+                    emptyMessage="No hay cuentas registradas."
+                />
             </div>
 
             <EditPucModal

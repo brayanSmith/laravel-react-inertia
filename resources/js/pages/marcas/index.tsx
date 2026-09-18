@@ -1,19 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CreateMarcaModal from '@/components/create-marca-modal';
+import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteMarcaModal from '@/components/delete-marca-modal';
 import EditMarcaModal from '@/components/edit-marca-modal';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Tooltip,
     TooltipContent,
@@ -47,6 +40,75 @@ export default function MarcasIndex({ marcas, permissions }: Props) {
         setDeleteDialogOpen(true);
     };
 
+    const columns = useMemo<DataTableColumn<Marca>[]>(
+        () => [
+            {
+                key: 'nombre',
+                label: 'Nombre',
+                getValue: (marca) => marca.marca,
+                render: (marca) => marca.marca,
+            },
+            {
+                key: 'descripcion',
+                label: 'Descripción',
+                getValue: (marca) => marca.descripcion_marca ?? '',
+                render: (marca) => marca.descripcion_marca ?? '—',
+            },
+            {
+                key: 'acciones',
+                label: 'Acciones',
+                align: 'right',
+                filter: 'none',
+                render: (marca) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissions.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-marca-button"
+                                            onClick={() =>
+                                                openEditDialog(marca)
+                                            }
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+
+                            {permissions.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-marca-button"
+                                            onClick={() =>
+                                                openDeleteDialog(marca)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
+            },
+        ],
+        [permissions],
+    );
+
     return (
         <>
             <Head title="Marcas" />
@@ -68,82 +130,14 @@ export default function MarcasIndex({ marcas, permissions }: Props) {
                     ) : null}
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Descripción</TableHead>
-                            <TableHead className="text-right">
-                                Acciones
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {marcas.map((marca) => (
-                            <TableRow key={marca.id} data-test="marca-row">
-                                <TableCell>{marca.marca}</TableCell>
-                                <TableCell>
-                                    {marca.descripcion_marca ?? '—'}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <TooltipProvider>
-                                        <div className="flex justify-end gap-2">
-                                            {permissions.canUpdate ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="edit-marca-button"
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    marca,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Editar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-
-                                            {permissions.canDelete ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="delete-marca-button"
-                                                            onClick={() =>
-                                                                openDeleteDialog(
-                                                                    marca,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Eliminar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-                                        </div>
-                                    </TooltipProvider>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-                {marcas.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center">
-                        No hay marcas registradas.
-                    </p>
-                ) : null}
+                <DataTable
+                    data={marcas}
+                    columns={columns}
+                    getRowId={(marca) => marca.id}
+                    dataTestPrefix="marca"
+                    searchPlaceholder="Buscar marcas..."
+                    emptyMessage="No hay marcas registradas."
+                />
             </div>
 
             <EditMarcaModal

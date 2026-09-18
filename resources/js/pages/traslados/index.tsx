@@ -1,19 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CreateTrasladoModal from '@/components/create-traslado-modal';
+import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteTrasladoModal from '@/components/delete-traslado-modal';
 import EditTrasladoModal from '@/components/edit-traslado-modal';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Tooltip,
     TooltipContent,
@@ -66,6 +59,93 @@ export default function TrasladosIndex({
         traslado.producto?.referencia_producto ??
         `Producto ${traslado.producto_id}`;
 
+    const columns = useMemo<DataTableColumn<Traslado>[]>(
+        () => [
+            {
+                key: 'producto',
+                label: 'Producto',
+                getValue: (traslado) => productoLabel(traslado),
+                render: (traslado) => productoLabel(traslado),
+            },
+            {
+                key: 'bodega_donante',
+                label: 'Bodega donante',
+                getValue: (traslado) =>
+                    traslado.bodega_donante?.nombre_bodega ?? '',
+                render: (traslado) =>
+                    traslado.bodega_donante?.nombre_bodega ?? '—',
+            },
+            {
+                key: 'bodega_destino',
+                label: 'Bodega destino',
+                getValue: (traslado) =>
+                    traslado.bodega_destino?.nombre_bodega ?? '',
+                render: (traslado) =>
+                    traslado.bodega_destino?.nombre_bodega ?? '—',
+            },
+            {
+                key: 'cantidad',
+                label: 'Cantidad',
+                align: 'right',
+                getValue: (traslado) => Number(traslado.cantidad),
+                render: (traslado) => traslado.cantidad,
+            },
+            {
+                key: 'acciones',
+                label: 'Acciones',
+                align: 'right',
+                filter: 'none',
+                render: (traslado) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissions.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-traslado-button"
+                                            onClick={() =>
+                                                openEditDialog(traslado)
+                                            }
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+
+                            {permissions.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-traslado-button"
+                                            onClick={() =>
+                                                openDeleteDialog(traslado)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
+            },
+        ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [permissions],
+    );
+
     return (
         <>
             <Head title="Traslados" />
@@ -91,97 +171,14 @@ export default function TrasladosIndex({
                     ) : null}
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Producto</TableHead>
-                            <TableHead>Bodega donante</TableHead>
-                            <TableHead>Bodega destino</TableHead>
-                            <TableHead className="text-right">
-                                Cantidad
-                            </TableHead>
-                            <TableHead className="text-right">
-                                Acciones
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {traslados.map((traslado) => (
-                            <TableRow
-                                key={traslado.id}
-                                data-test="traslado-row"
-                            >
-                                <TableCell>{productoLabel(traslado)}</TableCell>
-                                <TableCell>
-                                    {traslado.bodega_donante?.nombre_bodega ??
-                                        '—'}
-                                </TableCell>
-                                <TableCell>
-                                    {traslado.bodega_destino?.nombre_bodega ??
-                                        '—'}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {traslado.cantidad}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <TooltipProvider>
-                                        <div className="flex justify-end gap-2">
-                                            {permissions.canUpdate ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="edit-traslado-button"
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    traslado,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Editar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-
-                                            {permissions.canDelete ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="delete-traslado-button"
-                                                            onClick={() =>
-                                                                openDeleteDialog(
-                                                                    traslado,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Eliminar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-                                        </div>
-                                    </TooltipProvider>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-                {traslados.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center">
-                        No hay traslados registrados.
-                    </p>
-                ) : null}
+                <DataTable
+                    data={traslados}
+                    columns={columns}
+                    getRowId={(traslado) => traslado.id}
+                    dataTestPrefix="traslado"
+                    searchPlaceholder="Buscar traslados..."
+                    emptyMessage="No hay traslados registrados."
+                />
             </div>
 
             <EditTrasladoModal

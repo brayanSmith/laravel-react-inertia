@@ -1,20 +1,13 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CreateProveedorModal from '@/components/create-proveedor-modal';
+import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteProveedorModal from '@/components/delete-proveedor-modal';
 import EditProveedorModal from '@/components/edit-proveedor-modal';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Tooltip,
     TooltipContent,
@@ -28,6 +21,11 @@ type Props = {
     proveedores: Proveedor[];
     permissions: ProveedorPermissions;
 };
+
+const TIPO_OPTIONS = [
+    { value: 'REMISIONADO', label: 'Remisionado' },
+    { value: 'ELECTRONICO', label: 'Electrónico' },
+];
 
 export default function ProveedoresIndex({ proveedores, permissions }: Props) {
     const { currentTeam } = usePage().props;
@@ -51,6 +49,105 @@ export default function ProveedoresIndex({ proveedores, permissions }: Props) {
         setDeleteDialogOpen(true);
     };
 
+    const columns = useMemo<DataTableColumn<Proveedor>[]>(
+        () => [
+            {
+                key: 'nombre',
+                label: 'Nombre',
+                getValue: (proveedor) => proveedor.nombre_proveedor,
+                render: (proveedor) => proveedor.nombre_proveedor,
+            },
+            {
+                key: 'nit',
+                label: 'NIT',
+                getValue: (proveedor) => proveedor.nit_proveedor,
+                render: (proveedor) => proveedor.nit_proveedor,
+            },
+            {
+                key: 'tipo',
+                label: 'Tipo',
+                filter: 'select',
+                selectOptions: TIPO_OPTIONS,
+                getValue: (proveedor) => proveedor.tipo_proveedor,
+                render: (proveedor) => (
+                    <Badge variant="secondary">
+                        {proveedor.tipo_proveedor}
+                    </Badge>
+                ),
+            },
+            {
+                key: 'categoria',
+                label: 'Categoría',
+                getValue: (proveedor) => proveedor.categoria_proveedor,
+                render: (proveedor) => proveedor.categoria_proveedor,
+            },
+            {
+                key: 'ciudad',
+                label: 'Ciudad',
+                getValue: (proveedor) => proveedor.ciudad_proveedor ?? '',
+                render: (proveedor) => proveedor.ciudad_proveedor ?? '—',
+            },
+            {
+                key: 'telefono',
+                label: 'Teléfono',
+                getValue: (proveedor) => proveedor.telefono_proveedor ?? '',
+                render: (proveedor) => proveedor.telefono_proveedor ?? '—',
+            },
+            {
+                key: 'acciones',
+                label: 'Acciones',
+                align: 'right',
+                filter: 'none',
+                render: (proveedor) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissions.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-proveedor-button"
+                                            onClick={() =>
+                                                openEditDialog(proveedor)
+                                            }
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+
+                            {permissions.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-proveedor-button"
+                                            onClick={() =>
+                                                openDeleteDialog(proveedor)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
+            },
+        ],
+        [permissions],
+    );
+
     return (
         <>
             <Head title="Proveedores" />
@@ -72,103 +169,14 @@ export default function ProveedoresIndex({ proveedores, permissions }: Props) {
                     ) : null}
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>NIT</TableHead>
-                            <TableHead>Tipo</TableHead>
-                            <TableHead>Categoría</TableHead>
-                            <TableHead>Ciudad</TableHead>
-                            <TableHead>Teléfono</TableHead>
-                            <TableHead className="text-right">
-                                Acciones
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {proveedores.map((proveedor) => (
-                            <TableRow
-                                key={proveedor.id}
-                                data-test="proveedor-row"
-                            >
-                                <TableCell>
-                                    {proveedor.nombre_proveedor}
-                                </TableCell>
-                                <TableCell>{proveedor.nit_proveedor}</TableCell>
-                                <TableCell>
-                                    <Badge variant="secondary">
-                                        {proveedor.tipo_proveedor}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    {proveedor.categoria_proveedor}
-                                </TableCell>
-                                <TableCell>
-                                    {proveedor.ciudad_proveedor ?? '—'}
-                                </TableCell>
-                                <TableCell>
-                                    {proveedor.telefono_proveedor ?? '—'}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <TooltipProvider>
-                                        <div className="flex justify-end gap-2">
-                                            {permissions.canUpdate ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="edit-proveedor-button"
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    proveedor,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Editar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-
-                                            {permissions.canDelete ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="delete-proveedor-button"
-                                                            onClick={() =>
-                                                                openDeleteDialog(
-                                                                    proveedor,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Eliminar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-                                        </div>
-                                    </TooltipProvider>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-                {proveedores.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center">
-                        No hay proveedores registrados.
-                    </p>
-                ) : null}
+                <DataTable
+                    data={proveedores}
+                    columns={columns}
+                    getRowId={(proveedor) => proveedor.id}
+                    dataTestPrefix="proveedor"
+                    searchPlaceholder="Buscar proveedores..."
+                    emptyMessage="No hay proveedores registrados."
+                />
             </div>
 
             <EditProveedorModal

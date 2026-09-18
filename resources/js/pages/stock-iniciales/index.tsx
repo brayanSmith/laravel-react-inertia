@@ -1,19 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CreateStockInicialModal from '@/components/create-stock-inicial-modal';
+import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteStockInicialModal from '@/components/delete-stock-inicial-modal';
 import EditStockInicialModal from '@/components/edit-stock-inicial-modal';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Tooltip,
     TooltipContent,
@@ -66,6 +59,85 @@ export default function StockInicialesIndex({
         stockInicial.producto?.referencia_producto ??
         `Producto ${stockInicial.producto_id}`;
 
+    const columns = useMemo<DataTableColumn<StockInicial>[]>(
+        () => [
+            {
+                key: 'producto',
+                label: 'Producto',
+                getValue: (stockInicial) => productoLabel(stockInicial),
+                render: (stockInicial) => productoLabel(stockInicial),
+            },
+            {
+                key: 'bodega',
+                label: 'Bodega',
+                getValue: (stockInicial) =>
+                    stockInicial.bodega?.nombre_bodega ?? '',
+                render: (stockInicial) =>
+                    stockInicial.bodega?.nombre_bodega ?? '—',
+            },
+            {
+                key: 'cantidad',
+                label: 'Cantidad',
+                align: 'right',
+                getValue: (stockInicial) => Number(stockInicial.cantidad),
+                render: (stockInicial) => stockInicial.cantidad,
+            },
+            {
+                key: 'acciones',
+                label: 'Acciones',
+                align: 'right',
+                filter: 'none',
+                render: (stockInicial) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissions.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-stock-inicial-button"
+                                            onClick={() =>
+                                                openEditDialog(stockInicial)
+                                            }
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+
+                            {permissions.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-stock-inicial-button"
+                                            onClick={() =>
+                                                openDeleteDialog(stockInicial)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
+            },
+        ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [permissions],
+    );
+
     return (
         <>
             <Head title="Stock inicial" />
@@ -91,93 +163,14 @@ export default function StockInicialesIndex({
                     ) : null}
                 </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Producto</TableHead>
-                            <TableHead>Bodega</TableHead>
-                            <TableHead className="text-right">
-                                Cantidad
-                            </TableHead>
-                            <TableHead className="text-right">
-                                Acciones
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {stockIniciales.map((stockInicial) => (
-                            <TableRow
-                                key={stockInicial.id}
-                                data-test="stock-inicial-row"
-                            >
-                                <TableCell>
-                                    {productoLabel(stockInicial)}
-                                </TableCell>
-                                <TableCell>
-                                    {stockInicial.bodega?.nombre_bodega ?? '—'}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {stockInicial.cantidad}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <TooltipProvider>
-                                        <div className="flex justify-end gap-2">
-                                            {permissions.canUpdate ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="edit-stock-inicial-button"
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    stockInicial,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Editar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-
-                                            {permissions.canDelete ? (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            data-test="delete-stock-inicial-button"
-                                                            onClick={() =>
-                                                                openDeleteDialog(
-                                                                    stockInicial,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Eliminar</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            ) : null}
-                                        </div>
-                                    </TooltipProvider>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-
-                {stockIniciales.length === 0 ? (
-                    <p className="text-muted-foreground py-8 text-center">
-                        No hay stock inicial registrado.
-                    </p>
-                ) : null}
+                <DataTable
+                    data={stockIniciales}
+                    columns={columns}
+                    getRowId={(stockInicial) => stockInicial.id}
+                    dataTestPrefix="stock-inicial"
+                    searchPlaceholder="Buscar stock inicial..."
+                    emptyMessage="No hay stock inicial registrado."
+                />
             </div>
 
             <EditStockInicialModal
