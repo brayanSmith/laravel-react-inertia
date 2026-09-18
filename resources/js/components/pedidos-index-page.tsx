@@ -56,12 +56,14 @@ export default function PedidosIndexPage({
                             <ToggleGroupItem
                                 value="pedido"
                                 data-test="pedidos-vista-pedido"
+                                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
                             >
                                 Por pedido
                             </ToggleGroupItem>
                             <ToggleGroupItem
                                 value="detalle"
                                 data-test="pedidos-vista-detalle"
+                                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
                             >
                                 Por detalle
                             </ToggleGroupItem>

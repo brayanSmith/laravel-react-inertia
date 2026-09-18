@@ -194,13 +194,17 @@ function ajusteTotal(pedido: Pedido): number {
     );
 }
 
-function productosResumen(pedido: Pedido): string {
-    const nombres = (pedido.detalles ?? []).map(
+function productosList(pedido: Pedido): string[] {
+    return (pedido.detalles ?? []).map(
         (detalle) =>
             detalle.producto?.concatenar_codigo_nombre ??
             detalle.producto?.referencia_producto ??
             `Producto ${detalle.producto_id}`,
     );
+}
+
+function productosResumen(pedido: Pedido): string {
+    const nombres = productosList(pedido);
 
     return nombres.length > 0 ? nombres.join(', ') : '—';
 }
@@ -281,6 +285,22 @@ function TruncatedCell({ value }: { value: string }) {
         <span className="block truncate" title={value}>
             {value}
         </span>
+    );
+}
+
+function ListCell({ items }: { items: string[] }) {
+    if (items.length === 0) {
+        return <span className="text-muted-foreground">—</span>;
+    }
+
+    return (
+        <ul className="list-disc space-y-0.5 py-1 pl-4">
+            {items.map((item, index) => (
+                <li key={index} className="truncate" title={item}>
+                    {item}
+                </li>
+            ))}
+        </ul>
     );
 }
 
@@ -885,7 +905,7 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
             case 'turno':
                 return <TruncatedCell value={pedido.turno ?? '—'} />;
             case 'productos':
-                return <TruncatedCell value={productosResumen(pedido)} />;
+                return <ListCell items={productosList(pedido)} />;
             case 'medios':
                 return <TruncatedCell value={mediosDePagoResumen(pedido)} />;
             case 'observacion_pago':
