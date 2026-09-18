@@ -18,7 +18,10 @@ class StockBodegaController extends Controller
         Gate::authorize('stock-bodegas.view');
 
         return Inertia::render('stock-bodegas/index', [
-            'stockBodegas' => StockBodega::with(['producto', 'bodega'])
+            'stockBodegas' => StockBodega::with([
+                'producto:id,referencia_producto,concatenar_codigo_nombre,costo_producto,valor_detal,valor_mayorista',
+                'bodega:id,nombre_bodega',
+            ])
                 ->orderBy('bodega_id')
                 ->orderBy('producto_id')
                 ->get(),

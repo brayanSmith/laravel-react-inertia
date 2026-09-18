@@ -1,6 +1,11 @@
 import type { Bodega } from './bodegas';
 import type { ProductoOption } from './compras';
 
+export type ProductoInversionOption = ProductoOption & {
+    valor_detal: string;
+    valor_mayorista: string;
+};
+
 export type StockBodega = {
     id: number;
     producto_id: number;
@@ -9,6 +14,6 @@ export type StockBodega = {
     entradas: string;
     salidas: string;
     stock: string;
-    producto?: ProductoOption | null;
+    producto?: ProductoInversionOption | null;
     bodega?: Bodega | null;
 };
