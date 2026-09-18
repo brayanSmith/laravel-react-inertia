@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\TrasladoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Traslado extends Model
 {
-    /** @use HasFactory<\Database\Factories\TrasladoFactory> */
+    /** @use HasFactory<TrasladoFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -18,15 +20,26 @@ class Traslado extends Model
         'observaciones',
     ];
 
-    public function bodegaDonante()
+    /**
+     * @return BelongsTo<Bodega, $this>
+     */
+    public function bodegaDonante(): BelongsTo
     {
         return $this->belongsTo(Bodega::class, 'bodega_donante_id');
     }
-    public function bodegaDestino()
+
+    /**
+     * @return BelongsTo<Bodega, $this>
+     */
+    public function bodegaDestino(): BelongsTo
     {
         return $this->belongsTo(Bodega::class, 'bodega_destino_id');
     }
-    public function producto()
+
+    /**
+     * @return BelongsTo<Producto, $this>
+     */
+    public function producto(): BelongsTo
     {
         return $this->belongsTo(Producto::class, 'producto_id');
     }

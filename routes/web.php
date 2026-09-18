@@ -1,13 +1,21 @@
 <?php
 
+use App\Http\Controllers\AbonoController;
 use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\CompraController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\GastoController;
 use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\PucController;
+use App\Http\Controllers\StockBodegaController;
+use App\Http\Controllers\StockInicialController;
 use App\Http\Controllers\Teams\TeamInvitationController;
+use App\Http\Controllers\TrasladoController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -49,8 +57,51 @@ Route::prefix('{current_team}')
         Route::patch('pucs/{puc}', [PucController::class, 'update'])->name('pucs.update');
         Route::delete('pucs/{puc}', [PucController::class, 'destroy'])->name('pucs.destroy');
 
+        Route::get('gastos', [GastoController::class, 'index'])->name('gastos.index');
+        Route::post('gastos', [GastoController::class, 'store'])->name('gastos.store');
+        Route::patch('gastos/{gasto}', [GastoController::class, 'update'])->name('gastos.update');
+        Route::delete('gastos/{gasto}', [GastoController::class, 'destroy'])->name('gastos.destroy');
+
+        Route::get('compras', [CompraController::class, 'index'])->name('compras.index');
+        Route::get('compras/crear', [CompraController::class, 'create'])->name('compras.create');
+        Route::post('compras', [CompraController::class, 'store'])->name('compras.store');
+        Route::get('compras/{compra}/editar', [CompraController::class, 'edit'])->name('compras.edit');
+        Route::patch('compras/{compra}', [CompraController::class, 'update'])->name('compras.update');
+        Route::delete('compras/{compra}', [CompraController::class, 'destroy'])->name('compras.destroy');
+
+        Route::get('pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
+        Route::get('pedidos/crear', [PedidoController::class, 'create'])->name('pedidos.create');
+        Route::post('pedidos', [PedidoController::class, 'store'])->name('pedidos.store');
+        Route::get('pedidos/{pedido}/editar', [PedidoController::class, 'edit'])->name('pedidos.edit');
+        Route::patch('pedidos/{pedido}', [PedidoController::class, 'update'])->name('pedidos.update');
+        Route::delete('pedidos/{pedido}', [PedidoController::class, 'destroy'])->name('pedidos.destroy');
+
+        Route::post('pedidos/{pedido}/abonos', [AbonoController::class, 'store'])->name('pedidos.abonos.store');
+        Route::patch('pedidos/{pedido}/abonos/{abono}', [AbonoController::class, 'update'])->name('pedidos.abonos.update');
+        Route::delete('pedidos/{pedido}/abonos/{abono}', [AbonoController::class, 'destroy'])->name('pedidos.abonos.destroy');
+
         Route::get('empresa', [EmpresaController::class, 'edit'])->name('empresa.edit');
         Route::patch('empresa', [EmpresaController::class, 'update'])->name('empresa.update');
+
+        Route::get('productos', [ProductoController::class, 'index'])->name('productos.index');
+        Route::get('productos/crear', [ProductoController::class, 'create'])->name('productos.create');
+        Route::post('productos', [ProductoController::class, 'store'])->name('productos.store');
+        Route::get('productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
+        Route::get('productos/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
+        Route::patch('productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
+        Route::delete('productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
+
+        Route::get('stock-iniciales', [StockInicialController::class, 'index'])->name('stock-iniciales.index');
+        Route::post('stock-iniciales', [StockInicialController::class, 'store'])->name('stock-iniciales.store');
+        Route::patch('stock-iniciales/{stock_inicial}', [StockInicialController::class, 'update'])->name('stock-iniciales.update');
+        Route::delete('stock-iniciales/{stock_inicial}', [StockInicialController::class, 'destroy'])->name('stock-iniciales.destroy');
+
+        Route::get('stock-bodegas', [StockBodegaController::class, 'index'])->name('stock-bodegas.index');
+
+        Route::get('traslados', [TrasladoController::class, 'index'])->name('traslados.index');
+        Route::post('traslados', [TrasladoController::class, 'store'])->name('traslados.store');
+        Route::patch('traslados/{traslado}', [TrasladoController::class, 'update'])->name('traslados.update');
+        Route::delete('traslados/{traslado}', [TrasladoController::class, 'destroy'])->name('traslados.destroy');
     });
 
 Route::middleware(['auth'])->group(function () {

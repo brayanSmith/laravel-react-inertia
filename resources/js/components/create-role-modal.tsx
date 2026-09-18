@@ -43,7 +43,7 @@ export default function CreateRoleModal({
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-xl">
+            <DialogContent className="sm:max-w-4xl">
                 <Form
                     key={String(open)}
                     {...store.form(team.slug)}

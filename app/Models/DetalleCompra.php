@@ -2,13 +2,22 @@
 
 namespace App\Models;
 
+use Database\Factories\DetalleCompraFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DetalleCompra extends Model
 {
-    /** @use HasFactory<\Database\Factories\DetalleCompraFactory> */
+    /** @use HasFactory<DetalleCompraFactory> */
     use HasFactory;
+
+    protected $casts = [
+        'cantidad' => 'decimal:2',
+        'precio_unitario' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+    ];
+
     protected $fillable = [
         'compra_id',
         'producto_id',
@@ -19,17 +28,26 @@ class DetalleCompra extends Model
         'subtotal',
     ];
 
-    public function compra()
+    /**
+     * @return BelongsTo<Compra, $this>
+     */
+    public function compra(): BelongsTo
     {
         return $this->belongsTo(Compra::class, 'compra_id');
     }
 
-    public function producto()
+    /**
+     * @return BelongsTo<Producto, $this>
+     */
+    public function producto(): BelongsTo
     {
         return $this->belongsTo(Producto::class, 'producto_id');
     }
 
-    public function bodega()
+    /**
+     * @return BelongsTo<Bodega, $this>
+     */
+    public function bodega(): BelongsTo
     {
         return $this->belongsTo(Bodega::class, 'bodega_id');
     }

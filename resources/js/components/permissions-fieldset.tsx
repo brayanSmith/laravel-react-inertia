@@ -65,7 +65,7 @@ export default function PermissionsFieldset({
                 </div>
             </div>
 
-            <div className="max-h-[50vh] space-y-3 overflow-y-auto pr-1">
+            <div className="max-h-[45vh] space-y-3 overflow-y-auto pr-1">
                 {Object.entries(groups).map(
                     ([resource, resourcePermissions]) => {
                         const groupAllSelected = resourcePermissions.every(
@@ -96,7 +96,7 @@ export default function PermissionsFieldset({
                                             : 'Seleccionar todos'}
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                                     {resourcePermissions.map((permission) => (
                                         <label
                                             key={permission}

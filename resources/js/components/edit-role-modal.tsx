@@ -44,7 +44,7 @@ export default function EditRoleModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-xl">
+            <DialogContent className="sm:max-w-4xl">
                 <Form
                     key={String(open)}
                     {...update.form([team.slug, role.id])}

@@ -2,22 +2,34 @@
 
 namespace App\Models;
 
+use Database\Factories\StockInicialFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockInicial extends Model
 {
-    //
+    /** @use HasFactory<StockInicialFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'producto_id',
         'bodega_id',
         'cantidad',
     ];
 
-    public function producto()
+    /**
+     * @return BelongsTo<Producto, $this>
+     */
+    public function producto(): BelongsTo
     {
         return $this->belongsTo(Producto::class);
     }
-    public function bodega()
+
+    /**
+     * @return BelongsTo<Bodega, $this>
+     */
+    public function bodega(): BelongsTo
     {
         return $this->belongsTo(Bodega::class);
     }

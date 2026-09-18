@@ -22,6 +22,13 @@ declare module '@inertiajs/core' {
             canViewMarcas: boolean;
             canViewPucs: boolean;
             canViewEmpresa: boolean;
+            canViewGastos: boolean;
+            canViewProductos: boolean;
+            canViewCompras: boolean;
+            canViewPedidos: boolean;
+            canViewStockIniciales: boolean;
+            canViewStockBodegas: boolean;
+            canViewTraslados: boolean;
             [key: string]: unknown;
         };
     }

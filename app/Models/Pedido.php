@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Services\Pedido\PedidoCalculoService;
-use App\Services\Pedido\PedidoStockService;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pedido extends Model
@@ -21,7 +19,7 @@ class Pedido extends Model
         'fecha',
         'estado',
         'estado_pago',
-        //'tipo_pedido',
+        // 'tipo_pedido',
         'tipo_pago',
         'tipo_precio',
         'id_puc',
@@ -51,14 +49,17 @@ class Pedido extends Model
         'retefuente' => 'decimal:2',
         'facturacion_electronica' => 'boolean',
     ];
+
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
     }
+
     public function detalles()
     {
         return $this->hasMany(DetallePedido::class);
     }
+
     public function abonoPedido()
     {
         return $this->hasMany(Abono::class);
@@ -69,31 +70,48 @@ class Pedido extends Model
     {
         return $this->hasMany(Abono::class);
     }
+
     public function bodega()
     {
         return $this->belongsTo(Bodega::class, 'bodega_id');
     }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
     public function alistador()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
     public function puc()
     {
         return $this->belongsTo(Puc::class, 'id_puc');
     }
 
-    public function setCodigoPedido()
+    /**
+     * Recompute abono, saldo_pendiente, estado_pago and estado from the
+     * pedido's persisted abonos and current total_a_pagar.
+     */
+    public function recalcularTotales(): void
     {
-        $nuevoCodigo = PedidoCalculoService::generarCodigoPedido($this->id);
-            $this->updateQuietly(['codigo' => $nuevoCodigo]);
+        $abono = (float) $this->abonos()->sum('monto');
+        $totalAPagar = (float) $this->total_a_pagar;
+        $saldoPendiente = max($totalAPagar - $abono, 0);
+
+        $this->update([
+            'abono' => $abono,
+            'saldo_pendiente' => $saldoPendiente,
+            'estado_pago' => $saldoPendiente <= 0 && $totalAPagar > 0 ? 'SALDADO' : 'EN_CARTERA',
+            'estado' => $saldoPendiente <= 0 ? 'COMPLETADO' : 'PENDIENTE',
+        ]);
     }
 
     // Atributo: devolver fecha en America/Bogota
@@ -102,6 +120,7 @@ class Pedido extends Model
         if (is_null($value)) {
             return null;
         }
-        return \Carbon\Carbon::parse($value)->setTimezone('America/Bogota');
+
+        return Carbon::parse($value)->setTimezone('America/Bogota');
     }
 }

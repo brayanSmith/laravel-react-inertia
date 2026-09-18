@@ -2,15 +2,32 @@
 
 namespace App\Models;
 
+use Database\Factories\ProductoFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Producto extends Model
 {
-    //
+    /** @use HasFactory<ProductoFactory> */
     use HasFactory;
+
     use SoftDeletes;
+
+    protected $appends = [
+        'imagen_producto_url',
+    ];
+
+    protected $casts = [
+        'inventariable' => 'boolean',
+        'costo_producto' => 'decimal:2',
+        'valor_detal' => 'decimal:2',
+        'valor_mayorista' => 'decimal:2',
+        'valor_sin_instalacion' => 'decimal:2',
+    ];
 
     protected $fillable = [
         'categoria',
@@ -32,12 +49,17 @@ class Producto extends Model
         'imagen_producto',
         'concatenar_codigo_nombre',
         'codigo_appsheet',
-        'sku'
+        'sku',
     ];
-    public function marca()
+
+    /**
+     * @return BelongsTo<Marca, $this>
+     */
+    public function marca(): BelongsTo
     {
         return $this->belongsTo(Marca::class, 'marca_id');
     }
+
     public function detalleCompras()
     {
         return $this->hasMany(DetalleCompra::class);
@@ -57,9 +79,20 @@ class Producto extends Model
     {
         return $this->hasMany(StockBodega::class);
     }
+
     public function stockIniciales()
     {
         return $this->hasMany(StockInicial::class);
+    }
+
+    /**
+     * @return Attribute<string|null, never>
+     */
+    protected function imagenProductoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->imagen_producto ? Storage::disk('public')->url($this->imagen_producto) : null,
+        );
     }
 
     public function enStock(float|int $cantidad): bool
@@ -73,5 +106,4 @@ class Producto extends Model
 
         return $stock >= (float) $cantidad;
     }
-
 }

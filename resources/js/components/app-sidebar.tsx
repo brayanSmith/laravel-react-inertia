@@ -1,11 +1,18 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    ArrowLeftRight,
     BookOpen,
+    Boxes,
     Building2,
     Calculator,
+    ClipboardList,
+    FileText,
     FolderGit2,
     LayoutGrid,
+    Package,
+    Receipt,
     Shield,
+    ShoppingCart,
     Tags,
     Truck,
     UserCog,
@@ -29,11 +36,18 @@ import {
 import { dashboard } from '@/routes';
 import { index as bodegasIndex } from '@/routes/bodegas';
 import { index as clientesIndex } from '@/routes/clientes';
+import { index as comprasIndex } from '@/routes/compras';
 import { edit as empresaEdit } from '@/routes/empresa';
+import { index as gastosIndex } from '@/routes/gastos';
 import { index as marcasIndex } from '@/routes/marcas';
+import { index as pedidosIndex } from '@/routes/pedidos';
+import { index as productosIndex } from '@/routes/productos';
 import { index as proveedoresIndex } from '@/routes/proveedores';
 import { index as pucsIndex } from '@/routes/pucs';
+import { index as stockBodegasIndex } from '@/routes/stock-bodegas';
+import { index as stockInicialesIndex } from '@/routes/stock-iniciales';
 import { index as rolesIndex } from '@/routes/teams/roles';
+import { index as trasladosIndex } from '@/routes/traslados';
 import { index as usuariosIndex } from '@/routes/usuarios';
 import type { NavItem } from '@/types';
 
@@ -103,6 +117,69 @@ export function AppSidebar() {
                       title: 'PUC',
                       href: pucsIndex(page.props.currentTeam.slug),
                       icon: Calculator,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewCompras && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Compras',
+                      href: comprasIndex(page.props.currentTeam.slug),
+                      icon: ShoppingCart,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewPedidos && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Pedidos',
+                      href: pedidosIndex(page.props.currentTeam.slug),
+                      icon: FileText,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewGastos && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Gastos',
+                      href: gastosIndex(page.props.currentTeam.slug),
+                      icon: Receipt,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewProductos && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Productos',
+                      href: productosIndex(page.props.currentTeam.slug),
+                      icon: Package,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewStockIniciales && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Stock inicial',
+                      href: stockInicialesIndex(page.props.currentTeam.slug),
+                      icon: ClipboardList,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewStockBodegas && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Stock por bodega',
+                      href: stockBodegasIndex(page.props.currentTeam.slug),
+                      icon: Boxes,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewTraslados && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Traslados',
+                      href: trasladosIndex(page.props.currentTeam.slug),
+                      icon: ArrowLeftRight,
                   },
               ]
             : []),

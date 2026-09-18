@@ -22,6 +22,13 @@ class PermissionSeeder extends Seeder
         'marcas' => ['view', 'create', 'update', 'delete'],
         'puc' => ['view', 'create', 'update', 'delete'],
         'empresa' => ['view', 'update'],
+        'productos' => ['view', 'create', 'update', 'delete'],
+        'gastos' => ['view', 'create', 'update', 'delete'],
+        'compras' => ['view', 'create', 'update', 'delete'],
+        'pedidos' => ['view', 'create', 'update', 'delete'],
+        'stock-iniciales' => ['view', 'create', 'update', 'delete'],
+        'stock-bodegas' => ['view'],
+        'traslados' => ['view', 'create', 'update', 'delete'],
     ];
 
     /**
