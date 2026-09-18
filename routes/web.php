@@ -80,6 +80,19 @@ Route::prefix('{current_team}')
         Route::patch('pedidos/{pedido}/abonos/{abono}', [AbonoController::class, 'update'])->name('pedidos.abonos.update');
         Route::delete('pedidos/{pedido}/abonos/{abono}', [AbonoController::class, 'destroy'])->name('pedidos.abonos.destroy');
 
+        // Same controllers as "pedidos" above; PedidoController/AbonoController scope
+        // themselves to DETAL vs MAYORISTA by reading the matched route's name.
+        Route::get('pedidos-mayoristas', [PedidoController::class, 'index'])->name('pedidos-mayoristas.index');
+        Route::get('pedidos-mayoristas/crear', [PedidoController::class, 'create'])->name('pedidos-mayoristas.create');
+        Route::post('pedidos-mayoristas', [PedidoController::class, 'store'])->name('pedidos-mayoristas.store');
+        Route::get('pedidos-mayoristas/{pedido}/editar', [PedidoController::class, 'edit'])->name('pedidos-mayoristas.edit');
+        Route::patch('pedidos-mayoristas/{pedido}', [PedidoController::class, 'update'])->name('pedidos-mayoristas.update');
+        Route::delete('pedidos-mayoristas/{pedido}', [PedidoController::class, 'destroy'])->name('pedidos-mayoristas.destroy');
+
+        Route::post('pedidos-mayoristas/{pedido}/abonos', [AbonoController::class, 'store'])->name('pedidos-mayoristas.abonos.store');
+        Route::patch('pedidos-mayoristas/{pedido}/abonos/{abono}', [AbonoController::class, 'update'])->name('pedidos-mayoristas.abonos.update');
+        Route::delete('pedidos-mayoristas/{pedido}/abonos/{abono}', [AbonoController::class, 'destroy'])->name('pedidos-mayoristas.abonos.destroy');
+
         Route::get('empresa', [EmpresaController::class, 'edit'])->name('empresa.edit');
         Route::patch('empresa', [EmpresaController::class, 'update'])->name('empresa.update');
 

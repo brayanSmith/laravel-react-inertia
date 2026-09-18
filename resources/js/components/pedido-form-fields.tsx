@@ -44,6 +44,8 @@ type Props = {
     vendedores: VendedorOption[];
     errors: FormErrors;
     actions?: ReactNode;
+    /** Initial "Tipo Precio" for a new pedido (e.g. the mayorista module defaults to MAYORISTA). */
+    defaultTipoPrecio?: TipoPrecioPedido;
 };
 
 type DetalleRow = {
@@ -106,6 +108,7 @@ export default function PedidoFormFields({
     vendedores,
     errors,
     actions,
+    defaultTipoPrecio = 'DETAL',
 }: Props) {
     const clienteMap = useMemo(
         () => new Map(clientes.map((cliente) => [cliente.id, cliente])),
@@ -159,7 +162,7 @@ export default function PedidoFormFields({
         pedido?.bodega_id ? String(pedido.bodega_id) : '',
     );
     const [tipoPrecio, setTipoPrecio] = useState<TipoPrecioPedido>(
-        pedido?.tipo_precio ?? 'DETAL',
+        pedido?.tipo_precio ?? defaultTipoPrecio,
     );
     const [facturacionElectronica, setFacturacionElectronica] =
         useState<boolean>(pedido?.facturacion_electronica ?? false);

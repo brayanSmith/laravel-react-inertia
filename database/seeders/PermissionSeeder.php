@@ -26,6 +26,7 @@ class PermissionSeeder extends Seeder
         'gastos' => ['view', 'create', 'update', 'delete'],
         'compras' => ['view', 'create', 'update', 'delete'],
         'pedidos' => ['view', 'create', 'update', 'delete'],
+        'pedidos-mayoristas' => ['view', 'create', 'update', 'delete'],
         'stock-iniciales' => ['view', 'create', 'update', 'delete'],
         'stock-bodegas' => ['view'],
         'traslados' => ['view', 'create', 'update', 'delete'],

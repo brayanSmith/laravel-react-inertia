@@ -41,6 +41,7 @@ import { edit as empresaEdit } from '@/routes/empresa';
 import { index as gastosIndex } from '@/routes/gastos';
 import { index as marcasIndex } from '@/routes/marcas';
 import { index as pedidosIndex } from '@/routes/pedidos';
+import { index as pedidosMayoristasIndex } from '@/routes/pedidos-mayoristas';
 import { index as productosIndex } from '@/routes/productos';
 import { index as proveedoresIndex } from '@/routes/proveedores';
 import { index as pucsIndex } from '@/routes/pucs';
@@ -134,6 +135,17 @@ export function AppSidebar() {
                   {
                       title: 'Pedidos',
                       href: pedidosIndex(page.props.currentTeam.slug),
+                      icon: FileText,
+                  },
+              ]
+            : []),
+        ...(page.props.canViewPedidosMayoristas && page.props.currentTeam
+            ? [
+                  {
+                      title: 'Pedidos Mayorista',
+                      href: pedidosMayoristasIndex(
+                          page.props.currentTeam.slug,
+                      ),
                       icon: FileText,
                   },
               ]

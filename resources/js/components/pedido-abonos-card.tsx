@@ -12,11 +12,18 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { Pedido, PedidoAbono, PucOption, VendedorOption } from '@/types';
+import type {
+    Pedido,
+    PedidoAbono,
+    PedidoRoutes,
+    PucOption,
+    VendedorOption,
+} from '@/types';
 
 type Props = {
     teamSlug: string;
     pedido: Pedido;
+    routes: PedidoRoutes;
     pucs: PucOption[];
     vendedores: VendedorOption[];
 };
@@ -31,6 +38,7 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 export default function PedidoAbonosCard({
     teamSlug,
     pedido,
+    routes,
     pucs,
     vendedores,
 }: Props) {
@@ -158,6 +166,7 @@ export default function PedidoAbonosCard({
             <RegistrarPagoModal
                 teamSlug={teamSlug}
                 pedido={pedido}
+                routes={routes}
                 pucs={pucs}
                 vendedores={vendedores}
                 open={registrarOpen}
@@ -167,6 +176,7 @@ export default function PedidoAbonosCard({
             <EditAbonoModal
                 teamSlug={teamSlug}
                 pedido={pedido}
+                routes={routes}
                 abono={editAbono}
                 pucs={pucs}
                 vendedores={vendedores}
@@ -181,6 +191,7 @@ export default function PedidoAbonosCard({
             <DeleteAbonoModal
                 teamSlug={teamSlug}
                 pedido={pedido}
+                routes={routes}
                 abono={deleteAbono}
                 open={deleteAbono !== null}
                 onOpenChange={(open) => {

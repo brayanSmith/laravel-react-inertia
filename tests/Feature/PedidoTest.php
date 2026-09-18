@@ -165,6 +165,38 @@ test('members without permission cannot view pedidos', function () {
     $this->actingAs($member)->get(route('pedidos.index', $team))->assertForbidden();
 });
 
+test('storing a pedido snapshots the product cost and computes profit per detalle', function () {
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    attachTeamMember($team, $owner, 'Owner');
+
+    $cliente = Cliente::factory()->create();
+    $vendedor = User::factory()->create();
+    $producto = Producto::factory()->create(['costo_producto' => 60]);
+    $bodega = Bodega::factory()->create();
+
+    $this->actingAs($owner)->post(route('pedidos.store', $team), [
+        'cliente_id' => $cliente->id,
+        'fecha' => '2026-01-10 10:00:00',
+        'user_id' => $vendedor->id,
+        'bodega_id' => $bodega->id,
+        'tipo_precio' => 'DETAL',
+        'detalles' => [
+            [
+                'producto_id' => $producto->id,
+                'cantidad' => 3,
+                'precio_unitario' => 100,
+            ],
+        ],
+    ])->assertRedirect();
+
+    $detalle = Pedido::firstOrFail()->detalles()->firstOrFail();
+
+    expect((float) $detalle->costo_unitario)->toBe(60.0);
+    expect((float) $detalle->costo_total)->toBe(180.0);
+    expect((float) $detalle->ganancia_total)->toBe(120.0);
+});
+
 test('detalles are required to store a pedido', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();

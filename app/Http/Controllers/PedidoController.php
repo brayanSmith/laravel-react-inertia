@@ -17,9 +17,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Serves both the "pedidos" (DETAL) and "pedidos-mayoristas" (MAYORISTA)
+ * modules. Which one is active is derived from the matched route's name
+ * (e.g. "pedidos.index" vs "pedidos-mayoristas.index"), so both modules
+ * share this one controller instead of duplicating it.
+ */
 class PedidoController extends Controller
 {
     /**
@@ -27,13 +34,22 @@ class PedidoController extends Controller
      */
     public function index(Request $request): Response
     {
-        Gate::authorize('pedidos.view');
+        $module = $this->module($request);
 
-        return Inertia::render('pedidos/index', [
-            'pedidos' => Pedido::with(['cliente', 'bodega', 'user', 'detalles.producto', 'abonos.puc'])
+        Gate::authorize("{$module}.view");
+
+        return Inertia::render("{$module}/index", [
+            'pedidos' => Pedido::with([
+                'cliente',
+                'bodega',
+                'user',
+                'detalles.producto.stockBodegas',
+                'abonos.puc',
+            ])
+                ->where('tipo_precio', $this->tipoPrecio($module))
                 ->orderByDesc('fecha')
                 ->get(),
-            'permissions' => $this->permissions($request),
+            'permissions' => $this->permissions($request, $module),
         ]);
     }
 
@@ -42,9 +58,14 @@ class PedidoController extends Controller
      */
     public function create(Request $request): Response
     {
-        Gate::authorize('pedidos.create');
+        $module = $this->module($request);
 
-        return Inertia::render('pedidos/create', $this->formData($request));
+        Gate::authorize("{$module}.create");
+
+        return Inertia::render("{$module}/create", [
+            ...$this->formData($request),
+            'defaultTipoPrecio' => $this->tipoPrecio($module),
+        ]);
     }
 
     /**
@@ -52,7 +73,9 @@ class PedidoController extends Controller
      */
     public function store(StorePedidoRequest $request): RedirectResponse
     {
-        Gate::authorize('pedidos.create');
+        $module = $this->module($request);
+
+        Gate::authorize("{$module}.create");
 
         $data = $request->validated();
 
@@ -80,7 +103,7 @@ class PedidoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido created.')]);
 
-        return to_route('pedidos.index', ['current_team' => $request->route('current_team')]);
+        return to_route("{$module}.index", ['current_team' => $request->route('current_team')]);
     }
 
     /**
@@ -88,9 +111,11 @@ class PedidoController extends Controller
      */
     public function edit(Request $request, string $current_team, Pedido $pedido): Response
     {
-        Gate::authorize('pedidos.update');
+        $module = $this->module($request);
 
-        return Inertia::render('pedidos/edit', [
+        Gate::authorize("{$module}.update");
+
+        return Inertia::render("{$module}/edit", [
             'pedido' => $pedido->load([
                 'cliente',
                 'detalles.producto',
@@ -100,7 +125,7 @@ class PedidoController extends Controller
                 'bodega',
             ]),
             ...$this->formData($request),
-            'permissions' => ['canDelete' => $request->user()->can('pedidos.delete')],
+            'permissions' => ['canDelete' => $request->user()->can("{$module}.delete")],
         ]);
     }
 
@@ -109,7 +134,9 @@ class PedidoController extends Controller
      */
     public function update(UpdatePedidoRequest $request, string $current_team, Pedido $pedido): RedirectResponse
     {
-        Gate::authorize('pedidos.update');
+        $module = $this->module($request);
+
+        Gate::authorize("{$module}.update");
 
         $data = $request->validated();
 
@@ -141,15 +168,17 @@ class PedidoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido updated.')]);
 
-        return to_route('pedidos.edit', ['current_team' => $current_team, 'pedido' => $pedido]);
+        return to_route("{$module}.edit", ['current_team' => $current_team, 'pedido' => $pedido]);
     }
 
     /**
      * Remove the specified pedido.
      */
-    public function destroy(string $current_team, Pedido $pedido): RedirectResponse
+    public function destroy(Request $request, string $current_team, Pedido $pedido): RedirectResponse
     {
-        Gate::authorize('pedidos.delete');
+        $module = $this->module($request);
+
+        Gate::authorize("{$module}.delete");
 
         DB::transaction(function () use ($pedido): void {
             foreach ($pedido->detalles as $detalle) {
@@ -162,7 +191,7 @@ class PedidoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido deleted.')]);
 
-        return to_route('pedidos.index', ['current_team' => $current_team]);
+        return to_route("{$module}.index", ['current_team' => $current_team]);
     }
 
     /**
@@ -174,17 +203,27 @@ class PedidoController extends Controller
     {
         $subtotal = 0;
 
+        $productos = Producto::whereIn('id', array_column($detalles, 'producto_id'))
+            ->get(['id', 'costo_producto'])
+            ->keyBy('id');
+
         foreach ($detalles as $item) {
             $cantidad = (float) $item['cantidad'];
             $precioUnitario = (float) $item['precio_unitario'];
             $itemSubtotal = $cantidad * $precioUnitario;
             $subtotal += $itemSubtotal;
 
+            $costoUnitario = (float) ($productos->get($item['producto_id'])?->costo_producto ?? 0);
+            $costoTotal = $costoUnitario * $cantidad;
+
             $detalle = $pedido->detalles()->create([
                 'producto_id' => $item['producto_id'],
                 'cantidad' => $cantidad,
                 'precio_unitario' => $precioUnitario,
                 'subtotal' => $itemSubtotal,
+                'costo_unitario' => $costoUnitario,
+                'costo_total' => $costoTotal,
+                'ganancia_total' => $itemSubtotal - $costoTotal,
             ]);
 
             $this->adjustStock($detalle, $pedido, -1);
@@ -244,12 +283,29 @@ class PedidoController extends Controller
     /**
      * @return array{canCreate: bool, canUpdate: bool, canDelete: bool}
      */
-    private function permissions(Request $request): array
+    private function permissions(Request $request, string $module): array
     {
         return [
-            'canCreate' => $request->user()->can('pedidos.create'),
-            'canUpdate' => $request->user()->can('pedidos.update'),
-            'canDelete' => $request->user()->can('pedidos.delete'),
+            'canCreate' => $request->user()->can("{$module}.create"),
+            'canUpdate' => $request->user()->can("{$module}.update"),
+            'canDelete' => $request->user()->can("{$module}.delete"),
         ];
+    }
+
+    /**
+     * The active module ("pedidos" or "pedidos-mayoristas"), derived from
+     * the matched route's name (e.g. "pedidos-mayoristas.index").
+     */
+    private function module(Request $request): string
+    {
+        return Str::before($request->route()->getName(), '.');
+    }
+
+    /**
+     * The tipo_precio this module is scoped to.
+     */
+    private function tipoPrecio(string $module): string
+    {
+        return $module === 'pedidos-mayoristas' ? 'MAYORISTA' : 'DETAL';
     }
 }

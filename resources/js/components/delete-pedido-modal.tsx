@@ -10,12 +10,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { destroy } from '@/routes/pedidos';
-import type { Pedido } from '@/types';
+import type { Pedido, PedidoRoutes } from '@/types';
 
 type Props = {
     teamSlug: string;
     pedido: Pedido | null;
+    routes: PedidoRoutes;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
@@ -23,6 +23,7 @@ type Props = {
 export default function DeletePedidoModal({
     teamSlug,
     pedido,
+    routes,
     open,
     onOpenChange,
 }: Props) {
@@ -33,7 +34,7 @@ export default function DeletePedidoModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, pedido.id]), {
+        router.visit(routes.pedidos.destroy([teamSlug, pedido.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

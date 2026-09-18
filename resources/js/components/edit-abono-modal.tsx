@@ -14,12 +14,18 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { update } from '@/routes/pedidos/abonos';
-import type { Pedido, PedidoAbono, PucOption, VendedorOption } from '@/types';
+import type {
+    Pedido,
+    PedidoAbono,
+    PedidoRoutes,
+    PucOption,
+    VendedorOption,
+} from '@/types';
 
 type Props = {
     teamSlug: string;
     pedido: Pedido;
+    routes: PedidoRoutes;
     abono: PedidoAbono | null;
     pucs: PucOption[];
     vendedores: VendedorOption[];
@@ -37,6 +43,7 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 export default function EditAbonoModal({
     teamSlug,
     pedido,
+    routes,
     abono,
     pucs,
     vendedores,
@@ -98,7 +105,11 @@ export default function EditAbonoModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, pedido.id, abono.id])}
+                    {...routes.abonos.update.form([
+                        teamSlug,
+                        pedido.id,
+                        abono.id,
+                    ])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

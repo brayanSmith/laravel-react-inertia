@@ -1,7 +1,7 @@
 import PedidoEditPage from '@/components/pedido-edit-page';
-import * as pedidosAbonosRoutes from '@/routes/pedidos/abonos';
-import * as pedidosRoutes from '@/routes/pedidos';
-import { index } from '@/routes/pedidos';
+import * as pedidosMayoristasAbonosRoutes from '@/routes/pedidos-mayoristas/abonos';
+import * as pedidosMayoristasRoutes from '@/routes/pedidos-mayoristas';
+import { index } from '@/routes/pedidos-mayoristas';
 import type {
     BodegaOption,
     ClienteOption,
@@ -22,20 +22,25 @@ type Props = {
     permissions: PedidoPermissions;
 };
 
-export default function PedidoEdit(props: Props) {
+export default function PedidoMayoristaEdit(props: Props) {
     return (
         <PedidoEditPage
             {...props}
-            routes={{ pedidos: pedidosRoutes, abonos: pedidosAbonosRoutes }}
-            title="Pedidos"
+            routes={{
+                pedidos: pedidosMayoristasRoutes,
+                abonos: pedidosMayoristasAbonosRoutes,
+            }}
+            title="Pedidos Mayorista"
         />
     );
 }
 
-PedidoEdit.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+PedidoMayoristaEdit.layout = (props: {
+    currentTeam?: { slug: string } | null;
+}) => ({
     breadcrumbs: [
         {
-            title: 'Pedidos',
+            title: 'Pedidos Mayorista',
             href: props.currentTeam ? index(props.currentTeam.slug) : '/',
         },
         {

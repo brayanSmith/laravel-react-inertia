@@ -7,10 +7,16 @@ use App\Http\Requests\Abonos\UpdateAbonoRequest;
 use App\Models\Abono;
 use App\Models\Pedido;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
+/**
+ * Serves payments for both the "pedidos" and "pedidos-mayoristas" modules;
+ * see PedidoController for why the module is derived from the route name.
+ */
 class AbonoController extends Controller
 {
     /**
@@ -18,7 +24,9 @@ class AbonoController extends Controller
      */
     public function store(StoreAbonoRequest $request, string $current_team, Pedido $pedido): RedirectResponse
     {
-        Gate::authorize('pedidos.update');
+        $module = $this->module($request);
+
+        Gate::authorize("{$module}.update");
 
         $data = $request->validated();
 
@@ -42,7 +50,7 @@ class AbonoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pago registrado.')]);
 
-        return to_route('pedidos.edit', ['current_team' => $current_team, 'pedido' => $pedido]);
+        return to_route("{$module}.edit", ['current_team' => $current_team, 'pedido' => $pedido]);
     }
 
     /**
@@ -50,7 +58,9 @@ class AbonoController extends Controller
      */
     public function update(UpdateAbonoRequest $request, string $current_team, Pedido $pedido, Abono $abono): RedirectResponse
     {
-        Gate::authorize('pedidos.update');
+        $module = $this->module($request);
+
+        Gate::authorize("{$module}.update");
 
         $data = $request->validated();
 
@@ -73,15 +83,17 @@ class AbonoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pago actualizado.')]);
 
-        return to_route('pedidos.edit', ['current_team' => $current_team, 'pedido' => $pedido]);
+        return to_route("{$module}.edit", ['current_team' => $current_team, 'pedido' => $pedido]);
     }
 
     /**
      * Remove the specified payment (abono).
      */
-    public function destroy(string $current_team, Pedido $pedido, Abono $abono): RedirectResponse
+    public function destroy(Request $request, string $current_team, Pedido $pedido, Abono $abono): RedirectResponse
     {
-        Gate::authorize('pedidos.update');
+        $module = $this->module($request);
+
+        Gate::authorize("{$module}.update");
 
         DB::transaction(function () use ($pedido, $abono): void {
             $abono->delete();
@@ -90,6 +102,15 @@ class AbonoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pago eliminado.')]);
 
-        return to_route('pedidos.edit', ['current_team' => $current_team, 'pedido' => $pedido]);
+        return to_route("{$module}.edit", ['current_team' => $current_team, 'pedido' => $pedido]);
+    }
+
+    /**
+     * The active module ("pedidos" or "pedidos-mayoristas"), derived from
+     * the matched route's name (e.g. "pedidos-mayoristas.abonos.store").
+     */
+    private function module(Request $request): string
+    {
+        return Str::before($request->route()->getName(), '.');
     }
 }

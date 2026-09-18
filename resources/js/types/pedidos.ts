@@ -1,3 +1,17 @@
+import type * as PedidosRoutesModule from '@/routes/pedidos';
+import type * as PedidosAbonosRoutesModule from '@/routes/pedidos/abonos';
+
+/**
+ * Bundles the Wayfinder route helpers for a pedidos module ("pedidos" or
+ * "pedidos-mayoristas") so shared components (PedidosTable, the abono
+ * modals, etc.) can be reused by both without hardcoding either one's
+ * routes — the page passes the right bundle in as a prop.
+ */
+export type PedidoRoutes = {
+    pedidos: typeof PedidosRoutesModule;
+    abonos: typeof PedidosAbonosRoutesModule;
+};
+
 export type EstadoPedido = 'PENDIENTE' | 'COMPLETADO';
 
 export type EstadoPagoPedido = 'EN_CARTERA' | 'SALDADO' | 'NO_APLICA';
@@ -25,6 +39,13 @@ export type PucOption = {
     concatenar_subcuenta_concepto: string | null;
 };
 
+export type StockBodegaOption = {
+    id: number;
+    bodega_id: number;
+    producto_id: number;
+    stock: string;
+};
+
 export type ProductoPedidoOption = {
     id: number;
     referencia_producto: string | null;
@@ -32,6 +53,8 @@ export type ProductoPedidoOption = {
     valor_detal: string | null;
     valor_mayorista: string | null;
     costo_producto: string | null;
+    tipo_vehiculo?: string | null;
+    stock_bodegas?: StockBodegaOption[];
 };
 
 export type PedidoDetalle = {
@@ -39,6 +62,9 @@ export type PedidoDetalle = {
     producto_id: number;
     cantidad: string;
     precio_unitario: string;
+    costo_unitario: string | null;
+    costo_total: string | null;
+    ganancia_total: string | null;
     subtotal: string;
     producto?: ProductoPedidoOption | null;
 };

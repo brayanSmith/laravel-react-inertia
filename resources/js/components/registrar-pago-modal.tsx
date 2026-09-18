@@ -14,12 +14,12 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { store } from '@/routes/pedidos/abonos';
-import type { Pedido, PucOption, VendedorOption } from '@/types';
+import type { Pedido, PedidoRoutes, PucOption, VendedorOption } from '@/types';
 
 type Props = {
     teamSlug: string;
     pedido: Pedido;
+    routes: PedidoRoutes;
     pucs: PucOption[];
     vendedores: VendedorOption[];
     open: boolean;
@@ -36,6 +36,7 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 export default function RegistrarPagoModal({
     teamSlug,
     pedido,
+    routes,
     pucs,
     vendedores,
     open,
@@ -95,7 +96,7 @@ export default function RegistrarPagoModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...store.form([teamSlug, pedido.id])}
+                    {...routes.abonos.store.form([teamSlug, pedido.id])}
                     className="space-y-6"
                     onSuccess={() => {
                         onOpenChange(false);
