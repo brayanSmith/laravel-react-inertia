@@ -100,6 +100,7 @@ Route::prefix('{current_team}')
         Route::get('productos/crear', [ProductoController::class, 'create'])->name('productos.create');
         Route::post('productos', [ProductoController::class, 'store'])->name('productos.store');
         Route::get('productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
+        Route::get('productos/{producto}/detalles', [ProductoController::class, 'detalles'])->name('productos.detalles');
         Route::get('productos/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
         Route::patch('productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
         Route::delete('productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');

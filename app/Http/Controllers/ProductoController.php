@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Productos\StoreProductoRequest;
 use App\Http\Requests\Productos\UpdateProductoRequest;
 use App\Models\Bodega;
+use App\Models\DetalleCompra;
+use App\Models\DetallePedido;
 use App\Models\Marca;
 use App\Models\Producto;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -85,6 +88,46 @@ class ProductoController extends Controller
         return Inertia::render('productos/show', [
             'producto' => $producto->load('marca'),
             'permissions' => $this->permissions($request),
+        ]);
+    }
+
+    /**
+     * List the pedido and compra detail history for the specified producto,
+     * paginated independently so a product with a long history doesn't
+     * require loading every record at once.
+     */
+    public function detalles(Request $request, string $current_team, Producto $producto): JsonResponse
+    {
+        Gate::authorize('productos.view');
+
+        $detallePedidosQuery = DetallePedido::query()->where('producto_id', $producto->id);
+        $detalleComprasQuery = DetalleCompra::query()->where('producto_id', $producto->id);
+
+        $totalVendido = (clone $detallePedidosQuery)->sum('cantidad');
+        $totalComprado = (clone $detalleComprasQuery)->sum('cantidad');
+
+        $detallePedidos = $detallePedidosQuery
+            ->with([
+                'pedido:id,fecha,estado,cliente_id',
+                'pedido.cliente:id,razon_social',
+            ])
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'pedidos_page');
+
+        $detalleCompras = $detalleComprasQuery
+            ->with([
+                'compra:id,factura,fecha,estado,proveedor_id',
+                'compra.proveedor:id,nombre_proveedor',
+                'bodega:id,nombre_bodega',
+            ])
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'compras_page');
+
+        return response()->json([
+            'detallePedidos' => $detallePedidos,
+            'detalleCompras' => $detalleCompras,
+            'totalComprado' => (float) $totalComprado,
+            'totalVendido' => (float) $totalVendido,
         ]);
     }
 

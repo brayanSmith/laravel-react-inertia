@@ -15,8 +15,15 @@ import CreateProductoModal from '@/components/create-producto-modal';
 import DeleteProductoModal from '@/components/delete-producto-modal';
 import EditProductoModal from '@/components/edit-producto-modal';
 import Heading from '@/components/heading';
+import ProductoDetalleModal from '@/components/producto-detalle-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
     Table,
@@ -280,6 +287,11 @@ export default function ProductosIndex({
     const [productoToEdit, setProductoToEdit] = useState<Producto | null>(
         null,
     );
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [viewDialogOpen, setViewDialogOpen] = useState(false);
+    const [productoToView, setProductoToView] = useState<Producto | null>(
+        null,
+    );
     const [sorts, setSorts] = useState<SortEntry[]>([]);
     const [filters, setFilters] = useState<Record<string, string>>({});
     const [activeGroup, setActiveGroup] = useState<{
@@ -349,6 +361,11 @@ export default function ProductosIndex({
     const openEditDialog = (producto: Producto) => {
         setProductoToEdit(producto);
         setEditDialogOpen(true);
+    };
+
+    const openViewDialog = (producto: Producto) => {
+        setProductoToView(producto);
+        setViewDialogOpen(true);
     };
 
     const bodegaColumnKeys = useMemo(
@@ -815,17 +832,33 @@ export default function ProductosIndex({
                                         <TableRow
                                             key={producto.id}
                                             data-test="producto-row"
+                                            onClick={() =>
+                                                openViewDialog(producto)
+                                            }
+                                            className="cursor-pointer"
                                         >
                                             <TableCell>
                                                 {producto.imagen_producto_url ? (
-                                                    <img
-                                                        src={
-                                                            producto.imagen_producto_url
-                                                        }
-                                                        alt=""
-                                                        loading="lazy"
-                                                        className="h-10 w-10 rounded-md border object-cover"
-                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setPreviewImage(
+                                                                producto.imagen_producto_url,
+                                                            );
+                                                        }}
+                                                        data-test="producto-imagen-preview"
+                                                        className="cursor-zoom-in"
+                                                    >
+                                                        <img
+                                                            src={
+                                                                producto.imagen_producto_url
+                                                            }
+                                                            alt=""
+                                                            loading="lazy"
+                                                            className="h-10 w-10 rounded-md border object-cover transition hover:opacity-80"
+                                                        />
+                                                    </button>
                                                 ) : (
                                                     <div className="text-muted-foreground flex h-10 w-10 items-center justify-center rounded-md border text-xs">
                                                         —
@@ -849,7 +882,12 @@ export default function ProductosIndex({
                                                     )}
                                                 </TableCell>
                                             ))}
-                                            <TableCell className="text-right">
+                                            <TableCell
+                                                className="text-right"
+                                                onClick={(event) =>
+                                                    event.stopPropagation()
+                                                }
+                                            >
                                                 <TooltipProvider>
                                                     <div className="flex justify-end gap-2">
                                                         {permissions.canUpdate ? (
@@ -987,6 +1025,36 @@ export default function ProductosIndex({
                 producto={productoToEdit}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
+            />
+
+            <Dialog
+                open={previewImage !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setPreviewImage(null);
+                    }
+                }}
+            >
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Imagen del producto</DialogTitle>
+                    </DialogHeader>
+
+                    {previewImage ? (
+                        <img
+                            src={previewImage}
+                            alt=""
+                            className="max-h-[70vh] w-full rounded-md border object-contain"
+                        />
+                    ) : null}
+                </DialogContent>
+            </Dialog>
+
+            <ProductoDetalleModal
+                producto={productoToView}
+                bodegas={bodegas}
+                open={viewDialogOpen}
+                onOpenChange={setViewDialogOpen}
             />
         </>
     );

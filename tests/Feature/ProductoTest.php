@@ -1,7 +1,13 @@
 <?php
 
+use App\Models\Cliente;
+use App\Models\Compra;
+use App\Models\DetalleCompra;
+use App\Models\DetallePedido;
 use App\Models\Marca;
+use App\Models\Pedido;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
@@ -87,4 +93,40 @@ test('sku must be unique when provided', function () {
         'tipo' => 'NUEVO',
         'sku' => '12345678',
     ])->assertSessionHasErrors('sku');
+});
+
+test('the detalles endpoint returns paginated pedido and compra history for a producto', function () {
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    attachTeamMember($team, $owner, 'Owner');
+
+    $producto = Producto::factory()->create();
+    $otroProducto = Producto::factory()->create();
+
+    $cliente = Cliente::factory()->create(['razon_social' => 'Cliente Uno']);
+    $pedido = Pedido::factory()->create(['cliente_id' => $cliente->id]);
+    DetallePedido::factory()->create(['producto_id' => $producto->id, 'pedido_id' => $pedido->id]);
+    DetallePedido::factory()->create(['producto_id' => $otroProducto->id]);
+
+    $proveedor = Proveedor::factory()->create(['nombre_proveedor' => 'Proveedor Uno']);
+    $compra = Compra::factory()->create(['proveedor_id' => $proveedor->id]);
+    DetalleCompra::factory()->create(['producto_id' => $producto->id, 'compra_id' => $compra->id]);
+    DetalleCompra::factory()->create(['producto_id' => $otroProducto->id]);
+
+    $response = $this->actingAs($owner)->getJson(route('productos.detalles', [$team, $producto]));
+
+    $response->assertOk();
+    $response->assertJsonCount(1, 'detallePedidos.data');
+    $response->assertJsonCount(1, 'detalleCompras.data');
+    $response->assertJsonPath('detallePedidos.data.0.pedido.cliente.razon_social', 'Cliente Uno');
+    $response->assertJsonPath('detalleCompras.data.0.compra.proveedor.nombre_proveedor', 'Proveedor Uno');
+});
+
+test('members without permission cannot view producto detalles', function () {
+    $member = User::factory()->create();
+    $team = Team::factory()->create();
+    attachTeamMember($team, $member, 'Member');
+    $producto = Producto::factory()->create();
+
+    $this->actingAs($member)->getJson(route('productos.detalles', [$team, $producto]))->assertForbidden();
 });

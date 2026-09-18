@@ -43,3 +43,49 @@ export type ProductoPermissions = {
     canUpdate: boolean;
     canDelete: boolean;
 };
+
+export type LaravelPaginator<T> = {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+};
+
+export type ProductoDetallePedido = {
+    id: number;
+    pedido_id: number;
+    cantidad: string;
+    precio_unitario: string;
+    subtotal: string;
+    pedido?: {
+        id: number;
+        fecha: string | null;
+        estado: string;
+        cliente?: { id: number; razon_social: string } | null;
+    } | null;
+};
+
+export type ProductoDetalleCompra = {
+    id: number;
+    compra_id: number;
+    cantidad: string;
+    precio_unitario: string;
+    subtotal: string;
+    estado_entrega: string;
+    compra?: {
+        id: number;
+        factura: string;
+        fecha: string | null;
+        estado: string;
+        proveedor?: { id: number; nombre_proveedor: string } | null;
+    } | null;
+    bodega?: { id: number; nombre_bodega: string } | null;
+};
+
+export type ProductoDetallesResponse = {
+    detallePedidos: LaravelPaginator<ProductoDetallePedido>;
+    detalleCompras: LaravelPaginator<ProductoDetalleCompra>;
+    totalComprado: number;
+    totalVendido: number;
+};
