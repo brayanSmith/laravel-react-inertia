@@ -30,6 +30,7 @@ class UpdatePedidoRequest extends FormRequest
             'retefuente' => ['nullable', 'numeric', 'min:0'],
             'detalles' => ['required', 'array', 'min:1'],
             'detalles.*.producto_id' => ['required', 'integer', 'exists:productos,id'],
+            'detalles.*.bodega_id' => ['nullable', 'integer', 'exists:bodegas,id'],
             'detalles.*.cantidad' => ['required', 'numeric', 'min:0.01'],
             'detalles.*.precio_unitario' => ['required', 'numeric', 'min:0'],
         ];

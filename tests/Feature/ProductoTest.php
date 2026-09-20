@@ -130,3 +130,19 @@ test('members without permission cannot view producto detalles', function () {
 
     $this->actingAs($member)->getJson(route('productos.detalles', [$team, $producto]))->assertForbidden();
 });
+
+test('creating a producto from another screen can keep the user there', function () {
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    attachTeamMember($team, $owner, 'Owner');
+
+    $payload = ['categoria' => 'OTRO', 'tipo' => 'NUEVO', 'referencia_producto' => 'X-1'];
+
+    $this->actingAs($owner)->from(route('pos.index', $team))
+        ->post(route('productos.store', $team), $payload + ['stay_on_page' => '1'])
+        ->assertRedirect(route('pos.index', $team));
+
+    $this->actingAs($owner)
+        ->post(route('productos.store', $team), ['referencia_producto' => 'X-2'] + $payload)
+        ->assertRedirect(route('productos.index', $team));
+});

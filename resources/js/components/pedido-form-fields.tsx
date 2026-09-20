@@ -24,6 +24,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { precioParaTipo } from '@/lib/pedido-pricing';
 import { cn } from '@/lib/utils';
 import type {
     BodegaOption,
@@ -83,21 +84,6 @@ function productoLabel(producto: ProductoPedidoOption): string {
         producto.referencia_producto ??
         `Producto ${producto.id}`
     );
-}
-
-function precioParaTipo(
-    producto: ProductoPedidoOption,
-    tipoPrecio: TipoPrecioPedido,
-): number {
-    if (tipoPrecio === 'MAYORISTA') {
-        return Number(producto.valor_mayorista ?? producto.valor_detal ?? 0);
-    }
-
-    if (tipoPrecio === 'OTRO') {
-        return Number(producto.costo_producto ?? 0);
-    }
-
-    return Number(producto.valor_detal ?? 0);
 }
 
 export default function PedidoFormFields({

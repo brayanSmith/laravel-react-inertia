@@ -75,6 +75,11 @@ class ProductoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Producto created.')]);
 
+        // Created from another screen (the POS): stay there.
+        if ($request->boolean('stay_on_page')) {
+            return back();
+        }
+
         return to_route('productos.index', ['current_team' => $request->route('current_team')]);
     }
 

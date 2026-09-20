@@ -30,6 +30,7 @@ class PermissionSeeder extends Seeder
         'stock-iniciales' => ['view', 'create', 'update', 'delete'],
         'stock-bodegas' => ['view'],
         'cotizador' => ['view'],
+        'pos' => ['view', 'create'],
         'traslados' => ['view', 'create', 'update', 'delete'],
     ];
 

@@ -6,12 +6,11 @@ use App\Http\Requests\Pedidos\StorePedidoRequest;
 use App\Http\Requests\Pedidos\UpdatePedidoRequest;
 use App\Models\Bodega;
 use App\Models\Cliente;
-use App\Models\DetallePedido;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Puc;
-use App\Models\StockBodega;
 use App\Models\Team;
+use App\Services\PedidoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -71,35 +70,13 @@ class PedidoController extends Controller
     /**
      * Store a newly created pedido.
      */
-    public function store(StorePedidoRequest $request): RedirectResponse
+    public function store(StorePedidoRequest $request, PedidoService $pedidoService): RedirectResponse
     {
         $module = $this->module($request);
 
         Gate::authorize("{$module}.create");
 
-        $data = $request->validated();
-
-        DB::transaction(function () use ($data): void {
-            $pedido = Pedido::create([
-                'cliente_id' => $data['cliente_id'],
-                'fecha' => $data['fecha'],
-                'user_id' => $data['user_id'],
-                'bodega_id' => $data['bodega_id'],
-                'tipo_precio' => $data['tipo_precio'],
-                'placa' => $data['placa'] ?? null,
-                'facturacion_electronica' => $data['facturacion_electronica'] ?? false,
-                'observacion' => $data['observacion'] ?? null,
-                'observacion_pago' => $data['observacion_pago'] ?? null,
-                'flete' => $data['flete'] ?? 0,
-                'descuento' => $data['descuento'] ?? 0,
-                'reteica' => $data['reteica'] ?? 0,
-                'retefuente' => $data['retefuente'] ?? 0,
-                'subtotal' => 0,
-                'total_a_pagar' => 0,
-            ]);
-
-            $this->syncDetalles($pedido, $data['detalles']);
-        });
+        $pedidoService->create($request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido created.')]);
 
@@ -132,7 +109,7 @@ class PedidoController extends Controller
     /**
      * Update the specified pedido.
      */
-    public function update(UpdatePedidoRequest $request, string $current_team, Pedido $pedido): RedirectResponse
+    public function update(UpdatePedidoRequest $request, PedidoService $pedidoService, string $current_team, Pedido $pedido): RedirectResponse
     {
         $module = $this->module($request);
 
@@ -140,9 +117,9 @@ class PedidoController extends Controller
 
         $data = $request->validated();
 
-        DB::transaction(function () use ($pedido, $data): void {
+        DB::transaction(function () use ($pedido, $data, $pedidoService): void {
             foreach ($pedido->detalles as $detalle) {
-                $this->adjustStock($detalle, $pedido, 1);
+                $pedidoService->adjustStock($detalle, $pedido, 1);
             }
 
             $pedido->detalles()->delete();
@@ -163,7 +140,7 @@ class PedidoController extends Controller
                 'retefuente' => $data['retefuente'] ?? 0,
             ]);
 
-            $this->syncDetalles($pedido, $data['detalles']);
+            $pedidoService->syncDetalles($pedido, $data['detalles']);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido updated.')]);
@@ -174,15 +151,15 @@ class PedidoController extends Controller
     /**
      * Remove the specified pedido.
      */
-    public function destroy(Request $request, string $current_team, Pedido $pedido): RedirectResponse
+    public function destroy(Request $request, PedidoService $pedidoService, string $current_team, Pedido $pedido): RedirectResponse
     {
         $module = $this->module($request);
 
         Gate::authorize("{$module}.delete");
 
-        DB::transaction(function () use ($pedido): void {
+        DB::transaction(function () use ($pedido, $pedidoService): void {
             foreach ($pedido->detalles as $detalle) {
-                $this->adjustStock($detalle, $pedido, 1);
+                $pedidoService->adjustStock($detalle, $pedido, 1);
             }
 
             $pedido->detalles()->delete();
@@ -192,71 +169,6 @@ class PedidoController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido deleted.')]);
 
         return to_route("{$module}.index", ['current_team' => $current_team]);
-    }
-
-    /**
-     * Replace the pedido's detalles, recomputing totals and warehouse stock.
-     *
-     * @param  array<int, array{producto_id: int, cantidad: float|string, precio_unitario: float|string}>  $detalles
-     */
-    private function syncDetalles(Pedido $pedido, array $detalles): void
-    {
-        $subtotal = 0;
-
-        $productos = Producto::whereIn('id', array_column($detalles, 'producto_id'))
-            ->get(['id', 'costo_producto'])
-            ->keyBy('id');
-
-        foreach ($detalles as $item) {
-            $cantidad = (float) $item['cantidad'];
-            $precioUnitario = (float) $item['precio_unitario'];
-            $itemSubtotal = $cantidad * $precioUnitario;
-            $subtotal += $itemSubtotal;
-
-            $costoUnitario = (float) ($productos->get($item['producto_id'])?->costo_producto ?? 0);
-            $costoTotal = $costoUnitario * $cantidad;
-
-            $detalle = $pedido->detalles()->create([
-                'producto_id' => $item['producto_id'],
-                'cantidad' => $cantidad,
-                'precio_unitario' => $precioUnitario,
-                'subtotal' => $itemSubtotal,
-                'costo_unitario' => $costoUnitario,
-                'costo_total' => $costoTotal,
-                'ganancia_total' => $itemSubtotal - $costoTotal,
-            ]);
-
-            $this->adjustStock($detalle, $pedido, -1);
-        }
-
-        $descuento = (float) $pedido->descuento;
-        $flete = (float) $pedido->flete;
-        $reteica = (float) $pedido->reteica;
-        $retefuente = (float) $pedido->retefuente;
-
-        $pedido->update([
-            'subtotal' => $subtotal,
-            'total_a_pagar' => max($subtotal + $flete - $descuento - $reteica - $retefuente, 0),
-        ]);
-
-        $pedido->recalcularTotales();
-    }
-
-    /**
-     * Apply (or revert) a detalle's quantity to the pedido's warehouse stock.
-     */
-    private function adjustStock(DetallePedido $detalle, Pedido $pedido, int $sign): void
-    {
-        $stockBodega = StockBodega::firstOrNew([
-            'bodega_id' => $pedido->bodega_id,
-            'producto_id' => $detalle->producto_id,
-        ]);
-
-        $cantidad = (float) $detalle->cantidad;
-
-        $stockBodega->salidas = (float) ($stockBodega->salidas ?? 0) + ($sign < 0 ? $cantidad : 0);
-        $stockBodega->stock = (float) ($stockBodega->stock ?? 0) + $sign * $cantidad;
-        $stockBodega->save();
     }
 
     /**

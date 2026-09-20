@@ -25,6 +25,7 @@ declare module '@inertiajs/core' {
             canViewGastos: boolean;
             canViewProductos: boolean;
             canViewCotizador: boolean;
+            canViewPos: boolean;
             canViewCompras: boolean;
             canViewPedidos: boolean;
             canViewPedidosMayoristas: boolean;

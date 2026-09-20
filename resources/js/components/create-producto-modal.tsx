@@ -19,11 +19,14 @@ import type { MarcaOption } from '@/types';
 type Props = PropsWithChildren<{
     teamSlug: string;
     marcas: MarcaOption[];
+    /** Keep the user on the current screen after saving (e.g. the POS). */
+    stayOnPage?: boolean;
 }>;
 
 export default function CreateProductoModal({
     teamSlug,
     marcas,
+    stayOnPage = false,
     children,
 }: Props) {
     const [open, setOpen] = useState(false);
@@ -58,10 +61,17 @@ export default function CreateProductoModal({
                             <DialogHeader>
                                 <DialogTitle>Nuevo producto</DialogTitle>
                                 <DialogDescription>
-                                    Registra un nuevo producto en el
-                                    catálogo.
+                                    Registra un nuevo producto en el catálogo.
                                 </DialogDescription>
                             </DialogHeader>
+
+                            {stayOnPage ? (
+                                <input
+                                    type="hidden"
+                                    name="stay_on_page"
+                                    value="1"
+                                />
+                            ) : null}
 
                             <ProductoFormFields
                                 marcas={marcas}

@@ -8,6 +8,7 @@ export type * from './gastos';
 export type * from './marcas';
 export type * from './navigation';
 export type * from './pedidos';
+export type * from './pos';
 export type * from './productos';
 export type * from './proveedores';
 export type * from './pucs';

@@ -31,9 +31,15 @@ const TIPOS_DOCUMENTO: TipoDocumento[] = ['CC', 'NIT', 'CE', 'TI', 'PASAPORTE'];
 
 type Props = PropsWithChildren<{
     teamSlug: string;
+    /** Called after the cliente was created and the modal closed. */
+    onCreated?: () => void;
 }>;
 
-export default function CreateClienteModal({ teamSlug, children }: Props) {
+export default function CreateClienteModal({
+    teamSlug,
+    onCreated,
+    children,
+}: Props) {
     const [open, setOpen] = useState(false);
     const [tipoDocumento, setTipoDocumento] = useState<TipoDocumento>('CC');
     const [retenedorFuente, setRetenedorFuente] =
@@ -73,7 +79,10 @@ export default function CreateClienteModal({ teamSlug, children }: Props) {
                     key={String(open)}
                     {...store.form(teamSlug)}
                     className="space-y-6"
-                    onSuccess={() => handleOpenChange(false)}
+                    onSuccess={() => {
+                        handleOpenChange(false);
+                        onCreated?.();
+                    }}
                 >
                     {({ errors, processing }) => (
                         <>

@@ -10,6 +10,7 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\PucController;
@@ -64,6 +65,12 @@ Route::prefix('{current_team}')
         Route::delete('gastos/{gasto}', [GastoController::class, 'destroy'])->name('gastos.destroy');
 
         Route::get('cotizador', [CotizadorController::class, 'index'])->name('cotizador.index');
+
+        Route::get('pos', [PosController::class, 'index'])->name('pos.index');
+        Route::post('pos', [PosController::class, 'store'])->name('pos.store');
+        Route::get('pos/pedidos', [PosController::class, 'pedidos'])->name('pos.pedidos');
+        Route::get('pos/pedidos/{pedido}/voucher', [PosController::class, 'voucher'])->name('pos.pedidos.voucher');
+        Route::get('pos/clientes/{cliente}/pedidos', [PosController::class, 'clientePedidos'])->name('pos.clientes.pedidos');
 
         Route::get('compras', [CompraController::class, 'index'])->name('compras.index');
         Route::get('compras/crear', [CompraController::class, 'create'])->name('compras.create');
