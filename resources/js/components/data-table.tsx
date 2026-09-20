@@ -2,14 +2,13 @@ import {
     ArrowDown,
     ArrowUp,
     ArrowUpDown,
-    ChevronLeft,
-    ChevronRight,
     Columns3,
     GripVertical,
     Search,
     X,
 } from 'lucide-react';
 import DateRangeFilter from '@/components/date-range-filter';
+import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -190,10 +189,7 @@ function FilterCell<T>({
                     <SelectContent>
                         <SelectItem value="ALL">Todos</SelectItem>
                         {(column.selectOptions ?? []).map((option) => (
-                            <SelectItem
-                                key={option.value}
-                                value={option.value}
-                            >
+                            <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                             </SelectItem>
                         ))}
@@ -293,13 +289,9 @@ export default function DataTable<T>({
                                     checked={
                                         !table.hiddenColumns.has(column.key)
                                     }
-                                    onSelect={(event) =>
-                                        event.preventDefault()
-                                    }
+                                    onSelect={(event) => event.preventDefault()}
                                     onCheckedChange={() =>
-                                        table.toggleColumnVisibility(
-                                            column.key,
-                                        )
+                                        table.toggleColumnVisibility(column.key)
                                     }
                                     data-test={`${dataTestPrefix}-column-toggle-${column.key}`}
                                 >
@@ -330,9 +322,7 @@ export default function DataTable<T>({
                                     <HeaderCell
                                         key={key}
                                         column={column}
-                                        activeSortKey={
-                                            table.sort?.key ?? null
-                                        }
+                                        activeSortKey={table.sort?.key ?? null}
                                         sortDirection={
                                             table.sort?.direction ?? 'asc'
                                         }
@@ -404,46 +394,16 @@ export default function DataTable<T>({
                 <div className="flex items-center justify-between text-sm">
                     <p className="text-muted-foreground">
                         Mostrando {(table.page - 1) * table.pageSize + 1}–
-                        {Math.min(
-                            table.page * table.pageSize,
-                            table.totalRows,
-                        )}{' '}
+                        {Math.min(table.page * table.pageSize, table.totalRows)}{' '}
                         de {table.totalRows} registros
                     </p>
 
-                    <div className="flex items-center gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test={`${dataTestPrefix}-page-prev`}
-                            disabled={table.page <= 1}
-                            onClick={() =>
-                                table.setPage((prev) => Math.max(prev - 1, 1))
-                            }
-                        >
-                            <ChevronLeft className="size-4" />
-                            Anterior
-                        </Button>
-                        <span className="text-muted-foreground px-2">
-                            Página {table.page} de {table.totalPages}
-                        </span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test={`${dataTestPrefix}-page-next`}
-                            disabled={table.page >= table.totalPages}
-                            onClick={() =>
-                                table.setPage((prev) =>
-                                    Math.min(prev + 1, table.totalPages),
-                                )
-                            }
-                        >
-                            Siguiente
-                            <ChevronRight className="size-4" />
-                        </Button>
-                    </div>
+                    <Pagination
+                        page={table.page}
+                        totalPages={table.totalPages}
+                        onPageChange={table.setPage}
+                        dataTest={`${dataTestPrefix}-page`}
+                    />
                 </div>
             )}
         </div>

@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\InicioSesionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class InicioSesion extends Model
 {
+    /** @use HasFactory<InicioSesionFactory> */
+    use HasFactory;
+
     protected $table = 'inicios_sesion';
 
     public $timestamps = false;

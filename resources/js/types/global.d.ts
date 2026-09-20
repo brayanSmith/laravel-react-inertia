@@ -32,6 +32,13 @@ declare module '@inertiajs/core' {
             canViewStockIniciales: boolean;
             canViewStockBodegas: boolean;
             canViewTraslados: boolean;
+            canViewIniciosSesion: boolean;
+            /** Record totals shown as sidebar badges. */
+            navCounts: {
+                pedidos: number;
+                pedidosMayoristas: number;
+                compras: number;
+            };
             [key: string]: unknown;
         };
     }

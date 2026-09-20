@@ -8,6 +8,7 @@ use App\Http\Controllers\CotizadorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GastoController;
+use App\Http\Controllers\InicioSesionController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PosController;
@@ -63,6 +64,8 @@ Route::prefix('{current_team}')
         Route::post('gastos', [GastoController::class, 'store'])->name('gastos.store');
         Route::patch('gastos/{gasto}', [GastoController::class, 'update'])->name('gastos.update');
         Route::delete('gastos/{gasto}', [GastoController::class, 'destroy'])->name('gastos.destroy');
+
+        Route::get('inicios-sesion', [InicioSesionController::class, 'index'])->name('inicios-sesion.index');
 
         Route::get('cotizador', [CotizadorController::class, 'index'])->name('cotizador.index');
 

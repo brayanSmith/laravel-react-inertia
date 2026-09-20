@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Compra;
+use App\Models\Pedido;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -63,6 +66,31 @@ class HandleInertiaRequests extends Middleware
             'canViewStockIniciales' => fn () => $user?->can('stock-iniciales.view') ?? false,
             'canViewStockBodegas' => fn () => $user?->can('stock-bodegas.view') ?? false,
             'canViewTraslados' => fn () => $user?->can('traslados.view') ?? false,
+            'canViewIniciosSesion' => fn () => $user?->can('inicios-sesion.view') ?? false,
+            'navCounts' => fn () => $this->navCounts($user),
+        ];
+    }
+
+    /**
+     * The totals shown as badges in the sidebar: every pedido of each module
+     * (DETAL / MAYORISTA) and every compra, so the badge matches what the
+     * listing shows. A count is only computed for the modules the user can
+     * open.
+     *
+     * @return array{pedidos: int, pedidosMayoristas: int, compras: int}
+     */
+    private function navCounts(?User $user): array
+    {
+        return [
+            'pedidos' => $user?->can('pedidos.view')
+                ? Pedido::where('tipo_precio', 'DETAL')->count()
+                : 0,
+            'pedidosMayoristas' => $user?->can('pedidos-mayoristas.view')
+                ? Pedido::where('tipo_precio', 'MAYORISTA')->count()
+                : 0,
+            'compras' => $user?->can('compras.view')
+                ? Compra::count()
+                : 0,
         ];
     }
 }

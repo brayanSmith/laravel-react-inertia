@@ -185,7 +185,7 @@ export default function PosPage({
     // Reloads only the catalog (stock) — no full page reload.
     const actualizarInventario = () => {
         router.reload({
-            only: ['productos'],
+            only: ['productos', 'navCounts'],
             onStart: () => setActualizando(true),
             onFinish: () => setActualizando(false),
             onSuccess: () => toast.success('Inventario actualizado'),
@@ -318,7 +318,7 @@ export default function PosPage({
                 options={{
                     preserveState: true,
                     preserveScroll: true,
-                    only: ['productos'],
+                    only: ['productos', 'navCounts'],
                 }}
                 onStart={() => setProcessing(true)}
                 onFinish={() => setProcessing(false)}

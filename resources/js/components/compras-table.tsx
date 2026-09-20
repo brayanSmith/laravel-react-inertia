@@ -3,8 +3,6 @@ import {
     ArrowDown,
     ArrowUp,
     ArrowUpDown,
-    ChevronLeft,
-    ChevronRight,
     Columns3,
     GripVertical,
     Pencil,
@@ -19,6 +17,7 @@ import DateRangeFilter, {
 } from '@/components/date-range-filter';
 import DeleteCompraModal from '@/components/delete-compra-modal';
 import { Badge } from '@/components/ui/badge';
+import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -279,9 +278,7 @@ function FilterCell({
 }: FilterCellProps) {
     if (variant === 'estado') {
         return (
-            <TableHead
-                className={align === 'right' ? 'text-right' : undefined}
-            >
+            <TableHead className={align === 'right' ? 'text-right' : undefined}>
                 <Select
                     value={value === '' ? 'ALL' : value}
                     onValueChange={(next) =>
@@ -298,10 +295,7 @@ function FilterCell({
                     <SelectContent>
                         <SelectItem value="ALL">Todos</SelectItem>
                         {ESTADO_OPTIONS.map((option) => (
-                            <SelectItem
-                                key={option.value}
-                                value={option.value}
-                            >
+                            <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                             </SelectItem>
                         ))}
@@ -399,9 +393,7 @@ function HeaderCell({
                         <Icon className="size-3.5" />
                     </button>
                 ) : (
-                    <span className="text-muted-foreground">
-                        {meta.label}
-                    </span>
+                    <span className="text-muted-foreground">{meta.label}</span>
                 )}
             </div>
             <ResizeHandle onMouseDown={onResizeStart} />
@@ -450,14 +442,12 @@ export default function ComprasTable({ compras, permissions }: Props) {
     const columnDefs = useMemo<ColumnMeta[]>(
         () => [
             ...STATIC_COLUMN_DEFS,
-            ...bodegas.map(
-                (bodega): ColumnMeta => ({
-                    key: bodegaColumnKey(bodega.id),
-                    label: bodega.nombre,
-                    sortable: true,
-                    filter: 'text',
-                }),
-            ),
+            ...bodegas.map((bodega): ColumnMeta => ({
+                key: bodegaColumnKey(bodega.id),
+                label: bodega.nombre,
+                sortable: true,
+                filter: 'text',
+            })),
             ACCIONES_COLUMN,
         ],
         [bodegas],
@@ -526,9 +516,7 @@ export default function ComprasTable({ compras, permissions }: Props) {
     const resizingKeyRef = useRef<ColumnKey | null>(null);
     const resizeStartXRef = useRef(0);
     const resizeStartWidthRef = useRef(0);
-    const headerRefs = useRef<Map<ColumnKey, HTMLTableCellElement>>(
-        new Map(),
-    );
+    const headerRefs = useRef<Map<ColumnKey, HTMLTableCellElement>>(new Map());
     const pendingFlipRef = useRef<Map<ColumnKey, DOMRect> | null>(null);
 
     const registerHeaderRef =
@@ -797,10 +785,7 @@ export default function ComprasTable({ compras, permissions }: Props) {
         return list;
     }, [compras, search, filters, dateRange, sortKey, sortDirection]);
 
-    const totalPages = Math.max(
-        Math.ceil(visibleCompras.length / pageSize),
-        1,
-    );
+    const totalPages = Math.max(Math.ceil(visibleCompras.length / pageSize), 1);
     const currentPage = Math.min(page, totalPages);
 
     const paginatedCompras = useMemo(
@@ -995,9 +980,7 @@ export default function ComprasTable({ compras, permissions }: Props) {
                         align="end"
                         className="max-h-80 overflow-y-auto"
                     >
-                        <DropdownMenuLabel>
-                            Mostrar columnas
-                        </DropdownMenuLabel>
+                        <DropdownMenuLabel>Mostrar columnas</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {hideableColumns.map((meta) => (
                             <DropdownMenuCheckboxItem
@@ -1039,12 +1022,8 @@ export default function ComprasTable({ compras, permissions }: Props) {
                                         sortDirection={sortDirection}
                                         onSort={handleSort}
                                         onResizeStart={startResize(key)}
-                                        onDragStart={handleColumnDragStart(
-                                            key,
-                                        )}
-                                        onDragOver={handleColumnDragOver(
-                                            key,
-                                        )}
+                                        onDragStart={handleColumnDragStart(key)}
+                                        onDragOver={handleColumnDragOver(key)}
                                         onDrop={handleColumnDrop(key)}
                                         onDragEnd={handleColumnDragEnd}
                                         isDragging={draggedKey === key}
@@ -1105,39 +1084,12 @@ export default function ComprasTable({ compras, permissions }: Props) {
                         de {visibleCompras.length} compras
                     </p>
 
-                    <div className="flex items-center gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test="compras-page-prev"
-                            disabled={currentPage <= 1}
-                            onClick={() =>
-                                setPage((prev) => Math.max(prev - 1, 1))
-                            }
-                        >
-                            <ChevronLeft className="size-4" />
-                            Anterior
-                        </Button>
-                        <span className="text-muted-foreground px-2">
-                            Página {currentPage} de {totalPages}
-                        </span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test="compras-page-next"
-                            disabled={currentPage >= totalPages}
-                            onClick={() =>
-                                setPage((prev) =>
-                                    Math.min(prev + 1, totalPages),
-                                )
-                            }
-                        >
-                            Siguiente
-                            <ChevronRight className="size-4" />
-                        </Button>
-                    </div>
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        dataTest="compras-page"
+                    />
                 </div>
             )}
 

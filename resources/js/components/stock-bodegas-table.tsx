@@ -19,6 +19,7 @@ import {
     useState,
 } from 'react';
 import { Badge } from '@/components/ui/badge';
+import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -258,7 +259,10 @@ function getSortValue(row: ProductoStockRow, key: ColumnKey): string | number {
     }
 }
 
-function searchableText(row: ProductoStockRow, bodegas: BodegaOption[]): string {
+function searchableText(
+    row: ProductoStockRow,
+    bodegas: BodegaOption[],
+): string {
     return [
         row.label,
         totalStock(row),
@@ -331,7 +335,12 @@ type FilterCellProps = {
     align?: 'left' | 'right';
 };
 
-function FilterCell({ filterKey, value, onChange, align = 'left' }: FilterCellProps) {
+function FilterCell({
+    filterKey,
+    value,
+    onChange,
+    align = 'left',
+}: FilterCellProps) {
     return (
         <TableHead className={align === 'right' ? 'text-right' : undefined}>
             <Input
@@ -420,9 +429,7 @@ function HeaderCell({
                         <Icon className="size-3.5" />
                     </button>
                 ) : (
-                    <span className="text-muted-foreground">
-                        {meta.label}
-                    </span>
+                    <span className="text-muted-foreground">{meta.label}</span>
                 )}
             </div>
             <ResizeHandle onMouseDown={onResizeStart} />
@@ -464,7 +471,10 @@ function ExpandedDetail({
                         const entry = row.porBodega.get(bodega.id);
 
                         return (
-                            <tr key={bodega.id} data-test="stock-bodega-detail-row">
+                            <tr
+                                key={bodega.id}
+                                data-test="stock-bodega-detail-row"
+                            >
                                 <td className="px-2 py-1.5">{bodega.nombre}</td>
                                 <td className="px-2 py-1.5 text-right">
                                     {numberFormatter.format(
@@ -559,15 +569,13 @@ export default function StockBodegasTable({ stockBodegas }: Props) {
     }, [stockBodegas]);
 
     const columnDefs = useMemo<ColumnMeta[]>(() => {
-        const bodegaColumns = bodegas.map(
-            (bodega): ColumnMeta => ({
-                key: bodegaColumnKey(bodega.id),
-                label: bodega.nombre,
-                sortable: true,
-                filterable: true,
-                align: 'right',
-            }),
-        );
+        const bodegaColumns = bodegas.map((bodega): ColumnMeta => ({
+            key: bodegaColumnKey(bodega.id),
+            label: bodega.nombre,
+            sortable: true,
+            filterable: true,
+            align: 'right',
+        }));
 
         if (vista === 'inversion') {
             return [
@@ -645,9 +653,7 @@ export default function StockBodegasTable({ stockBodegas }: Props) {
     const resizingKeyRef = useRef<ColumnKey | null>(null);
     const resizeStartXRef = useRef(0);
     const resizeStartWidthRef = useRef(0);
-    const headerRefs = useRef<Map<ColumnKey, HTMLTableCellElement>>(
-        new Map(),
-    );
+    const headerRefs = useRef<Map<ColumnKey, HTMLTableCellElement>>(new Map());
     const pendingFlipRef = useRef<Map<ColumnKey, DOMRect> | null>(null);
 
     const registerHeaderRef =
@@ -928,7 +934,10 @@ export default function StockBodegasTable({ stockBodegas }: Props) {
         />
     );
 
-    const renderBodyCell = (key: ColumnKey, row: ProductoStockRow): ReactNode => {
+    const renderBodyCell = (
+        key: ColumnKey,
+        row: ProductoStockRow,
+    ): ReactNode => {
         switch (key) {
             case 'producto': {
                 if (vista !== 'stock') {
@@ -1088,9 +1097,7 @@ export default function StockBodegasTable({ stockBodegas }: Props) {
                                 <DropdownMenuCheckboxItem
                                     key={meta.key}
                                     checked={!hiddenColumns.has(meta.key)}
-                                    onSelect={(event) =>
-                                        event.preventDefault()
-                                    }
+                                    onSelect={(event) => event.preventDefault()}
                                     onCheckedChange={() =>
                                         toggleColumnVisibility(meta.key)
                                     }
@@ -1127,12 +1134,8 @@ export default function StockBodegasTable({ stockBodegas }: Props) {
                                         sortDirection={sortDirection}
                                         onSort={handleSort}
                                         onResizeStart={startResize(key)}
-                                        onDragStart={handleColumnDragStart(
-                                            key,
-                                        )}
-                                        onDragOver={handleColumnDragOver(
-                                            key,
-                                        )}
+                                        onDragStart={handleColumnDragStart(key)}
+                                        onDragOver={handleColumnDragOver(key)}
                                         onDrop={handleColumnDrop(key)}
                                         onDragEnd={handleColumnDragEnd}
                                         isDragging={draggedKey === key}
@@ -1214,37 +1217,12 @@ export default function StockBodegasTable({ stockBodegas }: Props) {
                         de {visibleRows.length} productos
                     </p>
 
-                    <div className="flex items-center gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test="stock-bodegas-page-prev"
-                            disabled={currentPage <= 1}
-                            onClick={() =>
-                                setPage((prev) => Math.max(prev - 1, 1))
-                            }
-                        >
-                            Anterior
-                        </Button>
-                        <span className="text-muted-foreground px-2">
-                            Página {currentPage} de {totalPages}
-                        </span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test="stock-bodegas-page-next"
-                            disabled={currentPage >= totalPages}
-                            onClick={() =>
-                                setPage((prev) =>
-                                    Math.min(prev + 1, totalPages),
-                                )
-                            }
-                        >
-                            Siguiente
-                        </Button>
-                    </div>
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        dataTest="stock-bodegas-page"
+                    />
                 </div>
             )}
         </div>

@@ -516,3 +516,32 @@ test('members without pos.view cannot fetch a voucher', function () {
         ->getJson(route('pos.pedidos.voucher', [$team, Pedido::factory()->create()]))
         ->assertForbidden();
 });
+
+test('the sidebar badges count all the pedidos and compras the user can see', function () {
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    attachTeamMember($team, $owner, 'Owner');
+
+    Pedido::factory()->create(['tipo_precio' => 'DETAL', 'estado' => 'PENDIENTE']);
+    Pedido::factory()->create(['tipo_precio' => 'DETAL', 'estado' => 'COMPLETADO']);
+    Pedido::factory()->count(2)->create(['tipo_precio' => 'MAYORISTA', 'estado' => 'PENDIENTE']);
+
+    $this->actingAs($owner)
+        ->get(route('pos.index', $team))
+        ->assertInertia(fn ($page) => $page
+            ->where('navCounts.pedidos', 2)
+            ->where('navCounts.pedidosMayoristas', 2)
+            ->where('navCounts.compras', 0)
+        );
+
+    $member = User::factory()->create();
+    attachTeamMember($team, $member, 'Member');
+    $member->givePermissionTo('pos.view');
+
+    $this->actingAs($member)
+        ->get(route('pos.index', $team))
+        ->assertInertia(fn ($page) => $page
+            ->where('navCounts.pedidos', 0)
+            ->where('navCounts.pedidosMayoristas', 0)
+        );
+});

@@ -11,4 +11,12 @@ export type NavItem = {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    /** A count shown as a badge; hidden when 0 or missing. */
+    badge?: number;
+};
+
+/** A sidebar section. Without a `label` its items are standalone links. */
+export type NavGroup = {
+    label?: string;
+    items: NavItem[];
 };

@@ -3,8 +3,6 @@ import {
     ArrowDown,
     ArrowUp,
     ArrowUpDown,
-    ChevronLeft,
-    ChevronRight,
     Columns3,
     GripVertical,
     Pencil,
@@ -19,6 +17,7 @@ import DateRangeFilter, {
 } from '@/components/date-range-filter';
 import DeletePedidoModal from '@/components/delete-pedido-modal';
 import { Badge } from '@/components/ui/badge';
+import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -348,9 +347,7 @@ function FilterCell({
             variant === 'estado' ? ESTADO_OPTIONS : ESTADO_PAGO_OPTIONS;
 
         return (
-            <TableHead
-                className={align === 'right' ? 'text-right' : undefined}
-            >
+            <TableHead className={align === 'right' ? 'text-right' : undefined}>
                 <Select
                     value={value === '' ? 'ALL' : value}
                     onValueChange={(next) =>
@@ -367,10 +364,7 @@ function FilterCell({
                     <SelectContent>
                         <SelectItem value="ALL">Todos</SelectItem>
                         {options.map((option) => (
-                            <SelectItem
-                                key={option.value}
-                                value={option.value}
-                            >
+                            <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                             </SelectItem>
                         ))}
@@ -468,9 +462,7 @@ function HeaderCell({
                         <Icon className="size-3.5" />
                     </button>
                 ) : (
-                    <span className="text-muted-foreground">
-                        {meta.label}
-                    </span>
+                    <span className="text-muted-foreground">{meta.label}</span>
                 )}
             </div>
             <ResizeHandle onMouseDown={onResizeStart} />
@@ -495,8 +487,9 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
     });
     const [page, setPage] = useState(1);
     const pageSize = 25;
-    const [columnWidths, setColumnWidths] =
-        useState<Record<ColumnKey, number>>(DEFAULT_COLUMN_WIDTHS);
+    const [columnWidths, setColumnWidths] = useState<Record<ColumnKey, number>>(
+        DEFAULT_COLUMN_WIDTHS,
+    );
     const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(COLUMN_KEYS);
     const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnKey>>(
         new Set(),
@@ -506,9 +499,7 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
     const resizingKeyRef = useRef<ColumnKey | null>(null);
     const resizeStartXRef = useRef(0);
     const resizeStartWidthRef = useRef(0);
-    const headerRefs = useRef<Map<ColumnKey, HTMLTableCellElement>>(
-        new Map(),
-    );
+    const headerRefs = useRef<Map<ColumnKey, HTMLTableCellElement>>(new Map());
     const pendingFlipRef = useRef<Map<ColumnKey, DOMRect> | null>(null);
 
     const registerHeaderRef =
@@ -780,10 +771,7 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
         return list;
     }, [pedidos, search, filters, dateRange, sortKey, sortDirection]);
 
-    const totalPages = Math.max(
-        Math.ceil(visiblePedidos.length / pageSize),
-        1,
-    );
+    const totalPages = Math.max(Math.ceil(visiblePedidos.length / pageSize), 1);
     const currentPage = Math.min(page, totalPages);
 
     const paginatedPedidos = useMemo(
@@ -897,9 +885,7 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
             case 'total':
                 return currencyFormatter.format(Number(pedido.total_a_pagar));
             case 'saldo':
-                return currencyFormatter.format(
-                    Number(pedido.saldo_pendiente),
-                );
+                return currencyFormatter.format(Number(pedido.saldo_pendiente));
             case 'vendedor':
                 return <TruncatedCell value={pedido.user?.name ?? '—'} />;
             case 'turno':
@@ -909,9 +895,7 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
             case 'medios':
                 return <TruncatedCell value={mediosDePagoResumen(pedido)} />;
             case 'observacion_pago':
-                return (
-                    <TruncatedCell value={pedido.observacion_pago ?? '—'} />
-                );
+                return <TruncatedCell value={pedido.observacion_pago ?? '—'} />;
             case 'observacion':
                 return <TruncatedCell value={pedido.observacion ?? '—'} />;
             case 'estado_pago':
@@ -1013,9 +997,7 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
                         align="end"
                         className="max-h-80 overflow-y-auto"
                     >
-                        <DropdownMenuLabel>
-                            Mostrar columnas
-                        </DropdownMenuLabel>
+                        <DropdownMenuLabel>Mostrar columnas</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {HIDEABLE_COLUMNS.map((meta) => (
                             <DropdownMenuCheckboxItem
@@ -1057,12 +1039,8 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
                                         sortDirection={sortDirection}
                                         onSort={handleSort}
                                         onResizeStart={startResize(key)}
-                                        onDragStart={handleColumnDragStart(
-                                            key,
-                                        )}
-                                        onDragOver={handleColumnDragOver(
-                                            key,
-                                        )}
+                                        onDragStart={handleColumnDragStart(key)}
+                                        onDragOver={handleColumnDragOver(key)}
                                         onDrop={handleColumnDrop(key)}
                                         onDragEnd={handleColumnDragEnd}
                                         isDragging={draggedKey === key}
@@ -1123,39 +1101,12 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
                         de {visiblePedidos.length} pedidos
                     </p>
 
-                    <div className="flex items-center gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test="pedidos-page-prev"
-                            disabled={currentPage <= 1}
-                            onClick={() =>
-                                setPage((prev) => Math.max(prev - 1, 1))
-                            }
-                        >
-                            <ChevronLeft className="size-4" />
-                            Anterior
-                        </Button>
-                        <span className="text-muted-foreground px-2">
-                            Página {currentPage} de {totalPages}
-                        </span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test="pedidos-page-next"
-                            disabled={currentPage >= totalPages}
-                            onClick={() =>
-                                setPage((prev) =>
-                                    Math.min(prev + 1, totalPages),
-                                )
-                            }
-                        >
-                            Siguiente
-                            <ChevronRight className="size-4" />
-                        </Button>
-                    </div>
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        dataTest="pedidos-page"
+                    />
                 </div>
             )}
 

@@ -3,8 +3,6 @@ import {
     ArrowDown,
     ArrowUp,
     ArrowUpDown,
-    ChevronLeft,
-    ChevronRight,
     DollarSign,
     ExternalLink,
     Image as ImageIcon,
@@ -13,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -50,12 +49,7 @@ type Props = {
 type SortDirection = 'asc' | 'desc';
 
 type PedidoSortKey =
-    | 'id'
-    | 'fecha'
-    | 'cliente'
-    | 'cantidad'
-    | 'precio_unitario'
-    | 'subtotal';
+    'id' | 'fecha' | 'cliente' | 'cantidad' | 'precio_unitario' | 'subtotal';
 
 type CompraSortKey =
     | 'id'
@@ -293,31 +287,12 @@ function PaginationBar({
     return (
         <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">{total} registros</span>
-            <div className="flex items-center gap-2">
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page <= 1 || loading}
-                    onClick={() => onChange(Math.max(page - 1, 1))}
-                >
-                    <ChevronLeft className="size-3.5" />
-                    Anterior
-                </Button>
-                <span className="text-muted-foreground px-1">
-                    Página {page} de {Math.max(lastPage, 1)}
-                </span>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= lastPage || loading}
-                    onClick={() => onChange(Math.min(page + 1, lastPage))}
-                >
-                    Siguiente
-                    <ChevronRight className="size-3.5" />
-                </Button>
-            </div>
+            <Pagination
+                page={page}
+                totalPages={Math.max(lastPage, 1)}
+                onPageChange={onChange}
+                dataTest="producto-detalle-page"
+            />
         </div>
     );
 }
@@ -508,10 +483,7 @@ export default function ProductoDetalleModal({
                         <SectionCard icon={Ruler} title="Medidas">
                             <div className="grid grid-cols-4 gap-4">
                                 <Field label="Ancho" value={producto.ancho} />
-                                <Field
-                                    label="Perfil"
-                                    value={producto.perfil}
-                                />
+                                <Field label="Perfil" value={producto.perfil} />
                                 <Field
                                     label="Construcción"
                                     value={producto.construccion}
@@ -710,8 +682,8 @@ export default function ProductoDetalleModal({
                                                 colSpan={7}
                                                 className="text-muted-foreground py-6 text-center"
                                             >
-                                                Este producto no tiene
-                                                pedidos registrados.
+                                                Este producto no tiene pedidos
+                                                registrados.
                                             </TableCell>
                                         </TableRow>
                                     ) : null}
@@ -809,8 +781,7 @@ export default function ProductoDetalleModal({
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {detalle.compra?.factura ??
-                                                    '—'}
+                                                {detalle.compra?.factura ?? '—'}
                                             </TableCell>
                                             <TableCell>
                                                 {detalle.compra?.proveedor
@@ -864,8 +835,8 @@ export default function ProductoDetalleModal({
                                                 colSpan={9}
                                                 className="text-muted-foreground py-6 text-center"
                                             >
-                                                Este producto no tiene
-                                                compras registradas.
+                                                Este producto no tiene compras
+                                                registradas.
                                             </TableCell>
                                         </TableRow>
                                     ) : null}

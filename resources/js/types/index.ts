@@ -5,6 +5,7 @@ export type * from './compras';
 export type * from './cotizador';
 export type * from './empresa';
 export type * from './gastos';
+export type * from './inicios-sesion';
 export type * from './marcas';
 export type * from './navigation';
 export type * from './pedidos';

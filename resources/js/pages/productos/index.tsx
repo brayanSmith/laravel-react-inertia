@@ -3,8 +3,6 @@ import {
     ArrowDown,
     ArrowUp,
     ArrowUpDown,
-    ChevronLeft,
-    ChevronRight,
     Pencil,
     Plus,
     Trash2,
@@ -17,6 +15,7 @@ import EditProductoModal from '@/components/edit-producto-modal';
 import Heading from '@/components/heading';
 import ProductoDetalleModal from '@/components/producto-detalle-modal';
 import { Badge } from '@/components/ui/badge';
+import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -222,9 +221,7 @@ function SortableHead({
                     data-test={`productos-sort-${columnKey}`}
                     className={cn(
                         'hover:text-foreground inline-flex items-center gap-1',
-                        isActive
-                            ? 'text-foreground'
-                            : 'text-muted-foreground',
+                        isActive ? 'text-foreground' : 'text-muted-foreground',
                     )}
                 >
                     {accessor.label}
@@ -259,7 +256,9 @@ function FilterHead({
     onChange: (key: string, value: string) => void;
 }) {
     return (
-        <TableHead className={accessor.align === 'right' ? 'text-right' : undefined}>
+        <TableHead
+            className={accessor.align === 'right' ? 'text-right' : undefined}
+        >
             <Input
                 value={value}
                 onChange={(event) => onChange(columnKey, event.target.value)}
@@ -284,14 +283,10 @@ export default function ProductosIndex({
         null,
     );
     const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [productoToEdit, setProductoToEdit] = useState<Producto | null>(
-        null,
-    );
+    const [productoToEdit, setProductoToEdit] = useState<Producto | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [viewDialogOpen, setViewDialogOpen] = useState(false);
-    const [productoToView, setProductoToView] = useState<Producto | null>(
-        null,
-    );
+    const [productoToView, setProductoToView] = useState<Producto | null>(null);
     const [sorts, setSorts] = useState<SortEntry[]>([]);
     const [filters, setFilters] = useState<Record<string, string>>({});
     const [activeGroup, setActiveGroup] = useState<{
@@ -769,9 +764,7 @@ export default function ProductosIndex({
                                                 sorts={sorts}
                                                 onSort={handleSort}
                                                 onRemoveSort={removeSort}
-                                                onResizeStart={startResize(
-                                                    key,
-                                                )}
+                                                onResizeStart={startResize(key)}
                                             />
                                         ))}
                                         <TableHead className="relative text-right">
@@ -959,8 +952,8 @@ export default function ProductosIndex({
                         ) : (
                             <div className="flex items-center justify-between text-sm">
                                 <p className="text-muted-foreground">
-                                    Mostrando{' '}
-                                    {(currentPage - 1) * pageSize + 1}–
+                                    Mostrando {(currentPage - 1) * pageSize + 1}
+                                    –
                                     {Math.min(
                                         currentPage * pageSize,
                                         visibleProductos.length,
@@ -968,44 +961,12 @@ export default function ProductosIndex({
                                     de {visibleProductos.length} productos
                                 </p>
 
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        data-test="productos-page-prev"
-                                        disabled={currentPage <= 1}
-                                        onClick={() =>
-                                            setPage((prev) =>
-                                                Math.max(prev - 1, 1),
-                                            )
-                                        }
-                                    >
-                                        <ChevronLeft className="size-4" />
-                                        Anterior
-                                    </Button>
-                                    <span className="text-muted-foreground px-2">
-                                        Página {currentPage} de {totalPages}
-                                    </span>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        data-test="productos-page-next"
-                                        disabled={currentPage >= totalPages}
-                                        onClick={() =>
-                                            setPage((prev) =>
-                                                Math.min(
-                                                    prev + 1,
-                                                    totalPages,
-                                                ),
-                                            )
-                                        }
-                                    >
-                                        Siguiente
-                                        <ChevronRight className="size-4" />
-                                    </Button>
-                                </div>
+                                <Pagination
+                                    page={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setPage}
+                                    dataTest="productos-page"
+                                />
                             </div>
                         )}
                     </div>

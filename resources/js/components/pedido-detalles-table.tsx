@@ -3,8 +3,6 @@ import {
     ArrowDown,
     ArrowUp,
     ArrowUpDown,
-    ChevronLeft,
-    ChevronRight,
     Columns3,
     GripVertical,
     Search,
@@ -16,6 +14,7 @@ import DateRangeFilter, {
     type DateRangeValue,
 } from '@/components/date-range-filter';
 import { Badge } from '@/components/ui/badge';
+import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -295,10 +294,7 @@ function FilterCell({
                     <SelectContent>
                         <SelectItem value="ALL">Todos</SelectItem>
                         {TIPO_VEHICULO_OPTIONS.map((option) => (
-                            <SelectItem
-                                key={option.value}
-                                value={option.value}
-                            >
+                            <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                             </SelectItem>
                         ))}
@@ -415,8 +411,9 @@ export default function PedidoDetallesTable({ pedidos, routes }: Props) {
     });
     const [page, setPage] = useState(1);
     const pageSize = 25;
-    const [columnWidths, setColumnWidths] =
-        useState<Record<ColumnKey, number>>(DEFAULT_COLUMN_WIDTHS);
+    const [columnWidths, setColumnWidths] = useState<Record<ColumnKey, number>>(
+        DEFAULT_COLUMN_WIDTHS,
+    );
     const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(COLUMN_KEYS);
     const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnKey>>(
         () => new Set<ColumnKey>(['codigoPedido']),
@@ -426,9 +423,7 @@ export default function PedidoDetallesTable({ pedidos, routes }: Props) {
     const resizingKeyRef = useRef<ColumnKey | null>(null);
     const resizeStartXRef = useRef(0);
     const resizeStartWidthRef = useRef(0);
-    const headerRefs = useRef<Map<ColumnKey, HTMLTableCellElement>>(
-        new Map(),
-    );
+    const headerRefs = useRef<Map<ColumnKey, HTMLTableCellElement>>(new Map());
     const pendingFlipRef = useRef<Map<ColumnKey, DOMRect> | null>(null);
 
     const registerHeaderRef =
@@ -746,7 +741,9 @@ export default function PedidoDetallesTable({ pedidos, routes }: Props) {
                 filterKey={meta.key}
                 value={filters[meta.key] ?? ''}
                 onChange={setFilter}
-                variant={meta.filter === 'tipoVehiculo' ? 'tipoVehiculo' : 'text'}
+                variant={
+                    meta.filter === 'tipoVehiculo' ? 'tipoVehiculo' : 'text'
+                }
                 align={meta.align === 'center' ? 'center' : meta.align}
             />
         );
@@ -847,9 +844,7 @@ export default function PedidoDetallesTable({ pedidos, routes }: Props) {
                         align="end"
                         className="max-h-80 overflow-y-auto"
                     >
-                        <DropdownMenuLabel>
-                            Mostrar columnas
-                        </DropdownMenuLabel>
+                        <DropdownMenuLabel>Mostrar columnas</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {COLUMN_DEFS.map((meta) => (
                             <DropdownMenuCheckboxItem
@@ -891,12 +886,8 @@ export default function PedidoDetallesTable({ pedidos, routes }: Props) {
                                         sortDirection={sortDirection}
                                         onSort={handleSort}
                                         onResizeStart={startResize(key)}
-                                        onDragStart={handleColumnDragStart(
-                                            key,
-                                        )}
-                                        onDragOver={handleColumnDragOver(
-                                            key,
-                                        )}
+                                        onDragStart={handleColumnDragStart(key)}
+                                        onDragOver={handleColumnDragOver(key)}
                                         onDrop={handleColumnDrop(key)}
                                         onDragEnd={handleColumnDragEnd}
                                         isDragging={draggedKey === key}
@@ -958,39 +949,12 @@ export default function PedidoDetallesTable({ pedidos, routes }: Props) {
                         de {visibleRows.length} detalles
                     </p>
 
-                    <div className="flex items-center gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test="detalle-pedidos-page-prev"
-                            disabled={currentPage <= 1}
-                            onClick={() =>
-                                setPage((prev) => Math.max(prev - 1, 1))
-                            }
-                        >
-                            <ChevronLeft className="size-4" />
-                            Anterior
-                        </Button>
-                        <span className="text-muted-foreground px-2">
-                            Página {currentPage} de {totalPages}
-                        </span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            data-test="detalle-pedidos-page-next"
-                            disabled={currentPage >= totalPages}
-                            onClick={() =>
-                                setPage((prev) =>
-                                    Math.min(prev + 1, totalPages),
-                                )
-                            }
-                        >
-                            Siguiente
-                            <ChevronRight className="size-4" />
-                        </Button>
-                    </div>
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        dataTest="detalle-pedidos-page"
+                    />
                 </div>
             )}
 

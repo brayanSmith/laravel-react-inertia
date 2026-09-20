@@ -9,8 +9,9 @@ import {
     FileText,
     FolderGit2,
     LayoutGrid,
-    Package,
+    LogIn,
     MonitorSmartphone,
+    Package,
     Quote,
     Receipt,
     Shield,
@@ -40,12 +41,13 @@ import { index as bodegasIndex } from '@/routes/bodegas';
 import { index as clientesIndex } from '@/routes/clientes';
 import { index as comprasIndex } from '@/routes/compras';
 import { index as cotizadorIndex } from '@/routes/cotizador';
-import { index as posIndex } from '@/routes/pos';
 import { edit as empresaEdit } from '@/routes/empresa';
 import { index as gastosIndex } from '@/routes/gastos';
+import { index as iniciosSesionIndex } from '@/routes/inicios-sesion';
 import { index as marcasIndex } from '@/routes/marcas';
 import { index as pedidosIndex } from '@/routes/pedidos';
 import { index as pedidosMayoristasIndex } from '@/routes/pedidos-mayoristas';
+import { index as posIndex } from '@/routes/pos';
 import { index as productosIndex } from '@/routes/productos';
 import { index as proveedoresIndex } from '@/routes/proveedores';
 import { index as pucsIndex } from '@/routes/pucs';
@@ -54,188 +56,173 @@ import { index as stockInicialesIndex } from '@/routes/stock-iniciales';
 import { index as rolesIndex } from '@/routes/teams/roles';
 import { index as trasladosIndex } from '@/routes/traslados';
 import { index as usuariosIndex } from '@/routes/usuarios';
-import type { NavItem } from '@/types';
+import type { NavGroup, NavItem } from '@/types';
 
 export function AppSidebar() {
     const page = usePage();
-    const dashboardUrl = page.props.currentTeam
-        ? dashboard(page.props.currentTeam.slug)
-        : '/';
+    const team = page.props.currentTeam?.slug;
+    const dashboardUrl = team ? dashboard(team) : '/';
     const canManageRoles =
         page.props.currentTeam?.role === 'owner' ||
         page.props.currentTeam?.role === 'admin';
 
-    const mainNavItems: NavItem[] = [
+    // Every entry is shown only when the user has the permission for it.
+    const entry = (
+        visible: boolean,
+        title: string,
+        href: (slug: string) => NavItem['href'],
+        icon: NavItem['icon'],
+        badge?: number,
+    ): NavItem[] =>
+        visible && team ? [{ title, href: href(team), icon, badge }] : [];
+
+    const groups: NavGroup[] = [
         {
-            title: 'Panel',
-            href: dashboardUrl,
-            icon: LayoutGrid,
+            items: [
+                { title: 'Escritorio', href: dashboardUrl, icon: LayoutGrid },
+                ...entry(
+                    page.props.canViewEmpresa,
+                    'Empresas',
+                    empresaEdit,
+                    Building2,
+                ),
+            ],
         },
-        ...(page.props.canViewClientes && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Clientes',
-                      href: clientesIndex(page.props.currentTeam.slug),
-                      icon: Users,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewUsuarios && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Usuarios',
-                      href: usuariosIndex(page.props.currentTeam.slug),
-                      icon: UserCog,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewBodegas && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Bodegas',
-                      href: bodegasIndex(page.props.currentTeam.slug),
-                      icon: Warehouse,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewProveedores && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Proveedores',
-                      href: proveedoresIndex(page.props.currentTeam.slug),
-                      icon: Truck,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewMarcas && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Marcas',
-                      href: marcasIndex(page.props.currentTeam.slug),
-                      icon: Tags,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewPucs && page.props.currentTeam
-            ? [
-                  {
-                      title: 'PUC',
-                      href: pucsIndex(page.props.currentTeam.slug),
-                      icon: Calculator,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewCotizador && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Cotizador',
-                      href: cotizadorIndex(page.props.currentTeam.slug),
-                      icon: Quote,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewPos && page.props.currentTeam
-            ? [
-                  {
-                      title: 'POS',
-                      href: posIndex(page.props.currentTeam.slug),
-                      icon: MonitorSmartphone,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewCompras && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Compras',
-                      href: comprasIndex(page.props.currentTeam.slug),
-                      icon: ShoppingCart,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewPedidos && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Pedidos',
-                      href: pedidosIndex(page.props.currentTeam.slug),
-                      icon: FileText,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewPedidosMayoristas && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Pedidos Mayorista',
-                      href: pedidosMayoristasIndex(
-                          page.props.currentTeam.slug,
-                      ),
-                      icon: FileText,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewGastos && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Gastos',
-                      href: gastosIndex(page.props.currentTeam.slug),
-                      icon: Receipt,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewProductos && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Productos',
-                      href: productosIndex(page.props.currentTeam.slug),
-                      icon: Package,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewStockIniciales && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Stock inicial',
-                      href: stockInicialesIndex(page.props.currentTeam.slug),
-                      icon: ClipboardList,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewStockBodegas && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Stock por bodega',
-                      href: stockBodegasIndex(page.props.currentTeam.slug),
-                      icon: Boxes,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewTraslados && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Traslados',
-                      href: trasladosIndex(page.props.currentTeam.slug),
-                      icon: ArrowLeftRight,
-                  },
-              ]
-            : []),
-        ...(page.props.canViewEmpresa && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Empresa',
-                      href: empresaEdit(page.props.currentTeam.slug),
-                      icon: Building2,
-                  },
-              ]
-            : []),
-        ...(canManageRoles && page.props.currentTeam
-            ? [
-                  {
-                      title: 'Roles y permisos',
-                      href: rolesIndex(page.props.currentTeam.slug),
-                      icon: Shield,
-                  },
-              ]
-            : []),
-    ];
+        {
+            label: 'Sistema',
+            items: [
+                ...entry(
+                    page.props.canViewCotizador,
+                    'Cotizar',
+                    cotizadorIndex,
+                    Quote,
+                ),
+                ...entry(
+                    page.props.canViewPos,
+                    'POS',
+                    posIndex,
+                    MonitorSmartphone,
+                ),
+                ...entry(
+                    page.props.canViewGastos,
+                    'Gastos',
+                    gastosIndex,
+                    Receipt,
+                ),
+                ...entry(page.props.canViewPucs, 'Puc', pucsIndex, Calculator),
+            ],
+        },
+        {
+            label: 'Pedidos',
+            items: [
+                ...entry(
+                    page.props.canViewPedidos,
+                    'Pedidos General',
+                    pedidosIndex,
+                    FileText,
+                    page.props.navCounts?.pedidos,
+                ),
+                ...entry(
+                    page.props.canViewPedidosMayoristas,
+                    'Pedidos Mayorista',
+                    pedidosMayoristasIndex,
+                    FileText,
+                    page.props.navCounts?.pedidosMayoristas,
+                ),
+            ],
+        },
+        {
+            label: 'Compras',
+            items: entry(
+                page.props.canViewCompras,
+                'Compras',
+                comprasIndex,
+                ShoppingCart,
+                page.props.navCounts?.compras,
+            ),
+        },
+        {
+            label: 'Productos',
+            items: [
+                ...entry(
+                    page.props.canViewBodegas,
+                    'Bodegas',
+                    bodegasIndex,
+                    Warehouse,
+                ),
+                ...entry(page.props.canViewMarcas, 'Marcas', marcasIndex, Tags),
+                ...entry(
+                    page.props.canViewProductos,
+                    'Productos',
+                    productosIndex,
+                    Package,
+                ),
+            ],
+        },
+        {
+            label: 'Stock',
+            items: [
+                ...entry(
+                    page.props.canViewStockBodegas,
+                    'Stock Bodegas',
+                    stockBodegasIndex,
+                    Boxes,
+                ),
+                ...entry(
+                    page.props.canViewStockIniciales,
+                    'Stocks Iniciales',
+                    stockInicialesIndex,
+                    ClipboardList,
+                ),
+                ...entry(
+                    page.props.canViewTraslados,
+                    'Traslados',
+                    trasladosIndex,
+                    ArrowLeftRight,
+                ),
+            ],
+        },
+        {
+            label: 'Users',
+            items: [
+                ...entry(
+                    page.props.canViewClientes,
+                    'Clientes',
+                    clientesIndex,
+                    Users,
+                ),
+                ...entry(
+                    page.props.canViewProveedores,
+                    'Proveedores',
+                    proveedoresIndex,
+                    Truck,
+                ),
+                ...entry(
+                    page.props.canViewUsuarios,
+                    'Users',
+                    usuariosIndex,
+                    UserCog,
+                ),
+            ],
+        },
+        {
+            label: 'Seguridad',
+            items: [
+                ...entry(
+                    canManageRoles,
+                    'Roles y Permisos',
+                    rolesIndex,
+                    Shield,
+                ),
+                ...entry(
+                    page.props.canViewIniciosSesion,
+                    'Inicios de sesión',
+                    iniciosSesionIndex,
+                    LogIn,
+                ),
+            ],
+        },
+    ].filter((group) => group.items.length > 0);
 
     const footerNavItems: NavItem[] = [
         {
@@ -270,7 +257,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain groups={groups} />
             </SidebarContent>
 
             <SidebarFooter>
