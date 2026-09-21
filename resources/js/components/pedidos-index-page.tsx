@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
+import TrashToggle from '@/components/trash-toggle';
 import PedidoDetallesTable from '@/components/pedido-detalles-table';
 import PedidosTable from '@/components/pedidos-table';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ type Props = {
     pedidos: Pedido[];
     permissions: PedidoPermissions;
     routes: PedidoRoutes;
+    eliminados: boolean;
     title: string;
     description: string;
 };
@@ -22,6 +24,7 @@ export default function PedidosIndexPage({
     pedidos,
     permissions,
     routes,
+    eliminados,
     title,
     description,
 }: Props) {
@@ -69,7 +72,12 @@ export default function PedidosIndexPage({
                             </ToggleGroupItem>
                         </ToggleGroup>
 
-                        {permissions.canCreate ? (
+                        <TrashToggle
+                            eliminados={eliminados}
+                            visible={permissions.canDelete}
+                        />
+
+                        {permissions.canCreate && !eliminados ? (
                             <Button asChild data-test="create-pedido-button">
                                 <Link href={routes.pedidos.create(teamSlug)}>
                                     <Plus /> Nuevo pedido
@@ -84,9 +92,14 @@ export default function PedidosIndexPage({
                         pedidos={pedidos}
                         permissions={permissions}
                         routes={routes}
+                        eliminados={eliminados}
                     />
                 ) : (
-                    <PedidoDetallesTable pedidos={pedidos} routes={routes} />
+                    <PedidoDetallesTable
+                        pedidos={pedidos}
+                        routes={routes}
+                        eliminados={eliminados}
+                    />
                 )}
             </div>
         </>

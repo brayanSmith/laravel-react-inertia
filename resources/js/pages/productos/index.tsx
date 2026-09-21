@@ -14,6 +14,8 @@ import DeleteProductoModal from '@/components/delete-producto-modal';
 import EditProductoModal from '@/components/edit-producto-modal';
 import Heading from '@/components/heading';
 import ProductoDetalleModal from '@/components/producto-detalle-modal';
+import RestoreButton from '@/components/restore-button';
+import TrashToggle from '@/components/trash-toggle';
 import { Badge } from '@/components/ui/badge';
 import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
@@ -40,7 +42,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { index } from '@/routes/productos';
+import { index, restore } from '@/routes/productos';
 import type {
     Bodega,
     CategoriaProducto,
@@ -61,6 +63,7 @@ const CATEGORIA_TABS: { value: CategoriaTab; label: string }[] = [
 
 type Props = {
     productos: Producto[];
+    eliminados: boolean;
     bodegas: Bodega[];
     marcas: MarcaOption[];
     permissions: ProductoPermissions;
@@ -233,7 +236,7 @@ function SortableHead({
                         onClick={() => onRemoveSort(columnKey)}
                         title="Quitar del orden"
                         data-test={`productos-sort-remove-${columnKey}`}
-                        className="bg-muted text-muted-foreground hover:bg-destructive hover:text-white rounded-full px-1.5 text-[10px]"
+                        className="bg-muted text-muted-foreground hover:bg-destructive rounded-full px-1.5 text-[10px] hover:text-white"
                     >
                         {activeIndex + 1}
                     </button>
@@ -272,6 +275,7 @@ function FilterHead({
 
 export default function ProductosIndex({
     productos,
+    eliminados,
     bodegas,
     marcas,
     permissions,
@@ -620,16 +624,23 @@ export default function ProductosIndex({
                         description="Administra el catálogo de productos"
                     />
 
-                    {permissions.canCreate ? (
-                        <CreateProductoModal
-                            teamSlug={teamSlug}
-                            marcas={marcas}
-                        >
-                            <Button data-test="create-producto-button">
-                                <Plus /> Nuevo producto
-                            </Button>
-                        </CreateProductoModal>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                        <TrashToggle
+                            eliminados={eliminados}
+                            visible={permissions.canDelete}
+                        />
+
+                        {permissions.canCreate && !eliminados ? (
+                            <CreateProductoModal
+                                teamSlug={teamSlug}
+                                marcas={marcas}
+                            >
+                                <Button data-test="create-producto-button">
+                                    <Plus /> Nuevo producto
+                                </Button>
+                            </CreateProductoModal>
+                        ) : null}
+                    </div>
                 </div>
 
                 <Tabs
@@ -662,7 +673,7 @@ export default function ProductosIndex({
                             onClick={() => setActiveGroup(null)}
                             data-test="productos-group-all"
                             className={cn(
-                                'flex w-full items-center justify-between rounded px-2 py-1 text-left hover:bg-accent',
+                                'hover:bg-accent flex w-full items-center justify-between rounded px-2 py-1 text-left',
                                 !activeGroup &&
                                     'bg-accent text-accent-foreground',
                             )}
@@ -685,7 +696,7 @@ export default function ProductosIndex({
                                         }
                                         data-test={`productos-group-tipo-${group.tipo}`}
                                         className={cn(
-                                            'flex w-full items-center justify-between rounded px-2 py-1 text-left font-medium hover:bg-accent',
+                                            'hover:bg-accent flex w-full items-center justify-between rounded px-2 py-1 text-left font-medium',
                                             activeGroup?.tipoVehiculo ===
                                                 group.tipo &&
                                                 !activeGroup?.rin &&
@@ -712,7 +723,7 @@ export default function ProductosIndex({
                                                 }
                                                 data-test={`productos-group-rin-${group.tipo}-${rin.rin}`}
                                                 className={cn(
-                                                    'flex w-full items-center justify-between rounded px-2 py-1 text-left text-muted-foreground hover:bg-accent',
+                                                    'text-muted-foreground hover:bg-accent flex w-full items-center justify-between rounded px-2 py-1 text-left',
                                                     activeGroup?.tipoVehiculo ===
                                                         group.tipo &&
                                                         activeGroup?.rin ===
@@ -881,61 +892,78 @@ export default function ProductosIndex({
                                                     event.stopPropagation()
                                                 }
                                             >
-                                                <TooltipProvider>
-                                                    <div className="flex justify-end gap-2">
-                                                        {permissions.canUpdate ? (
-                                                            <Tooltip>
-                                                                <TooltipTrigger
-                                                                    asChild
-                                                                >
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        data-test="edit-producto-button"
-                                                                        onClick={() =>
-                                                                            openEditDialog(
-                                                                                producto,
-                                                                            )
-                                                                        }
+                                                {eliminados ? (
+                                                    permissions.canDelete ? (
+                                                        <div className="flex justify-end">
+                                                            <RestoreButton
+                                                                action={restore(
+                                                                    [
+                                                                        teamSlug,
+                                                                        producto.id,
+                                                                    ],
+                                                                )}
+                                                                nombre={`el producto ${producto.concatenar_codigo_nombre ?? producto.referencia_producto ?? producto.id}`}
+                                                                dataTest="restore-producto-button"
+                                                            />
+                                                        </div>
+                                                    ) : null
+                                                ) : (
+                                                    <TooltipProvider>
+                                                        <div className="flex justify-end gap-2">
+                                                            {permissions.canUpdate ? (
+                                                                <Tooltip>
+                                                                    <TooltipTrigger
+                                                                        asChild
                                                                     >
-                                                                        <Pencil className="h-4 w-4" />
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>
-                                                                        Editar
-                                                                    </p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        ) : null}
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            data-test="edit-producto-button"
+                                                                            onClick={() =>
+                                                                                openEditDialog(
+                                                                                    producto,
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <Pencil className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p>
+                                                                            Editar
+                                                                        </p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            ) : null}
 
-                                                        {permissions.canDelete ? (
-                                                            <Tooltip>
-                                                                <TooltipTrigger
-                                                                    asChild
-                                                                >
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        data-test="delete-producto-button"
-                                                                        onClick={() =>
-                                                                            openDeleteDialog(
-                                                                                producto,
-                                                                            )
-                                                                        }
+                                                            {permissions.canDelete ? (
+                                                                <Tooltip>
+                                                                    <TooltipTrigger
+                                                                        asChild
                                                                     >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>
-                                                                        Eliminar
-                                                                    </p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        ) : null}
-                                                    </div>
-                                                </TooltipProvider>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            data-test="delete-producto-button"
+                                                                            onClick={() =>
+                                                                                openDeleteDialog(
+                                                                                    producto,
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p>
+                                                                            Eliminar
+                                                                        </p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            ) : null}
+                                                        </div>
+                                                    </TooltipProvider>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))}

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesTrash;
 use App\Http\Requests\Clientes\StoreClienteRequest;
 use App\Http\Requests\Clientes\UpdateClienteRequest;
 use App\Models\Cliente;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class ClienteController extends Controller
 {
+    use HandlesTrash;
+
     /**
      * Display a listing of clientes.
      */
@@ -21,8 +24,13 @@ class ClienteController extends Controller
     {
         Gate::authorize('clientes.view');
 
+        $eliminados = $this->verEliminados($request, 'clientes');
+
         return Inertia::render('clientes/index', [
-            'clientes' => Cliente::orderBy('razon_social')->get(),
+            'clientes' => Cliente::orderBy('razon_social')
+                ->when($eliminados, fn ($query) => $query->onlyTrashed())
+                ->get(),
+            'eliminados' => $eliminados,
             'permissions' => [
                 'canCreate' => $request->user()->can('clientes.create'),
                 'canUpdate' => $request->user()->can('clientes.update'),
@@ -90,5 +98,13 @@ class ClienteController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Cliente deleted.')]);
 
         return back();
+    }
+
+    /**
+     * Restore a deleted cliente.
+     */
+    public function restore(string $current_team, Cliente $cliente): RedirectResponse
+    {
+        return $this->restaurarRegistro('clientes', $cliente, __('Cliente restored.'));
     }
 }

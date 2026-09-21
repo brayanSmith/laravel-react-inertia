@@ -16,6 +16,7 @@ import DateRangeFilter, {
     type DateRangeValue,
 } from '@/components/date-range-filter';
 import DeleteCompraModal from '@/components/delete-compra-modal';
+import RestoreButton from '@/components/restore-button';
 import { Badge } from '@/components/ui/badge';
 import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
@@ -49,12 +50,14 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { edit } from '@/routes/compras';
+import { edit, restore } from '@/routes/compras';
 import type { Compra, CompraPermissions } from '@/types';
 
 type Props = {
     compras: Compra[];
     permissions: CompraPermissions;
+    /** Showing the deleted compras: rows offer "restaurar" instead of edit/delete. */
+    eliminados?: boolean;
 };
 
 type StaticColumnKey =
@@ -401,7 +404,11 @@ function HeaderCell({
     );
 }
 
-export default function ComprasTable({ compras, permissions }: Props) {
+export default function ComprasTable({
+    compras,
+    permissions,
+    eliminados = false,
+}: Props) {
     const { currentTeam } = usePage().props;
     const teamSlug = currentTeam?.slug ?? '';
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -890,6 +897,19 @@ export default function ComprasTable({ compras, permissions }: Props) {
             case 'total':
                 return currencyFormatter.format(Number(compra.total_a_pagar));
             case 'acciones':
+                if (eliminados) {
+                    return permissions.canDelete ? (
+                        <div className="flex justify-end">
+                            <RestoreButton
+                                action={restore([teamSlug, compra.id])}
+                                nombre={`la compra ${compra.factura}`}
+                                aviso="El stock de las líneas recibidas se sumará de nuevo a sus bodegas."
+                                dataTest="restore-compra-button"
+                            />
+                        </div>
+                    ) : null;
+                }
+
                 return (
                     <TooltipProvider>
                         <div className="flex justify-end gap-2">

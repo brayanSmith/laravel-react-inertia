@@ -7,16 +7,19 @@ import type { Pedido, PedidoPermissions } from '@/types';
 type Props = {
     pedidos: Pedido[];
     permissions: PedidoPermissions;
+    eliminados: boolean;
 };
 
 export default function PedidosMayoristasIndex({
     pedidos,
     permissions,
+    eliminados,
 }: Props) {
     return (
         <PedidosIndexPage
             pedidos={pedidos}
             permissions={permissions}
+            eliminados={eliminados}
             routes={{
                 pedidos: pedidosMayoristasRoutes,
                 abonos: pedidosMayoristasAbonosRoutes,

@@ -6,11 +6,14 @@ use Database\Factories\DetalleCompraFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DetalleCompra extends Model
 {
     /** @use HasFactory<DetalleCompraFactory> */
     use HasFactory;
+
+    use SoftDeletes;
 
     protected $casts = [
         'cantidad' => 'decimal:2',

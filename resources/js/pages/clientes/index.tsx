@@ -6,6 +6,8 @@ import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteClienteModal from '@/components/delete-cliente-modal';
 import EditClienteModal from '@/components/edit-cliente-modal';
 import Heading from '@/components/heading';
+import RestoreButton from '@/components/restore-button';
+import TrashToggle from '@/components/trash-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,15 +16,20 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { index } from '@/routes/clientes';
+import { index, restore } from '@/routes/clientes';
 import type { Cliente, ClientePermissions } from '@/types';
 
 type Props = {
     clientes: Cliente[];
+    eliminados: boolean;
     permissions: ClientePermissions;
 };
 
-export default function ClientesIndex({ clientes, permissions }: Props) {
+export default function ClientesIndex({
+    clientes,
+    permissions,
+    eliminados,
+}: Props) {
     const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [clienteToEdit, setClienteToEdit] = useState<Cliente | null>(null);
@@ -85,12 +92,9 @@ export default function ClientesIndex({ clientes, permissions }: Props) {
                     { value: 'activo', label: 'Activo' },
                     { value: 'inactivo', label: 'Inactivo' },
                 ],
-                getValue: (cliente) =>
-                    cliente.activo ? 'activo' : 'inactivo',
+                getValue: (cliente) => (cliente.activo ? 'activo' : 'inactivo'),
                 render: (cliente) => (
-                    <Badge
-                        variant={cliente.activo ? 'default' : 'secondary'}
-                    >
+                    <Badge variant={cliente.activo ? 'default' : 'secondary'}>
                         {cliente.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
                 ),
@@ -100,54 +104,66 @@ export default function ClientesIndex({ clientes, permissions }: Props) {
                 label: 'Acciones',
                 align: 'right',
                 filter: 'none',
-                render: (cliente) => (
-                    <TooltipProvider>
-                        <div className="flex justify-end gap-2">
-                            {permissions.canUpdate ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            data-test="edit-cliente-button"
-                                            onClick={() =>
-                                                openEditDialog(cliente)
-                                            }
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Editar</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            ) : null}
+                render: (cliente) =>
+                    eliminados ? (
+                        permissions.canDelete ? (
+                            <div className="flex justify-end">
+                                <RestoreButton
+                                    action={restore([teamSlug, cliente.id])}
+                                    nombre={`el cliente ${cliente.razon_social}`}
+                                    dataTest="restore-cliente-button"
+                                />
+                            </div>
+                        ) : null
+                    ) : (
+                        <TooltipProvider>
+                            <div className="flex justify-end gap-2">
+                                {permissions.canUpdate ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                data-test="edit-cliente-button"
+                                                onClick={() =>
+                                                    openEditDialog(cliente)
+                                                }
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Editar</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : null}
 
-                            {permissions.canDelete ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            data-test="delete-cliente-button"
-                                            onClick={() =>
-                                                openDeleteDialog(cliente)
-                                            }
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Eliminar</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            ) : null}
-                        </div>
-                    </TooltipProvider>
-                ),
+                                {permissions.canDelete ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                data-test="delete-cliente-button"
+                                                onClick={() =>
+                                                    openDeleteDialog(cliente)
+                                                }
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Eliminar</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : null}
+                            </div>
+                        </TooltipProvider>
+                    ),
             },
         ],
-        [permissions],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [permissions, eliminados, teamSlug],
     );
 
     return (
@@ -162,13 +178,20 @@ export default function ClientesIndex({ clientes, permissions }: Props) {
                         description="Administra los clientes registrados"
                     />
 
-                    {permissions.canCreate ? (
-                        <CreateClienteModal teamSlug={teamSlug}>
-                            <Button data-test="create-cliente-button">
-                                <Plus /> Nuevo cliente
-                            </Button>
-                        </CreateClienteModal>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                        <TrashToggle
+                            eliminados={eliminados}
+                            visible={permissions.canDelete}
+                        />
+
+                        {permissions.canCreate && !eliminados ? (
+                            <CreateClienteModal teamSlug={teamSlug}>
+                                <Button data-test="create-cliente-button">
+                                    <Plus /> Nuevo cliente
+                                </Button>
+                            </CreateClienteModal>
+                        ) : null}
+                    </div>
                 </div>
 
                 <DataTable

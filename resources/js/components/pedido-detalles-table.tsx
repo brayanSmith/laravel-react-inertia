@@ -45,6 +45,8 @@ import type { Pedido, PedidoDetalle, PedidoRoutes } from '@/types';
 type Props = {
     pedidos: Pedido[];
     routes: PedidoRoutes;
+    /** Showing the deleted pedidos: their edit page is not available. */
+    eliminados?: boolean;
 };
 
 type ColumnKey =
@@ -396,7 +398,11 @@ function HeaderCell({
     );
 }
 
-export default function PedidoDetallesTable({ pedidos, routes }: Props) {
+export default function PedidoDetallesTable({
+    pedidos,
+    routes,
+    eliminados = false,
+}: Props) {
     const { currentTeam } = usePage().props;
     const teamSlug = currentTeam?.slug ?? '';
     const [search, setSearch] = useState('');
@@ -764,6 +770,10 @@ export default function PedidoDetallesTable({ pedidos, routes }: Props) {
                     </Badge>
                 );
             case 'codigoPedido':
+                if (eliminados) {
+                    return <span>#{row.pedidoId}</span>;
+                }
+
                 return (
                     <Link
                         href={routes.pedidos.edit([teamSlug, row.pedidoId])}

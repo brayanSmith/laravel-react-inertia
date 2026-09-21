@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesTrash;
 use App\Http\Requests\Productos\StoreProductoRequest;
 use App\Http\Requests\Productos\UpdateProductoRequest;
 use App\Models\Bodega;
@@ -19,6 +20,8 @@ use Inertia\Response;
 
 class ProductoController extends Controller
 {
+    use HandlesTrash;
+
     /**
      * Display a listing of productos.
      */
@@ -26,17 +29,21 @@ class ProductoController extends Controller
     {
         Gate::authorize('productos.view');
 
+        $eliminados = $this->verEliminados($request, 'productos');
+
         $productos = Producto::with([
             'marca',
             'stockBodegas',
             'detalleCompras' => fn ($query) => $query->where('estado_entrega', 'PENDIENTE')->with('compra.proveedor'),
         ])
+            ->when($eliminados, fn ($query) => $query->onlyTrashed())
             ->orderBy('referencia_producto')
             ->get()
             ->map(fn (Producto $producto) => $this->withListingData($producto));
 
         return Inertia::render('productos/index', [
             'productos' => $productos,
+            'eliminados' => $eliminados,
             'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'marcas' => Marca::orderBy('marca')->get(['id', 'marca']),
             'permissions' => $this->permissions($request),
@@ -247,5 +254,13 @@ class ProductoController extends Controller
             'canUpdate' => $request->user()->can('productos.update'),
             'canDelete' => $request->user()->can('productos.delete'),
         ];
+    }
+
+    /**
+     * Restore a deleted producto.
+     */
+    public function restore(string $current_team, Producto $producto): RedirectResponse
+    {
+        return $this->restaurarRegistro('productos', $producto, __('Producto restored.'));
     }
 }

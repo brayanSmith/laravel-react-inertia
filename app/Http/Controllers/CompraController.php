@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesTrash;
 use App\Http\Requests\Compras\StoreCompraRequest;
 use App\Http\Requests\Compras\UpdateCompraRequest;
 use App\Models\Bodega;
@@ -20,6 +21,8 @@ use Inertia\Response;
 
 class CompraController extends Controller
 {
+    use HandlesTrash;
+
     /**
      * Display a listing of compras.
      */
@@ -27,10 +30,14 @@ class CompraController extends Controller
     {
         Gate::authorize('compras.view');
 
+        $eliminados = $this->verEliminados($request, 'compras');
+
         return Inertia::render('compras/index', [
-            'compras' => Compra::with(['proveedor', 'detallesCompra.producto', 'detallesCompra.bodega'])
+            'compras' => Compra::with(['proveedor', 'detallesCompra' => fn ($query) => $query->withTrashed()->with(['producto', 'bodega'])])
+                ->when($eliminados, fn ($query) => $query->onlyTrashed())
                 ->orderByDesc('fecha')
                 ->get(),
+            'eliminados' => $eliminados,
             'permissions' => $this->permissions($request),
         ]);
     }
@@ -101,7 +108,7 @@ class CompraController extends Controller
                 $this->adjustStock($detalle, -1);
             }
 
-            $compra->detallesCompra()->delete();
+            $compra->detallesCompra()->forceDelete();
 
             $compra->update([
                 'factura' => $data['factura'],
@@ -221,5 +228,21 @@ class CompraController extends Controller
             'canUpdate' => $request->user()->can('compras.update'),
             'canDelete' => $request->user()->can('compras.delete'),
         ];
+    }
+
+    /**
+     * Restore a deleted compra with its lines, receiving again the stock
+     * of the lines that had been received.
+     */
+    public function restore(string $current_team, Compra $compra): RedirectResponse
+    {
+        return $this->restaurarRegistro('compras', $compra, __('Compra restored.'), function (Compra $compra): void {
+            DB::transaction(function () use ($compra): void {
+                $compra->detallesCompra()->onlyTrashed()->get()->each(function (DetalleCompra $detalle): void {
+                    $detalle->restore();
+                    $this->adjustStock($detalle, 1);
+                });
+            });
+        });
     }
 }

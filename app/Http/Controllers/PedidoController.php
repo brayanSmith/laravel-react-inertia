@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesTrash;
 use App\Http\Requests\Pedidos\StorePedidoRequest;
 use App\Http\Requests\Pedidos\UpdatePedidoRequest;
 use App\Models\Bodega;
 use App\Models\Cliente;
+use App\Models\DetallePedido;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Puc;
@@ -28,6 +30,8 @@ use Inertia\Response;
  */
 class PedidoController extends Controller
 {
+    use HandlesTrash;
+
     /**
      * Display a listing of pedidos.
      */
@@ -37,17 +41,21 @@ class PedidoController extends Controller
 
         Gate::authorize("{$module}.view");
 
+        $eliminados = $this->verEliminados($request, $module);
+
         return Inertia::render("{$module}/index", [
             'pedidos' => Pedido::with([
                 'cliente',
                 'bodega',
                 'user',
-                'detalles.producto.stockBodegas',
+                'detalles' => fn ($query) => $query->withTrashed()->with('producto.stockBodegas'),
                 'abonos.puc',
             ])
+                ->when($eliminados, fn ($query) => $query->onlyTrashed())
                 ->where('tipo_precio', $this->tipoPrecio($module))
                 ->orderByDesc('fecha')
                 ->get(),
+            'eliminados' => $eliminados,
             'permissions' => $this->permissions($request, $module),
         ]);
     }
@@ -122,7 +130,7 @@ class PedidoController extends Controller
                 $pedidoService->adjustStock($detalle, $pedido, 1);
             }
 
-            $pedido->detalles()->delete();
+            $pedido->detalles()->forceDelete();
 
             $pedido->update([
                 'cliente_id' => $data['cliente_id'],
@@ -219,5 +227,21 @@ class PedidoController extends Controller
     private function tipoPrecio(string $module): string
     {
         return $module === 'pedidos-mayoristas' ? 'MAYORISTA' : 'DETAL';
+    }
+
+    /**
+     * Restore a deleted pedido with its lines, taking their stock out of
+     * the bodega again.
+     */
+    public function restore(Request $request, PedidoService $pedidoService, string $current_team, Pedido $pedido): RedirectResponse
+    {
+        return $this->restaurarRegistro($this->module($request), $pedido, __('Pedido restored.'), function (Pedido $pedido) use ($pedidoService): void {
+            DB::transaction(function () use ($pedido, $pedidoService): void {
+                $pedido->detalles()->onlyTrashed()->get()->each(function (DetallePedido $detalle) use ($pedido, $pedidoService): void {
+                    $detalle->restore();
+                    $pedidoService->adjustStock($detalle, $pedido, -1);
+                });
+            });
+        });
     }
 }

@@ -6,6 +6,8 @@ import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteProveedorModal from '@/components/delete-proveedor-modal';
 import EditProveedorModal from '@/components/edit-proveedor-modal';
 import Heading from '@/components/heading';
+import RestoreButton from '@/components/restore-button';
+import TrashToggle from '@/components/trash-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,11 +16,12 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { index } from '@/routes/proveedores';
+import { index, restore } from '@/routes/proveedores';
 import type { Proveedor, ProveedorPermissions } from '@/types';
 
 type Props = {
     proveedores: Proveedor[];
+    eliminados: boolean;
     permissions: ProveedorPermissions;
 };
 
@@ -27,7 +30,11 @@ const TIPO_OPTIONS = [
     { value: 'ELECTRONICO', label: 'Electrónico' },
 ];
 
-export default function ProveedoresIndex({ proveedores, permissions }: Props) {
+export default function ProveedoresIndex({
+    proveedores,
+    permissions,
+    eliminados,
+}: Props) {
     const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [proveedorToEdit, setProveedorToEdit] = useState<Proveedor | null>(
@@ -98,54 +105,66 @@ export default function ProveedoresIndex({ proveedores, permissions }: Props) {
                 label: 'Acciones',
                 align: 'right',
                 filter: 'none',
-                render: (proveedor) => (
-                    <TooltipProvider>
-                        <div className="flex justify-end gap-2">
-                            {permissions.canUpdate ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            data-test="edit-proveedor-button"
-                                            onClick={() =>
-                                                openEditDialog(proveedor)
-                                            }
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Editar</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            ) : null}
+                render: (proveedor) =>
+                    eliminados ? (
+                        permissions.canDelete ? (
+                            <div className="flex justify-end">
+                                <RestoreButton
+                                    action={restore([teamSlug, proveedor.id])}
+                                    nombre={`el proveedor ${proveedor.nombre_proveedor}`}
+                                    dataTest="restore-proveedor-button"
+                                />
+                            </div>
+                        ) : null
+                    ) : (
+                        <TooltipProvider>
+                            <div className="flex justify-end gap-2">
+                                {permissions.canUpdate ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                data-test="edit-proveedor-button"
+                                                onClick={() =>
+                                                    openEditDialog(proveedor)
+                                                }
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Editar</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : null}
 
-                            {permissions.canDelete ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            data-test="delete-proveedor-button"
-                                            onClick={() =>
-                                                openDeleteDialog(proveedor)
-                                            }
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Eliminar</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            ) : null}
-                        </div>
-                    </TooltipProvider>
-                ),
+                                {permissions.canDelete ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                data-test="delete-proveedor-button"
+                                                onClick={() =>
+                                                    openDeleteDialog(proveedor)
+                                                }
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Eliminar</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : null}
+                            </div>
+                        </TooltipProvider>
+                    ),
             },
         ],
-        [permissions],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [permissions, eliminados, teamSlug],
     );
 
     return (
@@ -160,13 +179,20 @@ export default function ProveedoresIndex({ proveedores, permissions }: Props) {
                         description="Administra los proveedores registrados"
                     />
 
-                    {permissions.canCreate ? (
-                        <CreateProveedorModal teamSlug={teamSlug}>
-                            <Button data-test="create-proveedor-button">
-                                <Plus /> Nuevo proveedor
-                            </Button>
-                        </CreateProveedorModal>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                        <TrashToggle
+                            eliminados={eliminados}
+                            visible={permissions.canDelete}
+                        />
+
+                        {permissions.canCreate && !eliminados ? (
+                            <CreateProveedorModal teamSlug={teamSlug}>
+                                <Button data-test="create-proveedor-button">
+                                    <Plus /> Nuevo proveedor
+                                </Button>
+                            </CreateProveedorModal>
+                        ) : null}
+                    </div>
                 </div>
 
                 <DataTable

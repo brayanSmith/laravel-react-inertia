@@ -16,6 +16,7 @@ import DateRangeFilter, {
     type DateRangeValue,
 } from '@/components/date-range-filter';
 import DeletePedidoModal from '@/components/delete-pedido-modal';
+import RestoreButton from '@/components/restore-button';
 import { Badge } from '@/components/ui/badge';
 import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,8 @@ type Props = {
     pedidos: Pedido[];
     permissions: PedidoPermissions;
     routes: PedidoRoutes;
+    /** Showing the deleted pedidos: rows offer "restaurar" instead of edit/delete. */
+    eliminados?: boolean;
 };
 
 type SortKey =
@@ -470,7 +473,12 @@ function HeaderCell({
     );
 }
 
-export default function PedidosTable({ pedidos, permissions, routes }: Props) {
+export default function PedidosTable({
+    pedidos,
+    permissions,
+    routes,
+    eliminados = false,
+}: Props) {
     const { currentTeam } = usePage().props;
     const teamSlug = currentTeam?.slug ?? '';
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -912,6 +920,22 @@ export default function PedidosTable({ pedidos, permissions, routes }: Props) {
                     </Badge>
                 );
             case 'acciones':
+                if (eliminados) {
+                    return permissions.canDelete ? (
+                        <div className="flex justify-end">
+                            <RestoreButton
+                                action={routes.pedidos.restore([
+                                    teamSlug,
+                                    pedido.id,
+                                ])}
+                                nombre={`el pedido #${pedido.id}`}
+                                aviso="El stock de sus productos se descontará de nuevo de la bodega."
+                                dataTest="restore-pedido-button"
+                            />
+                        </div>
+                    ) : null;
+                }
+
                 return (
                     <TooltipProvider>
                         <div className="flex justify-end gap-2">

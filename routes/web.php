@@ -34,6 +34,7 @@ Route::prefix('{current_team}')
         Route::post('clientes', [ClienteController::class, 'store'])->name('clientes.store');
         Route::patch('clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
         Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
+        Route::patch('clientes/{cliente}/restaurar', [ClienteController::class, 'restore'])->withTrashed()->name('clientes.restore');
 
         Route::get('usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
         Route::post('usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
@@ -49,6 +50,7 @@ Route::prefix('{current_team}')
         Route::post('proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
         Route::patch('proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
         Route::delete('proveedores/{proveedor}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
+        Route::patch('proveedores/{proveedor}/restaurar', [ProveedorController::class, 'restore'])->withTrashed()->name('proveedores.restore');
 
         Route::get('marcas', [MarcaController::class, 'index'])->name('marcas.index');
         Route::post('marcas', [MarcaController::class, 'store'])->name('marcas.store');
@@ -64,6 +66,7 @@ Route::prefix('{current_team}')
         Route::post('gastos', [GastoController::class, 'store'])->name('gastos.store');
         Route::patch('gastos/{gasto}', [GastoController::class, 'update'])->name('gastos.update');
         Route::delete('gastos/{gasto}', [GastoController::class, 'destroy'])->name('gastos.destroy');
+        Route::patch('gastos/{gasto}/restaurar', [GastoController::class, 'restore'])->withTrashed()->name('gastos.restore');
 
         Route::get('inicios-sesion', [InicioSesionController::class, 'index'])->name('inicios-sesion.index');
 
@@ -81,6 +84,7 @@ Route::prefix('{current_team}')
         Route::get('compras/{compra}/editar', [CompraController::class, 'edit'])->name('compras.edit');
         Route::patch('compras/{compra}', [CompraController::class, 'update'])->name('compras.update');
         Route::delete('compras/{compra}', [CompraController::class, 'destroy'])->name('compras.destroy');
+        Route::patch('compras/{compra}/restaurar', [CompraController::class, 'restore'])->withTrashed()->name('compras.restore');
 
         Route::get('pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
         Route::get('pedidos/crear', [PedidoController::class, 'create'])->name('pedidos.create');
@@ -88,6 +92,7 @@ Route::prefix('{current_team}')
         Route::get('pedidos/{pedido}/editar', [PedidoController::class, 'edit'])->name('pedidos.edit');
         Route::patch('pedidos/{pedido}', [PedidoController::class, 'update'])->name('pedidos.update');
         Route::delete('pedidos/{pedido}', [PedidoController::class, 'destroy'])->name('pedidos.destroy');
+        Route::patch('pedidos/{pedido}/restaurar', [PedidoController::class, 'restore'])->withTrashed()->name('pedidos.restore');
 
         Route::post('pedidos/{pedido}/abonos', [AbonoController::class, 'store'])->name('pedidos.abonos.store');
         Route::patch('pedidos/{pedido}/abonos/{abono}', [AbonoController::class, 'update'])->name('pedidos.abonos.update');
@@ -101,6 +106,7 @@ Route::prefix('{current_team}')
         Route::get('pedidos-mayoristas/{pedido}/editar', [PedidoController::class, 'edit'])->name('pedidos-mayoristas.edit');
         Route::patch('pedidos-mayoristas/{pedido}', [PedidoController::class, 'update'])->name('pedidos-mayoristas.update');
         Route::delete('pedidos-mayoristas/{pedido}', [PedidoController::class, 'destroy'])->name('pedidos-mayoristas.destroy');
+        Route::patch('pedidos-mayoristas/{pedido}/restaurar', [PedidoController::class, 'restore'])->withTrashed()->name('pedidos-mayoristas.restore');
 
         Route::post('pedidos-mayoristas/{pedido}/abonos', [AbonoController::class, 'store'])->name('pedidos-mayoristas.abonos.store');
         Route::patch('pedidos-mayoristas/{pedido}/abonos/{abono}', [AbonoController::class, 'update'])->name('pedidos-mayoristas.abonos.update');
@@ -113,10 +119,11 @@ Route::prefix('{current_team}')
         Route::get('productos/crear', [ProductoController::class, 'create'])->name('productos.create');
         Route::post('productos', [ProductoController::class, 'store'])->name('productos.store');
         Route::get('productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
-        Route::get('productos/{producto}/detalles', [ProductoController::class, 'detalles'])->name('productos.detalles');
+        Route::get('productos/{producto}/detalles', [ProductoController::class, 'detalles'])->withTrashed()->name('productos.detalles');
         Route::get('productos/{producto}/editar', [ProductoController::class, 'edit'])->name('productos.edit');
         Route::patch('productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
         Route::delete('productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
+        Route::patch('productos/{producto}/restaurar', [ProductoController::class, 'restore'])->withTrashed()->name('productos.restore');
 
         Route::get('stock-iniciales', [StockInicialController::class, 'index'])->name('stock-iniciales.index');
         Route::post('stock-iniciales', [StockInicialController::class, 'store'])->name('stock-iniciales.store');

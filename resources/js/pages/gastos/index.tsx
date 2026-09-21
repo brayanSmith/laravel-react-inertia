@@ -6,6 +6,8 @@ import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteGastoModal from '@/components/delete-gasto-modal';
 import EditGastoModal from '@/components/edit-gasto-modal';
 import Heading from '@/components/heading';
+import RestoreButton from '@/components/restore-button';
+import TrashToggle from '@/components/trash-toggle';
 import { Button } from '@/components/ui/button';
 import {
     Tooltip,
@@ -13,11 +15,12 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { index } from '@/routes/gastos';
+import { index, restore } from '@/routes/gastos';
 import type { Bodega, Gasto, GastoPermissions } from '@/types';
 
 type Props = {
     gastos: Gasto[];
+    eliminados: boolean;
     bodegas: Bodega[];
     permissions: GastoPermissions;
 };
@@ -28,7 +31,12 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
     maximumFractionDigits: 0,
 });
 
-export default function GastosIndex({ gastos, bodegas, permissions }: Props) {
+export default function GastosIndex({
+    gastos,
+    bodegas,
+    permissions,
+    eliminados,
+}: Props) {
     const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [gastoToEdit, setGastoToEdit] = useState<Gasto | null>(null);
@@ -81,54 +89,66 @@ export default function GastosIndex({ gastos, bodegas, permissions }: Props) {
                 label: 'Acciones',
                 align: 'right',
                 filter: 'none',
-                render: (gasto) => (
-                    <TooltipProvider>
-                        <div className="flex justify-end gap-2">
-                            {permissions.canUpdate ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            data-test="edit-gasto-button"
-                                            onClick={() =>
-                                                openEditDialog(gasto)
-                                            }
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Editar</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            ) : null}
+                render: (gasto) =>
+                    eliminados ? (
+                        permissions.canDelete ? (
+                            <div className="flex justify-end">
+                                <RestoreButton
+                                    action={restore([teamSlug, gasto.id])}
+                                    nombre={`el gasto ${gasto.descripcion}`}
+                                    dataTest="restore-gasto-button"
+                                />
+                            </div>
+                        ) : null
+                    ) : (
+                        <TooltipProvider>
+                            <div className="flex justify-end gap-2">
+                                {permissions.canUpdate ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                data-test="edit-gasto-button"
+                                                onClick={() =>
+                                                    openEditDialog(gasto)
+                                                }
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Editar</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : null}
 
-                            {permissions.canDelete ? (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            data-test="delete-gasto-button"
-                                            onClick={() =>
-                                                openDeleteDialog(gasto)
-                                            }
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Eliminar</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            ) : null}
-                        </div>
-                    </TooltipProvider>
-                ),
+                                {permissions.canDelete ? (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                data-test="delete-gasto-button"
+                                                onClick={() =>
+                                                    openDeleteDialog(gasto)
+                                                }
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Eliminar</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ) : null}
+                            </div>
+                        </TooltipProvider>
+                    ),
             },
         ],
-        [permissions],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [permissions, eliminados, teamSlug],
     );
 
     return (
@@ -143,13 +163,23 @@ export default function GastosIndex({ gastos, bodegas, permissions }: Props) {
                         description="Administra los gastos registrados"
                     />
 
-                    {permissions.canCreate ? (
-                        <CreateGastoModal teamSlug={teamSlug} bodegas={bodegas}>
-                            <Button data-test="create-gasto-button">
-                                <Plus /> Nuevo gasto
-                            </Button>
-                        </CreateGastoModal>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                        <TrashToggle
+                            eliminados={eliminados}
+                            visible={permissions.canDelete}
+                        />
+
+                        {permissions.canCreate && !eliminados ? (
+                            <CreateGastoModal
+                                teamSlug={teamSlug}
+                                bodegas={bodegas}
+                            >
+                                <Button data-test="create-gasto-button">
+                                    <Plus /> Nuevo gasto
+                                </Button>
+                            </CreateGastoModal>
+                        ) : null}
+                    </div>
                 </div>
 
                 <DataTable

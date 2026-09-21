@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesTrash;
 use App\Http\Requests\Gastos\StoreGastoRequest;
 use App\Http\Requests\Gastos\UpdateGastoRequest;
 use App\Models\Bodega;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class GastoController extends Controller
 {
+    use HandlesTrash;
+
     /**
      * Display a listing of gastos.
      */
@@ -21,8 +24,13 @@ class GastoController extends Controller
     {
         Gate::authorize('gastos.view');
 
+        $eliminados = $this->verEliminados($request, 'gastos');
+
         return Inertia::render('gastos/index', [
-            'gastos' => Gasto::with('bodega')->orderByDesc('fecha_gasto')->get(),
+            'gastos' => Gasto::with('bodega')->orderByDesc('fecha_gasto')
+                ->when($eliminados, fn ($query) => $query->onlyTrashed())
+                ->get(),
+            'eliminados' => $eliminados,
             'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'permissions' => [
                 'canCreate' => $request->user()->can('gastos.create'),
@@ -75,5 +83,13 @@ class GastoController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Gasto deleted.')]);
 
         return back();
+    }
+
+    /**
+     * Restore a deleted gasto.
+     */
+    public function restore(string $current_team, Gasto $gasto): RedirectResponse
+    {
+        return $this->restaurarRegistro('gastos', $gasto, __('Gasto restored.'));
     }
 }

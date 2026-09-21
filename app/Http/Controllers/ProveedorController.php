@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesTrash;
 use App\Http\Requests\Proveedores\StoreProveedorRequest;
 use App\Http\Requests\Proveedores\UpdateProveedorRequest;
 use App\Models\Proveedor;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class ProveedorController extends Controller
 {
+    use HandlesTrash;
+
     /**
      * Display a listing of proveedores.
      */
@@ -21,8 +24,13 @@ class ProveedorController extends Controller
     {
         Gate::authorize('proveedores.view');
 
+        $eliminados = $this->verEliminados($request, 'proveedores');
+
         return Inertia::render('proveedores/index', [
-            'proveedores' => Proveedor::orderBy('nombre_proveedor')->get(),
+            'proveedores' => Proveedor::orderBy('nombre_proveedor')
+                ->when($eliminados, fn ($query) => $query->onlyTrashed())
+                ->get(),
+            'eliminados' => $eliminados,
             'permissions' => [
                 'canCreate' => $request->user()->can('proveedores.create'),
                 'canUpdate' => $request->user()->can('proveedores.update'),
@@ -90,5 +98,13 @@ class ProveedorController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Proveedor deleted.')]);
 
         return back();
+    }
+
+    /**
+     * Restore a deleted proveedor.
+     */
+    public function restore(string $current_team, Proveedor $proveedor): RedirectResponse
+    {
+        return $this->restaurarRegistro('proveedores', $proveedor, __('Proveedor restored.'));
     }
 }
