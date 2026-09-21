@@ -1,15 +1,40 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import PendingInvitationsModal from '@/components/pending-invitations-modal';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import DashboardCharts from '@/components/dashboard-charts';
+import DashboardFilters from '@/components/dashboard-filters';
+import DashboardWidgets from '@/components/dashboard-widgets';
+import CantidadPorBodegaTable from '@/components/cantidad-por-bodega-table';
 import { dashboard } from '@/routes';
-import type { DashboardInvitation } from '@/types';
+import type {
+    CantidadPorBodega,
+    DashboardBodegaOption,
+    DashboardFiltros,
+    DashboardGraficos,
+    DashboardInvitation,
+    DashboardProductoOption,
+    DashboardResumen,
+} from '@/types';
 
 type Props = {
     pendingInvitations?: DashboardInvitation[];
+    cantidadPorBodega: CantidadPorBodega;
+    resumen: DashboardResumen;
+    graficos: DashboardGraficos;
+    filtros: DashboardFiltros;
+    bodegas: DashboardBodegaOption[];
+    productosFiltro: DashboardProductoOption[];
 };
 
-export default function Dashboard({ pendingInvitations = [] }: Props) {
+export default function Dashboard({
+    pendingInvitations = [],
+    cantidadPorBodega,
+    resumen,
+    graficos,
+    filtros,
+    bodegas,
+    productosFiltro,
+}: Props) {
     const [showInvitations, setShowInvitations] = useState(
         pendingInvitations.length > 0,
     );
@@ -23,20 +48,14 @@ export default function Dashboard({ pendingInvitations = [] }: Props) {
                 onOpenChange={setShowInvitations}
             />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                </div>
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                </div>
+                <DashboardFilters
+                    filtros={filtros}
+                    bodegas={bodegas}
+                    productos={productosFiltro}
+                />
+                <DashboardWidgets resumen={resumen} />
+                <CantidadPorBodegaTable data={cantidadPorBodega} />
+                <DashboardCharts graficos={graficos} />
             </div>
         </>
     );

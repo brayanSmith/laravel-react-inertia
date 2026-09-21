@@ -17,7 +17,11 @@ class StoreProductoRequest extends FormRequest
     {
         return [
             'categoria' => ['required', Rule::in(['LLANTA', 'RIN', 'SERVICIO', 'OTRO'])],
-            'tipo' => ['required', Rule::in(['NUEVO', 'USADO'])],
+            'tipo' => ['required', Rule::in(['NUEVO', 'USADO', 'SERVICIO']), function (string $attribute, mixed $value, \Closure $fail) {
+                if (($value === 'SERVICIO') !== ($this->input('categoria') === 'SERVICIO')) {
+                    $fail('El tipo Servicio solo aplica a la categoría Servicio, y viceversa.');
+                }
+            }],
             'inventariable' => ['boolean'],
             'ancho' => ['nullable', 'string', 'max:255'],
             'perfil' => ['nullable', 'string', 'max:255'],

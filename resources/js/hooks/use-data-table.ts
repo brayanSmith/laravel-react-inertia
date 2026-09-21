@@ -31,6 +31,8 @@ export type DataTableColumn<T> = {
     /** Used for sorting, filtering and (by default) searching. Omit for columns that are purely presentational. */
     getValue?: (row: T) => string | number;
     render: (row: T) => ReactNode;
+    /** Cell of the summary row, computed over the rows that pass the current filters. */
+    footer?: (rows: T[]) => ReactNode;
 };
 
 export type SortDirection = 'asc' | 'desc';
@@ -59,11 +61,15 @@ export type UseDataTableOptions<T> = {
     data: T[];
     columns: DataTableColumn<T>[];
     pageSize?: number;
+    /** Set to false to show every row without paging. Defaults to true. */
+    paginate?: boolean;
     /** Overrides the default (all columns with `getValue`, joined) search text builder. */
     searchableText?: (row: T) => string;
 };
 
-function normalizeColumn<T>(column: DataTableColumn<T>): Required<
+function normalizeColumn<T>(
+    column: DataTableColumn<T>,
+): Required<
     Pick<DataTableColumn<T>, 'sortable' | 'filter' | 'hideable' | 'width'>
 > &
     DataTableColumn<T> {
@@ -88,9 +94,11 @@ function normalizeColumn<T>(column: DataTableColumn<T>): Required<
 export function useDataTable<T>({
     data,
     columns,
-    pageSize = DEFAULT_PAGE_SIZE,
+    pageSize: requestedPageSize = DEFAULT_PAGE_SIZE,
+    paginate = true,
     searchableText,
 }: UseDataTableOptions<T>) {
+    const pageSize = paginate ? requestedPageSize : Number.MAX_SAFE_INTEGER;
     const normalizedColumns = useMemo(
         () => columns.map(normalizeColumn),
         [columns],
@@ -123,9 +131,7 @@ export function useDataTable<T>({
             ),
     );
     const [columnOrder, setColumnOrder] = useState<string[]>(columnKeys);
-    const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(
-        new Set(),
-    );
+    const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
 
     // Keeps widths/order in sync if the column set itself changes at
     // runtime (e.g. dynamic columns). Self-healing: `visibleColumnOrder`

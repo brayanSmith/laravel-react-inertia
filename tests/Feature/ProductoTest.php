@@ -146,3 +146,23 @@ test('creating a producto from another screen can keep the user there', function
         ->post(route('productos.store', $team), ['referencia_producto' => 'X-2'] + $payload)
         ->assertRedirect(route('productos.index', $team));
 });
+
+test('tipo servicio only pairs with the servicio category', function () {
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    attachTeamMember($team, $owner, 'Owner');
+
+    $base = ['referencia_producto' => 'SRV-1', 'inventariable' => false];
+
+    $this->actingAs($owner)
+        ->post(route('productos.store', $team), $base + ['categoria' => 'OTRO', 'tipo' => 'SERVICIO'])
+        ->assertSessionHasErrors('tipo');
+
+    $this->actingAs($owner)
+        ->post(route('productos.store', $team), $base + ['categoria' => 'SERVICIO', 'tipo' => 'NUEVO'])
+        ->assertSessionHasErrors('tipo');
+
+    $this->actingAs($owner)
+        ->post(route('productos.store', $team), $base + ['categoria' => 'SERVICIO', 'tipo' => 'SERVICIO'])
+        ->assertSessionHasNoErrors();
+});

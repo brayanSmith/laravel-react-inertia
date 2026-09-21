@@ -29,6 +29,7 @@ import {
 import {
     TableBody,
     TableCell,
+    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
@@ -47,6 +48,8 @@ type DataTableProps<T> = UseDataTableOptions<T> & {
     getRowId: (row: T) => string | number;
     dataTestPrefix: string;
     searchPlaceholder?: string;
+    /** Show the search box and the "Columnas" menu. Defaults to true. */
+    toolbar?: boolean;
     emptyMessage?: string;
     noResultsMessage?: string;
 };
@@ -226,15 +229,24 @@ export default function DataTable<T>({
     getRowId,
     dataTestPrefix,
     searchPlaceholder = 'Buscar...',
+    toolbar = true,
     emptyMessage = 'No hay registros.',
     noResultsMessage = 'Ningún registro coincide con la búsqueda.',
     pageSize,
+    paginate = true,
     searchableText,
 }: DataTableProps<T>) {
-    const table = useDataTable({ data, columns, pageSize, searchableText });
+    const table = useDataTable({
+        data,
+        columns,
+        pageSize,
+        paginate,
+        searchableText,
+    });
 
     return (
         <div className="flex flex-col space-y-6">
+            {toolbar ? (
             <div className="flex items-center justify-between gap-4">
                 <div className="relative max-w-sm flex-1">
                     <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -302,6 +314,7 @@ export default function DataTable<T>({
                     </DropdownMenu>
                 </div>
             </div>
+            ) : null}
 
             <div className="relative max-h-[75vh] w-full overflow-auto rounded-md border">
                 <table className="w-full table-fixed caption-bottom text-sm [&_tr]:divide-x">
@@ -383,6 +396,31 @@ export default function DataTable<T>({
                             </TableRow>
                         ))}
                     </TableBody>
+                    {table.rows.length > 0 &&
+                    table.visibleColumnOrder.some(
+                        (key) => table.columnsMap.get(key)?.footer,
+                    ) ? (
+                        <TableFooter>
+                            <TableRow>
+                                {table.visibleColumnOrder.map((key) => {
+                                    const column = table.columnsMap.get(key)!;
+
+                                    return (
+                                        <TableCell
+                                            key={key}
+                                            className={
+                                                column.align === 'right'
+                                                    ? 'text-right'
+                                                    : undefined
+                                            }
+                                        >
+                                            {column.footer?.(table.rows)}
+                                        </TableCell>
+                                    );
+                                })}
+                            </TableRow>
+                        </TableFooter>
+                    ) : null}
                 </table>
             </div>
 
@@ -390,7 +428,7 @@ export default function DataTable<T>({
                 <p className="text-muted-foreground py-8 text-center">
                     {data.length === 0 ? emptyMessage : noResultsMessage}
                 </p>
-            ) : (
+            ) : paginate ? (
                 <div className="flex items-center justify-between text-sm">
                     <p className="text-muted-foreground">
                         Mostrando {(table.page - 1) * table.pageSize + 1}–
@@ -405,7 +443,7 @@ export default function DataTable<T>({
                         dataTest={`${dataTestPrefix}-page`}
                     />
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }

@@ -40,6 +40,7 @@ const CATEGORIAS: { value: CategoriaProducto; label: string }[] = [
 const TIPOS: { value: TipoProducto; label: string }[] = [
     { value: 'NUEVO', label: 'Nuevo' },
     { value: 'USADO', label: 'Usado' },
+    { value: 'SERVICIO', label: 'Servicio' },
 ];
 
 export default function ProductoFormFields({
@@ -51,7 +52,13 @@ export default function ProductoFormFields({
     const [categoria, setCategoria] = useState<CategoriaProducto>(
         producto?.categoria ?? 'LLANTA',
     );
-    const [tipo, setTipo] = useState<TipoProducto>(producto?.tipo ?? 'NUEVO');
+    const [tipo, setTipo] = useState<TipoProducto>(
+        (producto?.categoria ?? 'LLANTA') === 'SERVICIO'
+            ? 'SERVICIO'
+            : producto?.tipo && producto.tipo !== 'SERVICIO'
+              ? producto.tipo
+              : 'NUEVO',
+    );
     const [inventariable, setInventariable] = useState(
         producto?.inventariable ?? true,
     );
@@ -158,8 +165,13 @@ export default function ProductoFormFields({
         setReferencia('');
         setConcatenacion('');
 
+        // Servicio is the only tipo allowed for the SERVICIO category, and
+        // any other category cannot use it.
         if (value === 'SERVICIO') {
             setInventariable(false);
+            setTipo('SERVICIO');
+        } else if (tipo === 'SERVICIO') {
+            setTipo('NUEVO');
         }
     };
 
@@ -203,7 +215,13 @@ export default function ProductoFormFields({
                                 key={t.value}
                                 className="flex items-center gap-2 text-sm"
                             >
-                                <RadioGroupItem value={t.value} />
+                                <RadioGroupItem
+                                    value={t.value}
+                                    disabled={
+                                        (t.value === 'SERVICIO') !==
+                                        (categoria === 'SERVICIO')
+                                    }
+                                />
                                 {t.label}
                             </label>
                         ))}

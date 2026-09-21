@@ -1,6 +1,6 @@
 export type CategoriaProducto = 'LLANTA' | 'RIN' | 'SERVICIO' | 'OTRO';
 
-export type TipoProducto = 'NUEVO' | 'USADO';
+export type TipoProducto = 'NUEVO' | 'USADO' | 'SERVICIO';
 
 export type TipoVehiculo = 'MOTO' | 'CARRO';
 
@@ -88,4 +88,60 @@ export type ProductoDetallesResponse = {
     detalleCompras: LaravelPaginator<ProductoDetalleCompra>;
     totalComprado: number;
     totalVendido: number;
+};
+
+export type CantidadPorBodegaFila = {
+    almacen: string;
+    NUEVO: number;
+    USADO: number;
+    SERVICIO: number;
+    total: number;
+    valores: Record<'NUEVO' | 'USADO' | 'SERVICIO' | 'total', number>;
+};
+
+export type CantidadPorBodega = {
+    filas: CantidadPorBodegaFila[];
+    totales: Omit<CantidadPorBodegaFila, 'almacen' | 'valores'>;
+};
+
+export type DashboardResumen = {
+    productosVendidos: {
+        cantidad: number;
+        valor: number;
+        serie: { fecha: string; cantidad: number; valor: number }[];
+    };
+    valorPedidos: { valor: number; cantidad: number };
+    inversion: number;
+    gastos: number;
+    ganancia: number;
+    ajustes: { reteica: number; retefuente: number; descuento: number };
+};
+
+export type DashboardGraficos = {
+    categorias: { categoria: string; cantidad: number; valor: number }[];
+    topProductos: { producto: string; cantidad: number; valor: number }[];
+    pedidosPorFecha: {
+        fecha: string;
+        pedidos: number;
+        cantidad: number;
+        valor: number;
+        inversion: number;
+    }[];
+    gastosPorFecha: { fecha: string; gastos: number }[];
+};
+
+export type DashboardFiltros = {
+    bodega_ids: string[];
+    desde: string;
+    hasta: string;
+    tipo_vehiculo: string;
+    producto_ids: string[];
+};
+
+export type DashboardBodegaOption = { id: number; nombre_bodega: string };
+
+export type DashboardProductoOption = {
+    id: number;
+    concatenar_codigo_nombre: string | null;
+    tipo_vehiculo: 'MOTO' | 'CARRO' | null;
 };
