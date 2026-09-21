@@ -4,6 +4,8 @@ import {
     ArrowDown,
     ArrowUp,
     ArrowUpDown,
+    ChevronDown,
+    ChevronRight,
     Pencil,
     Plus,
     Trash2,
@@ -296,6 +298,20 @@ export default function ProductosIndex({
         tipoVehiculo: string;
         rin?: string;
     } | null>(null);
+    // Tipos de vehículo whose rines are open in the side filter (all closed at first).
+    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+        new Set(),
+    );
+    const toggleGroup = (tipo: string) =>
+        setExpandedGroups((current) => {
+            const next = new Set(current);
+
+            if (!next.delete(tipo)) {
+                next.add(tipo);
+            }
+
+            return next;
+        });
     const [categoriaTab, setCategoriaTab] = useState<CategoriaTab>('TODOS');
     const [page, setPage] = useState(1);
     const pageSize = 25;
@@ -669,7 +685,7 @@ export default function ProductosIndex({
                     </TabsList>
                 </Tabs>
 
-                <div className="flex gap-4">
+                <div className="flex gap-1">
                     <aside className="w-56 shrink-0 space-y-1 rounded-lg border p-3 text-sm">
                         <div className="mb-2 font-semibold">
                             Tipo de vehículo / Rin
@@ -693,57 +709,81 @@ export default function ProductosIndex({
                         <div className="max-h-[60vh] overflow-y-auto pr-1">
                             {groupTree.map((group) => (
                                 <div key={group.tipo} className="mt-1">
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setActiveGroup({
-                                                tipoVehiculo: group.tipo,
-                                            })
-                                        }
-                                        data-test={`productos-group-tipo-${group.tipo}`}
-                                        className={cn(
-                                            'hover:bg-accent flex w-full items-center justify-between rounded px-2 py-1 text-left font-medium',
-                                            activeGroup?.tipoVehiculo ===
-                                                group.tipo &&
-                                                !activeGroup?.rin &&
-                                                'bg-accent text-accent-foreground',
-                                        )}
-                                    >
-                                        <span>{group.tipo}</span>
-                                        <span className="text-muted-foreground text-xs">
-                                            {group.count}
-                                        </span>
-                                    </button>
-
-                                    <div className="ml-3 border-l pl-2">
-                                        {group.rines.map((rin) => (
-                                            <button
-                                                key={rin.rin}
-                                                type="button"
-                                                onClick={() =>
-                                                    setActiveGroup({
-                                                        tipoVehiculo:
-                                                            group.tipo,
-                                                        rin: rin.rin,
-                                                    })
-                                                }
-                                                data-test={`productos-group-rin-${group.tipo}-${rin.rin}`}
-                                                className={cn(
-                                                    'text-muted-foreground hover:bg-accent flex w-full items-center justify-between rounded px-2 py-1 text-left',
-                                                    activeGroup?.tipoVehiculo ===
-                                                        group.tipo &&
-                                                        activeGroup?.rin ===
-                                                            rin.rin &&
-                                                        'bg-accent text-accent-foreground',
-                                                )}
-                                            >
-                                                <span>{rin.rin}</span>
-                                                <span className="text-xs">
-                                                    {rin.count}
-                                                </span>
-                                            </button>
-                                        ))}
+                                    <div className="flex items-center">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                toggleGroup(group.tipo)
+                                            }
+                                            aria-label={`${expandedGroups.has(group.tipo) ? 'Contraer' : 'Expandir'} ${group.tipo}`}
+                                            data-test={`productos-group-toggle-${group.tipo}`}
+                                            className="text-muted-foreground hover:bg-accent shrink-0 rounded p-1"
+                                        >
+                                            {expandedGroups.has(group.tipo) ? (
+                                                <ChevronDown className="size-4" />
+                                            ) : (
+                                                <ChevronRight className="size-4" />
+                                            )}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setActiveGroup({
+                                                    tipoVehiculo: group.tipo,
+                                                });
+                                                setExpandedGroups((current) =>
+                                                    new Set(current).add(
+                                                        group.tipo,
+                                                    ),
+                                                );
+                                            }}
+                                            data-test={`productos-group-tipo-${group.tipo}`}
+                                            className={cn(
+                                                'hover:bg-accent flex w-full items-center justify-between rounded px-2 py-1 text-left font-medium',
+                                                activeGroup?.tipoVehiculo ===
+                                                    group.tipo &&
+                                                    !activeGroup?.rin &&
+                                                    'bg-accent text-accent-foreground',
+                                            )}
+                                        >
+                                            <span>{group.tipo}</span>
+                                            <span className="text-muted-foreground text-xs">
+                                                {group.count}
+                                            </span>
+                                        </button>
                                     </div>
+
+                                    {expandedGroups.has(group.tipo) ? (
+                                        <div className="ml-3 border-l pl-2">
+                                            {group.rines.map((rin) => (
+                                                <button
+                                                    key={rin.rin}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setActiveGroup({
+                                                            tipoVehiculo:
+                                                                group.tipo,
+                                                            rin: rin.rin,
+                                                        })
+                                                    }
+                                                    data-test={`productos-group-rin-${group.tipo}-${rin.rin}`}
+                                                    className={cn(
+                                                        'text-muted-foreground hover:bg-accent flex w-full items-center justify-between rounded px-2 py-1 text-left',
+                                                        activeGroup?.tipoVehiculo ===
+                                                            group.tipo &&
+                                                            activeGroup?.rin ===
+                                                                rin.rin &&
+                                                            'bg-accent text-accent-foreground',
+                                                    )}
+                                                >
+                                                    <span>{rin.rin}</span>
+                                                    <span className="text-xs">
+                                                        {rin.count}
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : null}
                                 </div>
                             ))}
                         </div>
