@@ -1,3 +1,4 @@
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import {
     History,
     RotateCcw,
@@ -90,6 +91,7 @@ export default function PosCartPanel({
     errors,
     processing,
 }: Props) {
+    const { tiposPedido } = useTiposPrecio();
     const bodegaOptions = useMemo(
         () =>
             bodegas.map((bodega) => ({
@@ -206,9 +208,17 @@ export default function PosCartPanel({
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="DETAL">Detal</SelectItem>
-                            <SelectItem value="MAYORISTA">Mayorista</SelectItem>
-                            <SelectItem value="OTRO">Otro</SelectItem>
+                            {tiposPedido.includes('DETAL') ? (
+                                <SelectItem value="DETAL">Detal</SelectItem>
+                            ) : null}
+                            {tiposPedido.includes('MAYORISTA') ? (
+                                <SelectItem value="MAYORISTA">
+                                    Mayorista
+                                </SelectItem>
+                            ) : null}
+                            {tiposPedido.includes('OTRO') ? (
+                                <SelectItem value="OTRO">Costo</SelectItem>
+                            ) : null}
                         </SelectContent>
                     </Select>
                     <InputError message={errors.tipo_precio} />

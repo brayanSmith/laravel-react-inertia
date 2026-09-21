@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import {
     ArrowDown,
     ArrowUp,
@@ -384,9 +385,19 @@ export default function ProductosIndex({
         return map;
     }, [bodegas]);
 
+    const { puedeCosto, puedeDetal, puedeMayorista } = useTiposPrecio();
+
     const columnOrder = useMemo(
-        () => [...STATIC_COLUMN_ORDER, ...bodegaColumnKeys],
-        [bodegaColumnKeys],
+        () => [
+            ...STATIC_COLUMN_ORDER.filter(
+                (key) =>
+                    (key !== 'costo' || puedeCosto) &&
+                    (key !== 'detal' || puedeDetal) &&
+                    (key !== 'mayorista' || puedeMayorista),
+            ),
+            ...bodegaColumnKeys,
+        ],
+        [bodegaColumnKeys, puedeCosto, puedeDetal, puedeMayorista],
     );
 
     const allColumnKeys = useMemo(

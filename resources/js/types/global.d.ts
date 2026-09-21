@@ -14,6 +14,8 @@ declare module '@inertiajs/core' {
             logoUrl: string | null;
             auth: Auth;
             sidebarOpen: boolean;
+            /** Product prices the user may see: valor_detal, valor_mayorista, costo. */
+            tiposPrecioPermitidos: string[];
             canViewRoles: boolean;
             canViewClientes: boolean;
             canViewUsuarios: boolean;

@@ -73,7 +73,10 @@ class PedidoController extends Controller
                     fn ($query, array $bodegaIds) => $query->whereIn('bodega_id', $bodegaIds),
                 )
                 ->orderByDesc('fecha')
-                ->get(),
+                ->get()
+                ->each(fn (Pedido $pedido) => $request->user()->puedeVerPrecio('costo')
+                    ? null
+                    : $pedido->detalles->each->makeHidden(['costo_unitario', 'costo_total', 'ganancia_total'])),
             'eliminados' => $eliminados,
             'permissions' => $this->permissions($request, $module),
         ]);
@@ -255,7 +258,14 @@ class PedidoController extends Controller
             'productos' => Producto::where('categoria', '!=', 'SERVICIO')
                 ->where('inventariable', true)
                 ->orderBy('referencia_producto')
-                ->get(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'valor_detal', 'valor_mayorista', 'costo_producto']),
+                ->get(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'valor_detal', 'valor_mayorista', 'costo_producto'])
+                ->each(function (Producto $producto) use ($request): void {
+                    foreach (['valor_detal' => 'valor_detal', 'valor_mayorista' => 'valor_mayorista', 'costo_producto' => 'costo'] as $campo => $tipo) {
+                        if (! $request->user()->puedeVerPrecio($tipo)) {
+                            $producto->setAttribute($campo, null);
+                        }
+                    }
+                }),
             // Mayorista is its own section: it always offers every bodega.
             'bodegas' => Bodega::query()
                 ->when($this->module($request) === 'pedidos', fn ($query) => $query->permitidas())

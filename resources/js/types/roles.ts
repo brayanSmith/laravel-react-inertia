@@ -15,4 +15,5 @@ export type RoleMember = {
     name: string;
     email: string;
     roles: number[];
+    tipos_precio_permitidos: string[];
 };

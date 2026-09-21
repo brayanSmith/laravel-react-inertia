@@ -24,6 +24,7 @@ test('owners can create a user with roles', function () {
             'email' => 'empleado@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'tipos_precio_permitidos' => ['valor_detal', 'costo'],
             'roles' => [$role->id],
         ])
         ->assertRedirect();
@@ -31,8 +32,22 @@ test('owners can create a user with roles', function () {
     $usuario = User::where('email', 'empleado@example.com')->firstOrFail();
 
     expect($usuario->hasRole('Vendedor'))->toBeTrue();
+    expect($usuario->tiposPrecioPermitidos())->toBe(['valor_detal', 'costo']);
     expect(Hash::check('password123', $usuario->password))->toBeTrue();
     expect($usuario->email_verified_at)->not->toBeNull();
+});
+
+test('at least one price must stay allowed', function () {
+    $owner = User::factory()->create();
+    asignarRol($owner, 'Owner');
+
+    $this->actingAs($owner)->post(route('usuarios.store'), [
+        'name' => 'Nuevo',
+        'email' => 'nuevo@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'tipos_precio_permitidos' => [],
+    ])->assertSessionHasErrors('tipos_precio_permitidos');
 });
 
 test('members without permission cannot create users', function () {
@@ -46,6 +61,7 @@ test('members without permission cannot create users', function () {
             'email' => 'empleado@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'tipos_precio_permitidos' => ['valor_detal'],
         ])
         ->assertForbidden();
 });
@@ -61,10 +77,12 @@ test('a user can be edited and its roles replaced', function () {
     $this->actingAs($owner)->patch(route('usuarios.update', [$empleado]), [
         'name' => 'Otro Nombre',
         'email' => $empleado->email,
+        'tipos_precio_permitidos' => ['valor_mayorista'],
         'roles' => [$cajero->id],
     ])->assertRedirect();
 
     expect($empleado->fresh()->name)->toBe('Otro Nombre');
+    expect($empleado->fresh()->tiposPrecioPermitidos())->toBe(['valor_mayorista']);
     expect($empleado->fresh()->roles->pluck('name')->all())->toBe(['Cajero']);
 });
 
@@ -84,4 +102,27 @@ test('deleting a user removes the account', function () {
     $this->actingAs($owner)->delete(route('usuarios.destroy', [$empleado]))->assertRedirect();
 
     expect(User::find($empleado->id))->toBeNull();
+});
+
+test('the allowed prices can be changed inline, keeping at least one', function () {
+    $owner = User::factory()->create();
+    asignarRol($owner, 'Owner');
+    $empleado = User::factory()->create();
+
+    $this->actingAs($owner)->patch(route('usuarios.precios.update', [$empleado]), [
+        'tipos_precio_permitidos' => ['valor_detal'],
+    ])->assertRedirect();
+
+    expect($empleado->fresh()->tiposPrecioPermitidos())->toBe(['valor_detal']);
+
+    $this->actingAs($owner)->patch(route('usuarios.precios.update', [$empleado]), [
+        'tipos_precio_permitidos' => [],
+    ])->assertSessionHasErrors('tipos_precio_permitidos');
+
+    $member = User::factory()->create();
+    asignarRol($member, 'Member');
+
+    $this->actingAs($member)->patch(route('usuarios.precios.update', [$empleado]), [
+        'tipos_precio_permitidos' => ['costo'],
+    ])->assertForbidden();
 });

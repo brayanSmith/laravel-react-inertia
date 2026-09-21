@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'tiposPrecioPermitidos' => fn () => $user?->tiposPrecioPermitidos() ?? [],
             'canViewRoles' => fn () => $user?->can('roles.view') ?? false,
             'canViewClientes' => fn () => $user?->can('clientes.view') ?? false,
             'canViewUsuarios' => fn () => $user?->can('usuarios.view') ?? false,

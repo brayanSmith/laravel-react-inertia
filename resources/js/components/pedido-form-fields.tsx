@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from 'react';
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import type { ReactNode } from 'react';
 
 import Combobox from '@/components/combobox';
@@ -151,9 +152,18 @@ export default function PedidoFormFields({
     const [bodegaId, setBodegaId] = useState<string>(
         pedido?.bodega_id ? String(pedido.bodega_id) : '',
     );
+    const { tiposPedido } = useTiposPrecio();
     const [tipoPrecio, setTipoPrecio] = useState<TipoPrecioPedido>(
-        pedido?.tipo_precio ?? defaultTipoPrecio,
+        pedido?.tipo_precio ??
+            (tiposPedido.includes(defaultTipoPrecio)
+                ? defaultTipoPrecio
+                : (tiposPedido[0] ?? defaultTipoPrecio)),
     );
+    // What the user may pick, plus the tipo the pedido already has.
+    const tiposDisponibles = new Set<TipoPrecioPedido>([
+        ...tiposPedido,
+        tipoPrecio,
+    ]);
     const [facturacionElectronica, setFacturacionElectronica] =
         useState<boolean>(pedido?.facturacion_electronica ?? false);
     const [flete, setFlete] = useState<string>(pedido?.flete ?? '0');
@@ -414,11 +424,21 @@ export default function PedidoFormFields({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="DETAL">DETAL</SelectItem>
-                                    <SelectItem value="MAYORISTA">
-                                        MAYORISTA
-                                    </SelectItem>
-                                    <SelectItem value="OTRO">OTRO</SelectItem>
+                                    {tiposDisponibles.has('DETAL') ? (
+                                        <SelectItem value="DETAL">
+                                            DETAL
+                                        </SelectItem>
+                                    ) : null}
+                                    {tiposDisponibles.has('MAYORISTA') ? (
+                                        <SelectItem value="MAYORISTA">
+                                            MAYORISTA
+                                        </SelectItem>
+                                    ) : null}
+                                    {tiposDisponibles.has('OTRO') ? (
+                                        <SelectItem value="OTRO">
+                                            OTRO
+                                        </SelectItem>
+                                    ) : null}
                                 </SelectContent>
                             </Select>
                             <input

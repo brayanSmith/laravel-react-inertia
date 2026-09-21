@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { edit, index } from '@/routes/productos';
@@ -24,6 +25,7 @@ function Field({
 }
 
 export default function ProductoShow({ producto }: Props) {
+    const { puedeCosto, puedeDetal, puedeMayorista } = useTiposPrecio();
     const nombre = producto.concatenar_codigo_nombre || 'Producto';
 
     return (
@@ -106,15 +108,24 @@ export default function ProductoShow({ producto }: Props) {
                 <div className="bg-card space-y-4 rounded-lg border p-4">
                     <div className="font-semibold">Precios y Porcentajes</div>
                     <div className="grid gap-4 sm:grid-cols-4">
-                        <Field label="Costo" value={producto.costo_producto} />
-                        <Field
-                            label="Valor Detal"
-                            value={producto.valor_detal}
-                        />
-                        <Field
-                            label="Valor Mayorista"
-                            value={producto.valor_mayorista}
-                        />
+                        {puedeCosto ? (
+                            <Field
+                                label="Costo"
+                                value={producto.costo_producto}
+                            />
+                        ) : null}
+                        {puedeDetal ? (
+                            <Field
+                                label="Valor Detal"
+                                value={producto.valor_detal}
+                            />
+                        ) : null}
+                        {puedeMayorista ? (
+                            <Field
+                                label="Valor Mayorista"
+                                value={producto.valor_mayorista}
+                            />
+                        ) : null}
                         <Field
                             label="Valor Sin Instalación"
                             value={producto.valor_sin_instalacion}

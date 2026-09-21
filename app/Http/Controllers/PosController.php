@@ -170,6 +170,8 @@ class PosController extends Controller
      */
     private function catalogoProductos(): array
     {
+        $usuario = auth()->user();
+
         return Producto::where('categoria', '!=', 'SERVICIO')
             ->where('inventariable', true)
             ->select(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'categoria', 'sku', 'valor_detal', 'valor_mayorista', 'valor_sin_instalacion', 'costo_producto', 'imagen_producto'])
@@ -182,10 +184,10 @@ class PosController extends Controller
                 'concatenar_codigo_nombre' => $producto->concatenar_codigo_nombre,
                 'categoria' => $producto->categoria,
                 'sku' => $producto->sku,
-                'valor_detal' => $producto->valor_detal,
-                'valor_mayorista' => $producto->valor_mayorista,
+                'valor_detal' => $usuario->puedeVerPrecio('valor_detal') ? $producto->valor_detal : null,
+                'valor_mayorista' => $usuario->puedeVerPrecio('valor_mayorista') ? $producto->valor_mayorista : null,
                 'valor_sin_instalacion' => $producto->valor_sin_instalacion,
-                'costo_producto' => $producto->costo_producto,
+                'costo_producto' => $usuario->puedeVerPrecio('costo') ? $producto->costo_producto : null,
                 'imagen_producto_url' => $producto->imagen_producto_url,
                 'stock_total' => (float) $producto->stockBodegas->sum('stock'),
                 'stock_por_bodega' => $producto->stockBodegas->mapWithKeys(fn ($stock): array => [$stock->bodega_id => (float) $stock->stock])->all(),

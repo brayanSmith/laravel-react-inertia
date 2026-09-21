@@ -3,6 +3,7 @@ import type { PropsWithChildren } from 'react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
+import TiposPrecioFields from '@/components/tipos-precio-fields';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TIPOS_PRECIO } from '@/lib/tipos-precio';
 import { store } from '@/routes/usuarios';
 import type { UsuarioRoleOption } from '@/types';
 
@@ -30,12 +32,16 @@ export default function CreateUsuarioModal({
 }: Props) {
     const [open, setOpen] = useState(false);
     const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
+    const [selectedTipos, setSelectedTipos] = useState<string[]>(
+        TIPOS_PRECIO.map((tipo) => tipo.value),
+    );
 
     const handleOpenChange = (nextOpen: boolean) => {
         setOpen(nextOpen);
 
         if (!nextOpen) {
             setSelectedRoles([]);
+            setSelectedTipos(TIPOS_PRECIO.map((tipo) => tipo.value));
         }
     };
 
@@ -114,6 +120,12 @@ export default function CreateUsuarioModal({
                                         required
                                     />
                                 </div>
+
+                                <TiposPrecioFields
+                                    selected={selectedTipos}
+                                    onChange={setSelectedTipos}
+                                    error={errors.tipos_precio_permitidos}
+                                />
 
                                 {availableRoles.length > 0 ? (
                                     <div className="grid gap-2">

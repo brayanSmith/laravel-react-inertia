@@ -1,4 +1,5 @@
 import { Link, useHttp, usePage } from '@inertiajs/react';
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import {
     ArrowDown,
     ArrowUp,
@@ -308,6 +309,7 @@ export default function ProductoDetalleModal({
     open,
     onOpenChange,
 }: Props) {
+    const { puedeCosto, puedeDetal, puedeMayorista } = useTiposPrecio();
     const { submit } = useHttp();
 
     const [pedidosPage, setPedidosPage] = useState(1);
@@ -497,21 +499,27 @@ export default function ProductoDetalleModal({
 
                         <SectionCard icon={DollarSign} title="Precios">
                             <div className="grid grid-cols-4 gap-4">
-                                <PrecioField
-                                    label="Costo"
-                                    value={Number(producto.costo_producto)}
-                                    colorClassName="text-blue-600 dark:text-blue-400"
-                                />
-                                <PrecioField
-                                    label="Detal"
-                                    value={Number(producto.valor_detal)}
-                                    colorClassName="text-emerald-600 dark:text-emerald-400"
-                                />
-                                <PrecioField
-                                    label="Mayorista"
-                                    value={Number(producto.valor_mayorista)}
-                                    colorClassName="text-amber-600 dark:text-amber-400"
-                                />
+                                {puedeCosto ? (
+                                    <PrecioField
+                                        label="Costo"
+                                        value={Number(producto.costo_producto)}
+                                        colorClassName="text-blue-600 dark:text-blue-400"
+                                    />
+                                ) : null}
+                                {puedeDetal ? (
+                                    <PrecioField
+                                        label="Detal"
+                                        value={Number(producto.valor_detal)}
+                                        colorClassName="text-emerald-600 dark:text-emerald-400"
+                                    />
+                                ) : null}
+                                {puedeMayorista ? (
+                                    <PrecioField
+                                        label="Mayorista"
+                                        value={Number(producto.valor_mayorista)}
+                                        colorClassName="text-amber-600 dark:text-amber-400"
+                                    />
+                                ) : null}
                                 <PrecioField
                                     label="Sin Instalación"
                                     value={Number(

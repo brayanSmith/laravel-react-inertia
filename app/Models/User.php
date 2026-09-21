@@ -28,10 +28,11 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $avatar Public URL of the profile picture (the stored path is in the raw attribute).
  * @property string|null $remember_token
+ * @property list<string>|null $tipos_precio_permitidos
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'tipos_precio_permitidos'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -48,6 +49,24 @@ class User extends Authenticatable implements PasskeyUser
         return Attribute::make(
             get: fn (?string $path) => $path ? Storage::disk('public')->url($path) : null,
         );
+    }
+
+    /** The product prices a user can be allowed to see and use. */
+    public const TIPOS_PRECIO = ['valor_detal', 'valor_mayorista', 'costo'];
+
+    /**
+     * The prices this user may see and use; all of them until restricted.
+     *
+     * @return list<string>
+     */
+    public function tiposPrecioPermitidos(): array
+    {
+        return $this->tipos_precio_permitidos ?? self::TIPOS_PRECIO;
+    }
+
+    public function puedeVerPrecio(string $tipo): bool
+    {
+        return in_array($tipo, $this->tiposPrecioPermitidos(), true);
     }
 
     /**
@@ -79,6 +98,7 @@ class User extends Authenticatable implements PasskeyUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'tipos_precio_permitidos' => 'array',
         ];
     }
 }

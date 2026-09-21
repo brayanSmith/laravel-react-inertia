@@ -2,6 +2,7 @@ import { Form } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
+import TiposPrecioFields from '@/components/tipos-precio-fields';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -32,6 +33,7 @@ export default function EditUsuarioModal({
     onOpenChange,
 }: Props) {
     const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
+    const [selectedTipos, setSelectedTipos] = useState<string[]>([]);
 
     useEffect(() => {
         if (!usuario) {
@@ -39,6 +41,7 @@ export default function EditUsuarioModal({
         }
 
         setSelectedRoles(usuario.roles);
+        setSelectedTipos(usuario.tipos_precio_permitidos);
     }, [usuario]);
 
     const toggleRole = (roleId: number, checked: boolean) => {
@@ -124,6 +127,12 @@ export default function EditUsuarioModal({
                                         name="password_confirmation"
                                     />
                                 </div>
+
+                                <TiposPrecioFields
+                                    selected={selectedTipos}
+                                    onChange={setSelectedTipos}
+                                    error={errors.tipos_precio_permitidos}
+                                />
 
                                 {availableRoles.length > 0 ? (
                                     <div className="grid gap-2">

@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import {
     ArrowDown,
     ArrowUp,
@@ -113,6 +114,13 @@ const COLUMN_DEFS: ColumnMeta[] = [
     { key: 'subtotal', label: 'Sub Total', filter: 'text', align: 'right' },
     { key: 'cliente', label: 'Cliente', filter: 'text' },
     { key: 'usuario', label: 'Usuario', filter: 'text' },
+];
+
+/** Columns that only make sense for whoever may see the costo. */
+const COSTO_COLUMNS: ColumnKey[] = [
+    'costoUnitario',
+    'costoTotal',
+    'gananciaTotal',
 ];
 
 const COLUMN_DEFS_MAP = new Map(COLUMN_DEFS.map((meta) => [meta.key, meta]));
@@ -400,6 +408,7 @@ export default function PedidoDetallesTable({
     routes,
     eliminados = false,
 }: Props) {
+    const { puedeCosto } = useTiposPrecio();
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -588,8 +597,13 @@ export default function PedidoDetallesTable({
     };
 
     const visibleColumnOrder = useMemo(
-        () => columnOrder.filter((key) => !hiddenColumns.has(key)),
-        [columnOrder, hiddenColumns],
+        () =>
+            columnOrder.filter(
+                (key) =>
+                    !hiddenColumns.has(key) &&
+                    (puedeCosto || !COSTO_COLUMNS.includes(key)),
+            ),
+        [columnOrder, hiddenColumns, puedeCosto],
     );
 
     const handleSort = (key: ColumnKey) => {
@@ -851,7 +865,10 @@ export default function PedidoDetallesTable({
                     >
                         <DropdownMenuLabel>Mostrar columnas</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        {COLUMN_DEFS.map((meta) => (
+                        {COLUMN_DEFS.filter(
+                            (meta) =>
+                                puedeCosto || !COSTO_COLUMNS.includes(meta.key),
+                        ).map((meta) => (
                             <DropdownMenuCheckboxItem
                                 key={meta.key}
                                 checked={!hiddenColumns.has(meta.key)}

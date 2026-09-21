@@ -28,6 +28,7 @@ class UsuarioController extends Controller
                 'name' => $usuario->name,
                 'email' => $usuario->email,
                 'roles' => $usuario->roles->pluck('id')->values(),
+                'tipos_precio_permitidos' => $usuario->tiposPrecioPermitidos(),
             ]),
             'availableRoles' => Role::orderBy('name')->get(['id', 'name']),
             'permissions' => [
@@ -50,6 +51,7 @@ class UsuarioController extends Controller
                 'name' => $request->validated('name'),
                 'email' => $request->validated('email'),
                 'password' => $request->validated('password'),
+                'tipos_precio_permitidos' => $request->validated('tipos_precio_permitidos'),
             ]);
 
             $usuario->forceFill(['email_verified_at' => now()])->save();
@@ -72,6 +74,7 @@ class UsuarioController extends Controller
             $data = [
                 'name' => $request->validated('name'),
                 'email' => $request->validated('email'),
+                'tipos_precio_permitidos' => $request->validated('tipos_precio_permitidos'),
             ];
 
             if ($password = $request->validated('password')) {
@@ -81,6 +84,26 @@ class UsuarioController extends Controller
             $usuario->update($data);
             $usuario->syncRoles(Role::whereIn('id', $request->validated('roles', []))->get());
         });
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario updated.')]);
+
+        return back();
+    }
+
+    /**
+     * Change only the prices a user may see and use (inline edit from the
+     * users and roles tables).
+     */
+    public function updatePrecios(Request $request, User $usuario): RedirectResponse
+    {
+        abort_unless($request->user()->can('usuarios.update') || $request->user()->can('roles.update'), 403);
+
+        $data = $request->validate([
+            'tipos_precio_permitidos' => ['required', 'array', 'min:1'],
+            'tipos_precio_permitidos.*' => ['string', 'in:'.implode(',', User::TIPOS_PRECIO)],
+        ]);
+
+        $usuario->update($data);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario updated.')]);
 

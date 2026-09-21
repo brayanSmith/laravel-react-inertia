@@ -1,4 +1,5 @@
 import { Form, Head, router, usePage } from '@inertiajs/react';
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import { History } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -60,6 +61,7 @@ export default function PosPage({
     canViewAllPedidos,
 }: Props) {
     const userId = usePage().props.auth?.user?.id ?? 0;
+    const { tiposPedido } = useTiposPrecio();
 
     // Sales in progress live in localStorage, so leaving the POS (or a
     // reload) doesn't lose them; each tab is an independent pedido.
@@ -116,6 +118,18 @@ export default function PosPage({
             });
         }
     };
+
+    // A saved sale may carry a tipo precio this user can no longer use.
+    const tiposPedidoKey = tiposPedido.join(',');
+    useEffect(() => {
+        if (
+            tiposPedido.length > 0 &&
+            !tiposPedido.includes(header.tipoPrecio)
+        ) {
+            handleFieldChange('tipoPrecio', tiposPedido[0]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [header.tipoPrecio, tiposPedidoKey]);
 
     const nombreDe = (producto: PosCatalogoProducto) =>
         producto.concatenar_codigo_nombre ??

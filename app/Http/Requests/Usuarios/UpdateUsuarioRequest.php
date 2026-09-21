@@ -26,6 +26,8 @@ class UpdateUsuarioRequest extends FormRequest
         return [
             ...$this->profileRules($usuario->id),
             'password' => ['nullable', 'string', Password::default(), 'confirmed'],
+            'tipos_precio_permitidos' => ['required', 'array', 'min:1'],
+            'tipos_precio_permitidos.*' => ['string', 'in:valor_detal,valor_mayorista,costo'],
             'roles' => ['array'],
             'roles.*' => ['integer', 'exists:roles,id'],
         ];

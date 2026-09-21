@@ -6,6 +6,7 @@ import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteUsuarioModal from '@/components/delete-usuario-modal';
 import EditUsuarioModal from '@/components/edit-usuario-modal';
 import Heading from '@/components/heading';
+import TiposPrecioBadges from '@/components/tipos-precio-badges';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,6 +89,20 @@ export default function UsuariosIndex({
                         </div>
                     );
                 },
+            },
+            {
+                key: 'precios',
+                label: 'Precios permitidos',
+                filter: 'none',
+                getValue: (usuario) =>
+                    usuario.tipos_precio_permitidos.join(', '),
+                render: (usuario) => (
+                    <TiposPrecioBadges
+                        usuarioId={usuario.id}
+                        selected={usuario.tipos_precio_permitidos}
+                        canEdit={permissions.canUpdate}
+                    />
+                ),
             },
             {
                 key: 'acciones',

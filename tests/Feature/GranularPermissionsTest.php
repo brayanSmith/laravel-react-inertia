@@ -352,3 +352,36 @@ test('the sidebar count of pedidos general only counts the authorized bodegas', 
             ->where('navCounts.pedidosMayoristas', 4)
         );
 });
+
+test('a user without the costo price gets no costs in the POS, productos or pedidos', function () {
+    $producto = Producto::factory()->create(['inventariable' => true, 'categoria' => 'LLANTA', 'costo_producto' => 50, 'valor_detal' => 100, 'valor_mayorista' => 90]);
+    $pedido = Pedido::factory()->create(['tipo_precio' => 'DETAL']);
+    DetallePedido::factory()->create(['pedido_id' => $pedido->id, 'producto_id' => $producto->id, 'costo_unitario' => 50, 'costo_total' => 100, 'ganancia_total' => 100]);
+    concederPermisos($this->miembro, ['pos.view', 'productos.view', 'pedidos.view']);
+    $this->miembro->update(['tipos_precio_permitidos' => ['valor_detal']]);
+
+    $this->actingAs($this->miembro)->get(route('pos.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('productos.0.valor_detal', '100.00')
+            ->where('productos.0.valor_mayorista', null)
+            ->where('productos.0.costo_producto', null)
+        );
+
+    $this->actingAs($this->miembro)->get(route('productos.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('productos.0.valor_detal', '100.00')
+            ->where('productos.0.valor_mayorista', null)
+            ->where('productos.0.costo_producto', null)
+        );
+
+    $this->actingAs($this->miembro)->get(route('pedidos.index'))
+        ->assertInertia(fn ($page) => $page
+            ->missing('pedidos.0.detalles.0.costo_unitario')
+            ->missing('pedidos.0.detalles.0.ganancia_total')
+        );
+
+    $this->miembro->update(['tipos_precio_permitidos' => null]);
+
+    $this->actingAs($this->miembro)->get(route('pedidos.index'))
+        ->assertInertia(fn ($page) => $page->has('pedidos.0.detalles.0.costo_unitario'));
+});

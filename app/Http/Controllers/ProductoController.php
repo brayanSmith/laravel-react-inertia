@@ -256,9 +256,10 @@ class ProductoController extends Controller
             ->get(['detalle_compras.producto_id', 'detalle_compras.compra_id', "{$proveedores}.nombre_proveedor"])
             ->groupBy('producto_id');
 
+        $usuario = auth()->user();
         $dinero = fn (mixed $valor): ?string => $valor === null ? null : number_format((float) $valor, 2, '.', '');
 
-        return $productos->map(function (object $producto) use ($marcas, $stock, $pendientes, $dinero): array {
+        return $productos->map(function (object $producto) use ($marcas, $stock, $pendientes, $dinero, $usuario): array {
             $filasStock = $stock->get($producto->id, collect());
             $filasPendientes = $pendientes->get($producto->id, collect());
             $proveedores = $filasPendientes->pluck('nombre_proveedor')->filter()->unique()->values();
@@ -281,9 +282,9 @@ class ProductoController extends Controller
                     : null,
                 'referencia_producto' => $producto->referencia_producto,
                 'descripcion_producto' => $producto->descripcion_producto,
-                'costo_producto' => $dinero($producto->costo_producto),
-                'valor_detal' => $dinero($producto->valor_detal),
-                'valor_mayorista' => $dinero($producto->valor_mayorista),
+                'costo_producto' => $usuario->puedeVerPrecio('costo') ? $dinero($producto->costo_producto) : null,
+                'valor_detal' => $usuario->puedeVerPrecio('valor_detal') ? $dinero($producto->valor_detal) : null,
+                'valor_mayorista' => $usuario->puedeVerPrecio('valor_mayorista') ? $dinero($producto->valor_mayorista) : null,
                 'valor_sin_instalacion' => $dinero($producto->valor_sin_instalacion),
                 'imagen_producto_url' => $producto->imagen_producto ? Storage::disk('public')->url($producto->imagen_producto) : null,
                 'concatenar_codigo_nombre' => $producto->concatenar_codigo_nombre,

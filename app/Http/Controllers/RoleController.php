@@ -40,6 +40,7 @@ class RoleController extends Controller
                 'name' => $member->name,
                 'email' => $member->email,
                 'roles' => $member->roles->pluck('id')->values(),
+                'tipos_precio_permitidos' => $member->tiposPrecioPermitidos(),
             ]),
             'permissionsFlags' => [
                 'canCreate' => request()->user()->can('roles.create'),

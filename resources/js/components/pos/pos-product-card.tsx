@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import { cn } from '@/lib/utils';
 import type { PosCatalogoProducto, TipoPrecioPedido } from '@/types';
 
@@ -52,6 +53,7 @@ export default function PosProductCard({
     tipoPrecio,
     onAdd,
 }: Props) {
+    const { puedeDetal, puedeMayorista } = useTiposPrecio();
     const nombre =
         producto.concatenar_codigo_nombre ??
         producto.referencia_producto ??
@@ -110,18 +112,22 @@ export default function PosProductCard({
             </p>
 
             <div className="space-y-0.5">
-                <PrecioRow
-                    label="Detal"
-                    active={tipoPrecio === 'DETAL'}
-                    value={producto.valor_detal}
-                    colorClassName="text-emerald-600 dark:text-emerald-400"
-                />
-                <PrecioRow
-                    label="Mayorista"
-                    active={tipoPrecio === 'MAYORISTA'}
-                    value={producto.valor_mayorista}
-                    colorClassName="text-amber-600 dark:text-amber-400"
-                />
+                {puedeDetal ? (
+                    <PrecioRow
+                        label="Detal"
+                        active={tipoPrecio === 'DETAL'}
+                        value={producto.valor_detal}
+                        colorClassName="text-emerald-600 dark:text-emerald-400"
+                    />
+                ) : null}
+                {puedeMayorista ? (
+                    <PrecioRow
+                        label="Mayorista"
+                        active={tipoPrecio === 'MAYORISTA'}
+                        value={producto.valor_mayorista}
+                        colorClassName="text-amber-600 dark:text-amber-400"
+                    />
+                ) : null}
                 <PrecioRow
                     label="S. Instalación"
                     value={producto.valor_sin_instalacion}

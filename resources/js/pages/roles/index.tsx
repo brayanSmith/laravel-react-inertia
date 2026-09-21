@@ -1,10 +1,12 @@
 import { Head, router } from '@inertiajs/react';
-import { Pencil, Plus, X } from 'lucide-react';
-import { useState } from 'react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import CreateRoleModal from '@/components/create-role-modal';
+import DataTable, { type DataTableColumn } from '@/components/data-table';
 import DeleteRoleModal from '@/components/delete-role-modal';
 import EditRoleModal from '@/components/edit-role-modal';
 import Heading from '@/components/heading';
+import TiposPrecioBadges from '@/components/tipos-precio-badges';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +24,11 @@ type Props = {
     permissions: string[];
     bodegas: RoleBodegaOption[];
     members: RoleMember[];
+    permissionsFlags: {
+        canCreate: boolean;
+        canUpdate: boolean;
+        canDelete: boolean;
+    };
 };
 
 export default function RolesIndex({
@@ -29,6 +36,7 @@ export default function RolesIndex({
     permissions,
     bodegas,
     members,
+    permissionsFlags,
 }: Props) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [roleToEdit, setRoleToEdit] = useState<Role | null>(null);
@@ -60,6 +68,198 @@ export default function RolesIndex({
         });
     };
 
+    const bodegasLabel = (role: Role) =>
+        role.bodegas.length === 0
+            ? 'Todas'
+            : bodegas
+                  .filter((bodega) => role.bodegas.includes(bodega.id))
+                  .map((bodega) => bodega.nombre_bodega)
+                  .join(', ');
+
+    const memberCount = (role: Role) =>
+        members.filter((member) => member.roles.includes(role.id)).length;
+
+    const roleColumns = useMemo<DataTableColumn<Role>[]>(
+        () => [
+            {
+                key: 'rol',
+                label: 'Rol',
+                getValue: (role) => role.name,
+                render: (role) => (
+                    <span className="font-medium">{role.name}</span>
+                ),
+            },
+            {
+                key: 'permisos',
+                label: 'Permisos',
+                filter: 'none',
+                getValue: (role) => role.permissions.length,
+                render: (role) => (
+                    <Badge variant="secondary">
+                        {role.permissions.length}{' '}
+                        {role.permissions.length === 1 ? 'permiso' : 'permisos'}
+                    </Badge>
+                ),
+            },
+            {
+                key: 'bodegas',
+                label: 'Bodegas autorizadas',
+                getValue: (role) => bodegasLabel(role),
+                render: (role) =>
+                    role.bodegas.length === 0 ? (
+                        <span className="text-muted-foreground text-sm">
+                            Todas
+                        </span>
+                    ) : (
+                        <div className="flex flex-wrap gap-1">
+                            {bodegas
+                                .filter((bodega) =>
+                                    role.bodegas.includes(bodega.id),
+                                )
+                                .map((bodega) => (
+                                    <Badge key={bodega.id} variant="outline">
+                                        {bodega.nombre_bodega}
+                                    </Badge>
+                                ))}
+                        </div>
+                    ),
+            },
+            {
+                key: 'miembros',
+                label: 'Miembros',
+                filter: 'none',
+                getValue: (role) => memberCount(role),
+                render: (role) => memberCount(role),
+            },
+            {
+                key: 'acciones',
+                label: 'Acciones',
+                align: 'right',
+                filter: 'none',
+                render: (role) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissionsFlags.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-role-button"
+                                            onClick={() => openEditDialog(role)}
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar rol</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+
+                            {permissionsFlags.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-role-button"
+                                            onClick={() =>
+                                                openDeleteDialog(role)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar rol</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
+            },
+        ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [roles, members, bodegas, permissionsFlags],
+    );
+
+    const memberColumns = useMemo<DataTableColumn<RoleMember>[]>(
+        () => [
+            {
+                key: 'nombre',
+                label: 'Nombre',
+                getValue: (member) => member.name,
+                render: (member) => (
+                    <span className="font-medium">{member.name}</span>
+                ),
+            },
+            {
+                key: 'email',
+                label: 'Email',
+                getValue: (member) => member.email,
+                render: (member) => member.email,
+            },
+            {
+                key: 'roles',
+                label: 'Roles',
+                getValue: (member) =>
+                    roles
+                        .filter((role) => member.roles.includes(role.id))
+                        .map((role) => role.name)
+                        .join(', '),
+                render: (member) => (
+                    <div className="flex flex-wrap gap-2">
+                        {roles.map((role) => {
+                            const hasRole = member.roles.includes(role.id);
+
+                            return (
+                                <Badge
+                                    key={role.id}
+                                    data-test="role-toggle"
+                                    variant={hasRole ? 'default' : 'outline'}
+                                    className={
+                                        permissionsFlags.canUpdate
+                                            ? 'cursor-pointer'
+                                            : undefined
+                                    }
+                                    onClick={
+                                        permissionsFlags.canUpdate
+                                            ? () =>
+                                                  toggleMemberRole(
+                                                      member,
+                                                      role,
+                                                      hasRole,
+                                                  )
+                                            : undefined
+                                    }
+                                >
+                                    {role.name}
+                                </Badge>
+                            );
+                        })}
+                    </div>
+                ),
+            },
+            {
+                key: 'precios',
+                label: 'Precios permitidos',
+                filter: 'none',
+                getValue: (member) => member.tipos_precio_permitidos.join(', '),
+                render: (member) => (
+                    <TiposPrecioBadges
+                        usuarioId={member.id}
+                        selected={member.tipos_precio_permitidos}
+                        canEdit={permissionsFlags.canUpdate}
+                    />
+                ),
+            },
+        ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [roles, permissionsFlags],
+    );
+
     return (
         <>
             <Head title="Roles y permisos" />
@@ -71,162 +271,47 @@ export default function RolesIndex({
                     <div className="flex items-center justify-between">
                         <Heading
                             variant="small"
-                            title="Roles personalizados"
-                            description="Crea roles y elige qué permisos otorga cada uno"
+                            title="Roles"
+                            description="Crea roles y elige qué permisos, bodegas y partes del panel otorga cada uno"
                         />
 
-                        <CreateRoleModal
-                            permissions={permissions}
-                            bodegas={bodegas}
-                        >
-                            <Button data-test="create-role-button">
-                                <Plus /> Crear rol
-                            </Button>
-                        </CreateRoleModal>
-                    </div>
-
-                    <div className="space-y-3">
-                        {roles.map((role) => (
-                            <div
-                                key={role.id}
-                                data-test="role-row"
-                                className="flex items-center justify-between rounded-lg border p-4"
+                        {permissionsFlags.canCreate ? (
+                            <CreateRoleModal
+                                permissions={permissions}
+                                bodegas={bodegas}
                             >
-                                <div>
-                                    <div className="font-medium">
-                                        {role.name}
-                                    </div>
-                                    <div className="mt-1 flex flex-wrap gap-1">
-                                        {role.permissions.length > 0 ? (
-                                            role.permissions.map(
-                                                (permission) => (
-                                                    <Badge
-                                                        key={permission}
-                                                        variant="secondary"
-                                                    >
-                                                        {permission}
-                                                    </Badge>
-                                                ),
-                                            )
-                                        ) : (
-                                            <span className="text-muted-foreground text-sm">
-                                                No permissions assigned
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <TooltipProvider>
-                                    <div className="flex items-center gap-2">
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    data-test="edit-role-button"
-                                                    onClick={() =>
-                                                        openEditDialog(role)
-                                                    }
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Editar rol</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    data-test="delete-role-button"
-                                                    onClick={() =>
-                                                        openDeleteDialog(role)
-                                                    }
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Eliminar rol</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </div>
-                                </TooltipProvider>
-                            </div>
-                        ))}
-
-                        {roles.length === 0 ? (
-                            <p className="text-muted-foreground py-8 text-center">
-                                Aún no hay roles personalizados.
-                            </p>
+                                <Button data-test="create-role-button">
+                                    <Plus /> Crear rol
+                                </Button>
+                            </CreateRoleModal>
                         ) : null}
                     </div>
+
+                    <DataTable
+                        data={roles}
+                        columns={roleColumns}
+                        getRowId={(role) => role.id}
+                        dataTestPrefix="role"
+                        searchPlaceholder="Buscar roles..."
+                        emptyMessage="Aún no hay roles."
+                    />
                 </div>
 
                 <div className="space-y-6">
                     <Heading
                         variant="small"
-                        title="Asignar roles a miembros"
-                        description="Otorga roles personalizados para controlar lo que cada miembro puede acceder"
+                        title="Asignar roles a usuarios"
+                        description="Marca los roles de cada usuario haciendo clic en ellos"
                     />
 
-                    <div className="space-y-3">
-                        {members.map((member) => (
-                            <div
-                                key={member.id}
-                                data-test="role-member-row"
-                                className="space-y-2 rounded-lg border p-4"
-                            >
-                                <div>
-                                    <div className="font-medium">
-                                        {member.name}
-                                    </div>
-                                    <div className="text-muted-foreground text-sm">
-                                        {member.email}
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2">
-                                    {roles.map((role) => {
-                                        const hasRole = member.roles.includes(
-                                            role.id,
-                                        );
-
-                                        return (
-                                            <Badge
-                                                key={role.id}
-                                                data-test="role-toggle"
-                                                variant={
-                                                    hasRole
-                                                        ? 'default'
-                                                        : 'outline'
-                                                }
-                                                className="cursor-pointer"
-                                                onClick={() =>
-                                                    toggleMemberRole(
-                                                        member,
-                                                        role,
-                                                        hasRole,
-                                                    )
-                                                }
-                                            >
-                                                {role.name}
-                                            </Badge>
-                                        );
-                                    })}
-
-                                    {roles.length === 0 ? (
-                                        <span className="text-muted-foreground text-sm">
-                                            Crea un rol arriba para asignarlo
-                                        </span>
-                                    ) : null}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <DataTable
+                        data={members}
+                        columns={memberColumns}
+                        getRowId={(member) => member.id}
+                        dataTestPrefix="role-member"
+                        searchPlaceholder="Buscar usuarios..."
+                        emptyMessage="No hay usuarios."
+                    />
                 </div>
             </div>
 
