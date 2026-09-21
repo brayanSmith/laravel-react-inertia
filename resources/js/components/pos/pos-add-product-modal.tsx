@@ -214,6 +214,7 @@ export default function PosAddProductModal({
                                 type="button"
                                 variant="outline"
                                 size="icon"
+                                className="border-red-200 bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
                                 onClick={() =>
                                     setCantidad((prev) => Math.max(prev - 1, 1))
                                 }
@@ -243,6 +244,7 @@ export default function PosAddProductModal({
                                 type="button"
                                 variant="outline"
                                 size="icon"
+                                className="border-emerald-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900"
                                 onClick={() => setCantidad((prev) => prev + 1)}
                                 data-test="pos-add-plus"
                             >

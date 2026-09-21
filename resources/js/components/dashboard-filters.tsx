@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Combobox from '@/components/combobox';
 import MultiCombobox from '@/components/multi-combobox';
 import { Button } from '@/components/ui/button';
+import { useTiposPrecio } from '@/hooks/use-tipos-precio';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
@@ -63,15 +64,19 @@ export default function DashboardFilters({
     );
     const hayCambios = JSON.stringify(borrador) !== filtrosKey;
 
+    const { puedeMayorista } = useTiposPrecio();
+
     const bodegaOptions = useMemo(
         () => [
             ...bodegas.map((bodega) => ({
                 value: String(bodega.id),
                 label: bodega.nombre_bodega,
             })),
-            { value: MAYORISTA, label: 'Mayorista' },
+            ...(puedeMayorista
+                ? [{ value: MAYORISTA, label: 'Mayorista' }]
+                : []),
         ],
-        [bodegas],
+        [bodegas, puedeMayorista],
     );
 
     // The product list follows the selected vehicle type.

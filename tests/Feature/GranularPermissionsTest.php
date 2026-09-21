@@ -385,3 +385,18 @@ test('a user without the costo price gets no costs in the POS, productos or pedi
     $this->actingAs($this->miembro)->get(route('pedidos.index'))
         ->assertInertia(fn ($page) => $page->has('pedidos.0.detalles.0.costo_unitario'));
 });
+
+test('the dashboard has no mayorista group without the mayorista price', function () {
+    concederPermisos($this->miembro, ['dashboard.tabla-bodegas']);
+
+    $this->actingAs($this->miembro)->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page->where('cantidadPorBodega.filas', fn ($filas) => collect($filas)->contains('almacen', 'Mayorista')));
+
+    $this->miembro->update(['tipos_precio_permitidos' => ['valor_detal', 'costo']]);
+
+    $this->actingAs($this->miembro)->get(route('dashboard', ['bodega_ids' => ['mayorista']]))
+        ->assertInertia(fn ($page) => $page
+            ->where('cantidadPorBodega.filas', fn ($filas) => ! collect($filas)->contains('almacen', 'Mayorista'))
+            ->where('filtros.bodega_ids', [])
+        );
+});

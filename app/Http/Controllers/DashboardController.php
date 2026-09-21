@@ -55,7 +55,11 @@ class DashboardController extends Controller
         ]);
 
         return [
-            'bodega_ids' => array_map('strval', $datos['bodega_ids'] ?? []),
+            // "mayorista" is only offered to whoever may see the mayorista price.
+            'bodega_ids' => array_values(array_filter(
+                array_map('strval', $datos['bodega_ids'] ?? []),
+                fn (string $id) => $id !== 'mayorista' || $request->user()->puedeVerPrecio('valor_mayorista'),
+            )),
             'desde' => (string) ($datos['desde'] ?? ''),
             'hasta' => (string) ($datos['hasta'] ?? ''),
             'tipo_vehiculo' => (string) ($datos['tipo_vehiculo'] ?? ''),
@@ -142,7 +146,7 @@ class DashboardController extends Controller
         foreach ($bodegas as $bodega) {
             $filas['b'.$bodega->id] = $vacia($bodega->nombre_bodega);
         }
-        if ($filtros['bodega_ids'] === [] || in_array('mayorista', $filtros['bodega_ids'], true)) {
+        if (auth()->user()->puedeVerPrecio('valor_mayorista') && ($filtros['bodega_ids'] === [] || in_array('mayorista', $filtros['bodega_ids'], true))) {
             $filas['mayorista'] = $vacia('Mayorista');
         }
 
