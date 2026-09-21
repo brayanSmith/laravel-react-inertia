@@ -6,7 +6,9 @@ use App\Models\Abono;
 use App\Models\Bodega;
 use App\Models\Cliente;
 use App\Models\Compra;
+use App\Models\Marca;
 use App\Models\Pedido;
+use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Puc;
 use App\Models\User;
@@ -47,6 +49,36 @@ class HistorialController extends Controller
         'factura' => 'Factura',
         'proveedor_id' => 'Proveedor',
         'observaciones' => 'Observaciones',
+        'categoria' => 'Categoría',
+        'tipo' => 'Tipo',
+        'inventariable' => 'Inventariable',
+        'sku' => 'SKU',
+        'referencia_producto' => 'Referencia',
+        'descripcion_producto' => 'Descripción',
+        'marca_id' => 'Marca',
+        'ancho' => 'Ancho',
+        'perfil' => 'Perfil',
+        'construccion' => 'Construcción',
+        'rin' => 'Rin',
+        'tipo_vehiculo' => 'Tipo de vehículo',
+        'diametro' => 'Diámetro',
+        'costo_producto' => 'Costo',
+        'valor_detal' => 'Valor detal',
+        'valor_mayorista' => 'Valor mayorista',
+        'valor_sin_instalacion' => 'Valor sin instalación',
+    ];
+
+    /** Fields that hold money, shown as $1.234. */
+    private const DINERO = [
+        'flete', 'descuento', 'reteica', 'retefuente', 'monto', 'con_cuanto_pago', 'cambio', 'total_a_pagar',
+        'costo_producto', 'valor_detal', 'valor_mayorista', 'valor_sin_instalacion',
+    ];
+
+    /** Product prices: only for whoever may see that price (see "Precios permitidos"). */
+    private const PRECIOS = [
+        'costo_producto' => 'costo',
+        'valor_detal' => 'valor_detal',
+        'valor_mayorista' => 'valor_mayorista',
     ];
 
     /**
@@ -59,10 +91,16 @@ class HistorialController extends Controller
         $actividades = Activity::query()
             ->with('causer:id,name')
             ->latest()
+            ->latest('id')
             ->limit(2000)
             ->get();
 
         $nombres = $this->nombres($actividades);
+        $productosPorId = Producto::withTrashed()
+            ->whereIn('id', $actividades->where('subject_type', Producto::class)->pluck('subject_id'))
+            ->get(['id', 'concatenar_codigo_nombre', 'referencia_producto'])
+            ->mapWithKeys(fn (Producto $producto) => [$producto->id => $producto->concatenar_codigo_nombre ?? $producto->referencia_producto])
+            ->all();
 
         return Inertia::render('historial/index', [
             'actividades' => $actividades->map(fn (Activity $actividad): array => [
@@ -70,7 +108,7 @@ class HistorialController extends Controller
                 'fecha' => $actividad->created_at->toIso8601String(),
                 'usuario' => $actividad->causer?->name ?? 'Sistema',
                 'modulo' => $this->modulo($actividad),
-                'registro' => $this->registro($actividad),
+                'registro' => $this->registro($actividad, $productosPorId),
                 'accion' => $actividad->description,
                 'cambios' => $this->cambios($actividad, $nombres),
             ])->values(),
@@ -83,11 +121,15 @@ class HistorialController extends Controller
             Pedido::class => 'Pedidos',
             Abono::class => 'Pedidos',
             Compra::class => 'Compras',
+            Producto::class => 'Productos',
             default => class_basename((string) $actividad->subject_type),
         };
     }
 
-    private function registro(Activity $actividad): string
+    /**
+     * @param  array<int, string>  $productos  Product names by id.
+     */
+    private function registro(Activity $actividad, array $productos = []): string
     {
         $propiedades = $actividad->properties;
         $pedidoId = $actividad->subject_type === Abono::class
@@ -97,6 +139,7 @@ class HistorialController extends Controller
         return match ($actividad->subject_type) {
             Abono::class => 'Abono del pedido #'.($pedidoId ?? '?'),
             Compra::class => 'Compra #'.$actividad->subject_id,
+            Producto::class => 'Producto #'.$actividad->subject_id.($productos[$actividad->subject_id] ?? false ? ' · '.$productos[$actividad->subject_id] : ''),
             default => 'Pedido #'.$actividad->subject_id,
         };
     }
@@ -113,6 +156,7 @@ class HistorialController extends Controller
         $viejos = $actividad->properties['old'] ?? [];
 
         return collect(array_keys($nuevos + $viejos))
+            ->reject(fn (string $campo): bool => isset(self::PRECIOS[$campo]) && ! auth()->user()->puedeVerPrecio(self::PRECIOS[$campo]))
             ->map(fn (string $campo): array => [
                 'campo' => self::CAMPOS[$campo] ?? $campo,
                 'antes' => array_key_exists($campo, $viejos) ? $this->formatear($campo, $viejos[$campo], $nombres) : null,
@@ -139,6 +183,10 @@ class HistorialController extends Controller
                 ->implode("\n");
         }
 
+        if (in_array($campo, self::DINERO, true) && is_numeric($valor)) {
+            return '$'.number_format((float) $valor, 0, ',', '.');
+        }
+
         if (isset($nombres[$campo][$valor])) {
             return $nombres[$campo][$valor];
         }
@@ -158,7 +206,7 @@ class HistorialController extends Controller
      */
     private function nombres(Collection $actividades): array
     {
-        $ids = ['cliente_id' => [], 'proveedor_id' => [], 'user_id' => [], 'vendedor_id' => [], 'bodega_id' => [], 'puc_id' => []];
+        $ids = ['cliente_id' => [], 'marca_id' => [], 'proveedor_id' => [], 'user_id' => [], 'vendedor_id' => [], 'bodega_id' => [], 'puc_id' => []];
 
         foreach ($actividades as $actividad) {
             foreach (['attributes', 'old'] as $lado) {
@@ -176,6 +224,7 @@ class HistorialController extends Controller
 
         return [
             'cliente_id' => Cliente::withTrashed()->whereIn('id', $ids['cliente_id'])->pluck('razon_social', 'id')->all(),
+            'marca_id' => Marca::whereIn('id', $ids['marca_id'])->pluck('marca', 'id')->all(),
             'proveedor_id' => Proveedor::withTrashed()->whereIn('id', $ids['proveedor_id'])->pluck('nombre_proveedor', 'id')->all(),
             'user_id' => $usuarios,
             'vendedor_id' => $usuarios,

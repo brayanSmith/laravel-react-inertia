@@ -3,6 +3,7 @@
 use App\Models\Bodega;
 use App\Models\Cliente;
 use App\Models\Compra;
+use App\Models\Marca;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Proveedor;
@@ -129,4 +130,49 @@ test('the history records who created, edited, received, deleted and restored a 
 
     $this->actingAs($this->owner)->get(route('historial.index'))
         ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => collect($actividades)->contains(fn ($a) => $a['modulo'] === 'Compras' && $a['registro'] === 'Compra #'.$compra->id)));
+});
+
+test('the history records the changes of a producto and hides the prices its reader may not see', function () {
+    $marca = Marca::factory()->create(['marca' => 'WANDA']);
+    $this->actingAs($this->owner)->post(route('productos.store'), [
+        'categoria' => 'OTRO',
+        'tipo' => 'NUEVO',
+        'referencia_producto' => 'REF-1',
+        'marca_id' => $marca->id,
+        'costo_producto' => 50000,
+        'valor_detal' => 80000,
+    ])->assertRedirect();
+
+    $producto = Producto::where('referencia_producto', 'REF-1')->firstOrFail();
+    expect(Activity::where('description', 'Producto creado')->where('subject_id', $producto->id)->exists())->toBeTrue();
+
+    $this->actingAs($this->owner)->patch(route('productos.update', [$producto]), [
+        'categoria' => 'OTRO',
+        'tipo' => 'NUEVO',
+        'referencia_producto' => 'REF-1',
+        'marca_id' => $marca->id,
+        'costo_producto' => 50000,
+        'valor_detal' => 90000,
+    ])->assertRedirect();
+
+    $editado = Activity::where('description', 'Producto editado')->firstOrFail();
+    expect((float) $editado->properties['old']['valor_detal'])->toBe(80000.0);
+    expect((float) $editado->properties['attributes']['valor_detal'])->toBe(90000.0);
+    expect($editado->properties['attributes'])->not->toHaveKey('costo_producto');
+
+    $this->actingAs($this->owner)->get(route('historial.index'))
+        ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => collect($actividades)->contains(fn ($a) => $a['modulo'] === 'Productos'
+            && str_contains($a['registro'], 'REF-1')
+            && collect($a['cambios'])->contains(fn ($c) => $c['campo'] === 'Valor detal' && $c['antes'] === '$80.000' && $c['despues'] === '$90.000'))));
+
+    // Without the costo price its changes are not shown.
+    $this->owner->update(['tipos_precio_permitidos' => ['valor_detal']]);
+
+    $this->actingAs($this->owner->fresh())->get(route('historial.index'))
+        ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => ! collect($actividades)
+            ->flatMap(fn ($a) => $a['cambios'])
+            ->contains(fn ($c) => $c['campo'] === 'Costo')));
+
+    $this->actingAs($this->owner)->delete(route('productos.destroy', [$producto]))->assertRedirect();
+    expect(Activity::where('description', 'Producto eliminado')->exists())->toBeTrue();
 });

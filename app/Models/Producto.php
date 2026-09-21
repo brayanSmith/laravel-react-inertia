@@ -9,12 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Producto extends Model
 {
     /** @use HasFactory<ProductoFactory> */
     use HasFactory;
 
+    use LogsActivity;
     use SoftDeletes;
 
     protected $appends = [
@@ -51,6 +54,30 @@ class Producto extends Model
         'codigo_appsheet',
         'sku',
     ];
+
+    /**
+     * What gets written to the history. The composed name and the image path
+     * are left out: they follow from the fields below.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('productos')
+            ->logOnly([
+                'categoria', 'tipo', 'inventariable', 'sku', 'referencia_producto', 'descripcion_producto', 'marca_id',
+                'ancho', 'perfil', 'construccion', 'rin', 'tipo_vehiculo', 'diametro',
+                'costo_producto', 'valor_detal', 'valor_mayorista', 'valor_sin_instalacion',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $event): string => match ($event) {
+                'created' => 'Producto creado',
+                'updated' => 'Producto editado',
+                'deleted' => 'Producto eliminado',
+                'restored' => 'Producto restaurado',
+                default => "Producto {$event}",
+            });
+    }
 
     /**
      * @return BelongsTo<Marca, $this>
