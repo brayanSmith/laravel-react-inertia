@@ -63,6 +63,7 @@ export default function RegistrarPagoModal({
     const [vendedorId, setVendedorId] = useState<string>(
         pedido.user_id ? String(pedido.user_id) : '',
     );
+    // The monto is the saldo to pay: it is shown, not edited.
     const [monto, setMonto] = useState<string>(defaultMonto);
     const [conCuantoPago, setConCuantoPago] = useState<string>('');
 
@@ -72,6 +73,12 @@ export default function RegistrarPagoModal({
 
         return Math.max(conCuantoNum - montoNum, 0);
     }, [monto, conCuantoPago]);
+
+    // Paying less than the monto registers a partial abono of what was paid.
+    const abonoParcial =
+        Number(conCuantoPago) > 0 && Number(conCuantoPago) < Number(monto)
+            ? Number(conCuantoPago)
+            : null;
 
     const resetForm = () => {
         setPucId('');
@@ -131,19 +138,19 @@ export default function RegistrarPagoModal({
 
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="monto">Monto</Label>
-                                        <Input
-                                            id="monto"
-                                            name="monto"
-                                            type="number"
-                                            min="0.01"
-                                            step="0.01"
+                                        <Label>Monto</Label>
+                                        <p
                                             data-test="abono-monto"
+                                            className="flex h-9 items-center text-sm font-medium"
+                                        >
+                                            {currencyFormatter.format(
+                                                Number(monto) || 0,
+                                            )}
+                                        </p>
+                                        <input
+                                            type="hidden"
+                                            name="monto"
                                             value={monto}
-                                            onChange={(event) =>
-                                                setMonto(event.target.value)
-                                            }
-                                            required
                                         />
                                         <InputError message={errors.monto} />
                                     </div>
@@ -180,6 +187,17 @@ export default function RegistrarPagoModal({
                                         {currencyFormatter.format(cambio)}
                                     </span>
                                 </div>
+
+                                {abonoParcial !== null ? (
+                                    <p
+                                        data-test="abono-parcial"
+                                        className="text-sm text-amber-600 dark:text-amber-400"
+                                    >
+                                        Abono parcial: se registrará{' '}
+                                        {currencyFormatter.format(abonoParcial)}
+                                        .
+                                    </p>
+                                ) : null}
 
                                 <div className="grid gap-2">
                                     <Label>Vendedor</Label>

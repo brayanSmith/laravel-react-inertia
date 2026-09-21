@@ -58,6 +58,7 @@ const ACTION_LABELS: Record<string, string> = {
     'chart-categorias': 'Gráfico: productos vendidos por categoría',
     'chart-top-productos': 'Gráfico: 10 productos más vendidos',
     'chart-pedidos': 'Gráfico: pedidos, gastos + inversión y ganancia',
+    'alerta-stock': 'Alerta: productos sin stock con ventas',
     'view-all-pedidos': 'Ver el historial de todos los pedidos',
 };
 

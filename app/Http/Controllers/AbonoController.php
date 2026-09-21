@@ -32,8 +32,9 @@ class AbonoController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($request, $pedido, $data): void {
-            $monto = (float) $data['monto'];
-            $conCuantoPago = isset($data['con_cuanto_pago']) ? (float) $data['con_cuanto_pago'] : $monto;
+            $conCuantoPago = isset($data['con_cuanto_pago']) ? (float) $data['con_cuanto_pago'] : (float) $data['monto'];
+            // Paying less than the monto is a partial abono: only what was paid counts.
+            $monto = min((float) $data['monto'], $conCuantoPago);
 
             $pedido->abonos()->create([
                 'fecha' => $data['fecha'] ?? now(),
@@ -67,8 +68,9 @@ class AbonoController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($pedido, $abono, $data): void {
-            $monto = (float) $data['monto'];
-            $conCuantoPago = isset($data['con_cuanto_pago']) ? (float) $data['con_cuanto_pago'] : $monto;
+            $conCuantoPago = isset($data['con_cuanto_pago']) ? (float) $data['con_cuanto_pago'] : (float) $data['monto'];
+            // Paying less than the monto is a partial abono: only what was paid counts.
+            $monto = min((float) $data['monto'], $conCuantoPago);
 
             $abono->update([
                 'fecha' => $data['fecha'] ?? $abono->fecha,

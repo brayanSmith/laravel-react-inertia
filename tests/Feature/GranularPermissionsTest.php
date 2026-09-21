@@ -400,3 +400,53 @@ test('the dashboard has no mayorista group without the mayorista price', functio
             ->where('filtros.bodega_ids', [])
         );
 });
+
+test('the dashboard alerts of the best selling products that ran out of stock', function () {
+    $bodega = Bodega::factory()->create();
+    $agotadoMuy = Producto::factory()->create(['inventariable' => true]);
+    $agotadoPoco = Producto::factory()->create(['inventariable' => true]);
+    $conStock = Producto::factory()->create(['inventariable' => true]);
+    $pedido = Pedido::factory()->create(['bodega_id' => $bodega->id]);
+
+    foreach ([[$agotadoMuy, 9], [$agotadoPoco, 2], [$conStock, 20]] as [$producto, $cantidad]) {
+        DetallePedido::factory()->create(['pedido_id' => $pedido->id, 'producto_id' => $producto->id, 'cantidad' => $cantidad]);
+    }
+
+    StockBodega::create(['bodega_id' => $bodega->id, 'producto_id' => $agotadoMuy->id, 'stock_inicial' => 0, 'entradas' => 0, 'salidas' => 0, 'stock' => 0]);
+    StockBodega::create(['bodega_id' => $bodega->id, 'producto_id' => $agotadoPoco->id, 'stock_inicial' => 0, 'entradas' => 0, 'salidas' => 0, 'stock' => -1]);
+    StockBodega::create(['bodega_id' => $bodega->id, 'producto_id' => $conStock->id, 'stock_inicial' => 5, 'entradas' => 0, 'salidas' => 0, 'stock' => 5]);
+
+    concederPermisos($this->miembro, ['dashboard.alerta-stock']);
+
+    $this->actingAs($this->miembro)->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->has('sinStock', 2)
+            ->where('sinStock.0.id', $agotadoMuy->id)
+            ->where('sinStock.0.vendidas', 9)
+            ->where('sinStock.1.id', $agotadoPoco->id)
+            ->where('sinStock.1.stock', -1)
+        );
+
+    $this->miembro->revokePermissionTo('dashboard.alerta-stock');
+
+    $this->actingAs($this->miembro->fresh())->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page->where('sinStock', null));
+});
+
+test('paying less than the monto registers a partial abono of what was paid', function () {
+    $pedido = Pedido::factory()->create(['total_a_pagar' => 2000]);
+    $puc = Puc::factory()->create();
+    concederPermisos($this->miembro, ['pedidos.view', 'pedidos.update', 'pedidos.create-abono', 'pedidos.update-abono']);
+
+    $this->actingAs($this->miembro)->post(route('pedidos.abonos.store', [$pedido]), ['puc_id' => $puc->id, 'monto' => 2000, 'con_cuanto_pago' => 500])->assertSessionHasNoErrors();
+
+    $abono = Abono::firstOrFail();
+    expect((float) $abono->monto)->toBe(500.0);
+    expect((float) $abono->cambio)->toBe(0.0);
+    expect((float) $pedido->fresh()->saldo_pendiente)->toBe(1500.0);
+
+    $this->actingAs($this->miembro)->patch(route('pedidos.abonos.update', [$pedido, $abono]), ['puc_id' => $puc->id, 'monto' => 2000, 'con_cuanto_pago' => 2500])->assertSessionHasNoErrors();
+
+    expect((float) $abono->fresh()->monto)->toBe(2000.0);
+    expect((float) $abono->fresh()->cambio)->toBe(500.0);
+});

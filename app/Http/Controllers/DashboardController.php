@@ -18,7 +18,7 @@ class DashboardController extends Controller
     public function __invoke(Request $request): Response
     {
         $filtros = $this->filtros($request);
-        $acciones = ['widget-productos', 'widget-ganancia', 'widget-ajustes', 'tabla-bodegas', 'chart-categorias', 'chart-top-productos', 'chart-pedidos'];
+        $acciones = ['widget-productos', 'widget-ganancia', 'widget-ajustes', 'tabla-bodegas', 'chart-categorias', 'chart-top-productos', 'chart-pedidos', 'alerta-stock'];
         // True when the user may see at least one of the given dashboard parts.
         $puede = fn (string ...$partes): bool => collect($partes)->contains(fn (string $parte) => $request->user()->can("dashboard.{$parte}"));
 
@@ -26,6 +26,7 @@ class DashboardController extends Controller
             'cantidadPorBodega' => $puede('tabla-bodegas') ? $this->cantidadPorBodega($filtros) : null,
             'resumen' => $puede('widget-productos', 'widget-ganancia', 'widget-ajustes') ? $this->resumen($filtros) : null,
             'graficos' => $puede('chart-categorias', 'chart-top-productos', 'chart-pedidos') ? $this->graficos($filtros) : null,
+            'sinStock' => $puede('alerta-stock') ? $this->sinStock($filtros) : null,
             'permisos' => collect($acciones)->mapWithKeys(fn (string $accion) => [$accion => $puede($accion)])->all(),
             'filtros' => $filtros,
             'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
@@ -274,6 +275,32 @@ class DashboardController extends Controller
             ->all();
 
         return compact('categorias', 'topProductos', 'pedidosPorFecha', 'gastosPorFecha');
+    }
+
+    /**
+     * The five products that ran out of stock and still sell the most (in the
+     * filtered period): an alert of what needs restocking first.
+     *
+     * @param  array<string, mixed>  $filtros
+     * @return list<array{id: int, producto: string, vendidas: int, stock: float}>
+     */
+    private function sinStock(array $filtros): array
+    {
+        return $this->detalles($filtros)
+            ->where('productos.inventariable', true)
+            ->whereRaw('(select coalesce(sum(stock), 0) from stock_bodegas where stock_bodegas.producto_id = detalle_pedidos.producto_id) <= 0')
+            ->selectRaw('detalle_pedidos.producto_id, MAX(productos.concatenar_codigo_nombre) as producto, SUM(detalle_pedidos.cantidad) as vendidas, (select coalesce(sum(stock), 0) from stock_bodegas where stock_bodegas.producto_id = detalle_pedidos.producto_id) as stock')
+            ->groupBy('detalle_pedidos.producto_id')
+            ->orderByDesc('vendidas')
+            ->limit(5)
+            ->get()
+            ->map(fn ($fila) => [
+                'id' => (int) $fila->producto_id,
+                'producto' => $fila->producto ?? 'Producto '.$fila->producto_id,
+                'vendidas' => (int) $fila->vendidas,
+                'stock' => (float) $fila->stock,
+            ])
+            ->all();
     }
 
     /**

@@ -147,7 +147,15 @@ export type DashboardParte =
     | 'tabla-bodegas'
     | 'chart-categorias'
     | 'chart-top-productos'
-    | 'chart-pedidos';
+    | 'chart-pedidos'
+    | 'alerta-stock';
+
+export type ProductoSinStock = {
+    id: number;
+    producto: string;
+    vendidas: number;
+    stock: number;
+};
 
 export type DashboardPermisos = Record<DashboardParte, boolean>;
 

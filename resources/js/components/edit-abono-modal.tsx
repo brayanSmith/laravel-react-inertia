@@ -92,6 +92,12 @@ export default function EditAbonoModal({
         return Math.max(conCuantoNum - montoNum, 0);
     }, [monto, conCuantoPago]);
 
+    // Paying less than the monto registers a partial abono of what was paid.
+    const abonoParcial =
+        Number(conCuantoPago) > 0 && Number(conCuantoPago) < Number(monto)
+            ? Number(conCuantoPago)
+            : null;
+
     if (!abono) {
         return null;
     }
@@ -186,6 +192,17 @@ export default function EditAbonoModal({
                                         {currencyFormatter.format(cambio)}
                                     </span>
                                 </div>
+
+                                {abonoParcial !== null ? (
+                                    <p
+                                        data-test="abono-parcial"
+                                        className="text-sm text-amber-600 dark:text-amber-400"
+                                    >
+                                        Abono parcial: se registrará{' '}
+                                        {currencyFormatter.format(abonoParcial)}
+                                        .
+                                    </p>
+                                ) : null}
 
                                 <div className="grid gap-2">
                                     <Label>Vendedor</Label>

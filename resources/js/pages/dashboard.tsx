@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import DashboardCharts from '@/components/dashboard-charts';
 import DashboardFilters from '@/components/dashboard-filters';
+import DashboardStockAlert from '@/components/dashboard-stock-alert';
 import DashboardWidgets from '@/components/dashboard-widgets';
 import CantidadPorBodegaTable from '@/components/cantidad-por-bodega-table';
 import { dashboard } from '@/routes';
@@ -12,6 +13,7 @@ import type {
     DashboardPermisos,
     DashboardProductoOption,
     DashboardResumen,
+    ProductoSinStock,
 } from '@/types';
 
 type Props = {
@@ -19,6 +21,7 @@ type Props = {
     resumen: DashboardResumen | null;
     graficos: DashboardGraficos | null;
     permisos: DashboardPermisos;
+    sinStock: ProductoSinStock[] | null;
     filtros: DashboardFiltros;
     bodegas: DashboardBodegaOption[];
     productosFiltro: DashboardProductoOption[];
@@ -29,6 +32,7 @@ export default function Dashboard({
     resumen,
     graficos,
     permisos,
+    sinStock,
     filtros,
     bodegas,
     productosFiltro,
@@ -37,6 +41,7 @@ export default function Dashboard({
         <>
             <Head title="Panel" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl">
+                {sinStock ? <DashboardStockAlert productos={sinStock} /> : null}
                 <DashboardFilters
                     filtros={filtros}
                     bodegas={bodegas}

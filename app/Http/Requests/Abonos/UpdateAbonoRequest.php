@@ -17,7 +17,7 @@ class UpdateAbonoRequest extends FormRequest
         return [
             'puc_id' => ['required', 'integer', 'exists:pucs,id'],
             'monto' => ['required', 'numeric', 'min:0.01'],
-            'con_cuanto_pago' => ['nullable', 'numeric', 'gte:monto'],
+            'con_cuanto_pago' => ['nullable', 'numeric', 'min:0.01'],
             'descripcion' => ['nullable', 'string', 'max:255'],
             'fecha' => ['nullable', 'date'],
             'vendedor_id' => ['nullable', 'integer', 'exists:users,id'],
