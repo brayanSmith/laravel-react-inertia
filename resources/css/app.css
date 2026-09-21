@@ -196,3 +196,27 @@
     background-color: color-mix(in oklab, var(--color-emerald-500) 20%, transparent);
     color: var(--color-emerald-300);
 }
+
+/* The scrollbar of the side menu follows the menu colors (see Apariencia). */
+[data-sidebar='content'] {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--sidebar-foreground) 35%, transparent)
+        transparent;
+}
+
+[data-sidebar='content']::-webkit-scrollbar {
+    width: 8px;
+}
+
+[data-sidebar='content']::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+[data-sidebar='content']::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: color-mix(in oklab, var(--sidebar-foreground) 35%, transparent);
+}
+
+[data-sidebar='content']::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--sidebar-foreground) 55%, transparent);
+}
