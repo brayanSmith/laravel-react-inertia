@@ -58,6 +58,7 @@ class RoleController extends Controller
 
         $role->syncPermissions($request->validated('permissions', []));
         $role->bodegas()->sync($request->validated('bodegas', []));
+        $role->registrarCambioAcceso(null);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role created.')]);
 
@@ -68,9 +69,12 @@ class RoleController extends Controller
     {
         Gate::authorize('roles.update');
 
+        $antes = $role->acceso();
+
         $role->update(['name' => $request->validated('name')]);
         $role->syncPermissions($request->validated('permissions', []));
         $role->bodegas()->sync($request->validated('bodegas', []));
+        $role->registrarCambioAcceso($antes);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role updated.')]);
 
@@ -95,7 +99,7 @@ class RoleController extends Controller
     {
         Gate::authorize('roles.update');
 
-        $user->syncRoles(Role::whereIn('id', $request->validated('roles', []))->get());
+        $user->syncRolesWithHistory(Role::whereIn('id', $request->validated('roles', []))->get());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Member roles updated.')]);
 

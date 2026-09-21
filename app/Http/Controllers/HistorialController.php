@@ -6,12 +6,14 @@ use App\Models\Abono;
 use App\Models\Bodega;
 use App\Models\Cliente;
 use App\Models\Compra;
+use App\Models\Empresa;
 use App\Models\Gasto;
 use App\Models\Marca;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Puc;
+use App\Models\Role;
 use App\Models\StockInicial;
 use App\Models\Traslado;
 use App\Models\User;
@@ -41,6 +43,10 @@ class HistorialController extends Controller
         Traslado::class => ['modulo' => 'Traslados', 'etiqueta' => 'Traslado', 'nombre' => null],
         Marca::class => ['modulo' => 'Marcas', 'etiqueta' => 'Marca', 'nombre' => 'marca'],
         Bodega::class => ['modulo' => 'Bodegas', 'etiqueta' => 'Bodega', 'nombre' => 'nombre_bodega'],
+        Puc::class => ['modulo' => 'Puc', 'etiqueta' => 'Puc', 'nombre' => 'concatenar_subcuenta_concepto'],
+        Empresa::class => ['modulo' => 'Empresas', 'etiqueta' => 'Empresa', 'nombre' => 'nombre_empresa'],
+        User::class => ['modulo' => 'Usuarios', 'etiqueta' => 'Usuario', 'nombre' => 'name'],
+        Role::class => ['modulo' => 'Roles', 'etiqueta' => 'Rol', 'nombre' => 'name'],
     ];
 
     /** Names of the logged fields, as people read them. */
@@ -124,6 +130,26 @@ class HistorialController extends Controller
         'descripcion_marca' => 'Descripción',
         'nombre_bodega' => 'Nombre',
         'ubicacion_bodega' => 'Ubicación',
+        'cuenta' => 'Cuenta',
+        'subcuenta' => 'Subcuenta',
+        'concepto' => 'Concepto',
+        'nombre_empresa' => 'Nombre',
+        'direccion_empresa' => 'Dirección',
+        'telefono_empresa' => 'Teléfono',
+        'email_empresa' => 'Email',
+        'nit_empresa' => 'NIT',
+        'name' => 'Nombre',
+        'tipos_precio_permitidos' => 'Precios permitidos',
+        'roles' => 'Roles',
+        'permisos' => 'Permisos',
+        'bodegas' => 'Bodegas',
+    ];
+
+    /** Names of the product prices a user can be allowed. */
+    private const PRECIOS_PERMITIDOS = [
+        'valor_detal' => 'Precio detal',
+        'valor_mayorista' => 'Precio mayorista',
+        'costo' => 'Costo',
     ];
 
     /** Fields that hold money, shown as $1.234. */
@@ -254,6 +280,14 @@ class HistorialController extends Controller
     {
         if ($valor === null || $valor === '') {
             return null;
+        }
+
+        if ($campo === 'tipos_precio_permitidos' && is_array($valor)) {
+            return collect($valor)->map(fn (string $tipo): string => self::PRECIOS_PERMITIDOS[$tipo] ?? $tipo)->implode(', ');
+        }
+
+        if (is_array($valor) && $campo !== 'productos') {
+            return implode(', ', $valor) ?: null;
         }
 
         if ($campo === 'productos' && is_array($valor)) {

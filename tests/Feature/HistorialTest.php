@@ -3,12 +3,14 @@
 use App\Models\Bodega;
 use App\Models\Cliente;
 use App\Models\Compra;
+use App\Models\Empresa;
 use App\Models\Gasto;
 use App\Models\Marca;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Puc;
+use App\Models\Role;
 use App\Models\StockBodega;
 use App\Models\StockInicial;
 use App\Models\Traslado;
@@ -241,3 +243,62 @@ test('the simple records write their creation, edition and deletion to the histo
     $this->get(route('historial.index'))
         ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => collect($actividades)->contains(fn ($a) => $a['modulo'] === $modulo)));
 })->with('registros simples');
+
+test('the history records the changes of usuarios, their roles and the permissions of a role, but never a password', function () {
+    $this->actingAs($this->owner);
+    $cajero = Role::create(['name' => 'Cajero']);
+
+    $this->patch(route('roles.update', [$cajero]), [
+        'name' => 'Cajero',
+        'permissions' => ['pedidos.view', 'pos.view'],
+        'bodegas' => [$this->bodega->id],
+    ])->assertRedirect();
+
+    $acceso = Activity::where('event', 'acceso')->firstOrFail();
+    expect($acceso->properties['old']['permisos'])->toBe([]);
+    expect($acceso->properties['attributes']['permisos'])->toBe(['pedidos.view', 'pos.view']);
+    expect($acceso->properties['attributes']['bodegas'])->toBe([$this->bodega->nombre_bodega]);
+
+    $this->patch(route('roles.update', [$cajero]), ['name' => 'Cajero', 'permissions' => ['pedidos.view', 'pos.view'], 'bodegas' => [$this->bodega->id]])->assertRedirect();
+    expect(Activity::where('event', 'acceso')->count())->toBe(1);
+
+    $this->post(route('usuarios.store'), [
+        'name' => 'Empleado Uno',
+        'email' => 'uno@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'tipos_precio_permitidos' => ['valor_detal'],
+        'roles' => [$cajero->id],
+    ])->assertRedirect();
+
+    $usuario = User::where('email', 'uno@example.com')->firstOrFail();
+    expect(Activity::where('description', 'Usuario creado')->where('subject_id', $usuario->id)->exists())->toBeTrue();
+
+    $roles = Activity::where('event', 'roles')->firstOrFail();
+    expect($roles->properties['attributes']['roles'])->toBe(['Cajero']);
+
+    $this->patch(route('usuarios.precios.update', [$usuario]), ['tipos_precio_permitidos' => ['valor_detal', 'costo']])->assertRedirect();
+
+    $editado = Activity::where('description', 'Usuario editado')->firstOrFail();
+    expect($editado->properties['attributes']['tipos_precio_permitidos'])->toBe(['valor_detal', 'costo']);
+
+    // No entry ever carries the password.
+    expect(Activity::all()->contains(fn ($a) => str_contains($a->properties->toJson(), 'password')))->toBeFalse();
+
+    $this->get(route('historial.index'))
+        ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => collect($actividades)->contains(fn ($a) => $a['modulo'] === 'Usuarios'
+            && collect($a['cambios'])->contains(fn ($c) => $c['campo'] === 'Precios permitidos' && $c['despues'] === 'Precio detal, Costo'))
+            && collect($actividades)->contains(fn ($a) => $a['modulo'] === 'Roles'
+                && collect($a['cambios'])->contains(fn ($c) => $c['campo'] === 'Permisos' && $c['despues'] === 'pedidos.view, pos.view'))));
+});
+
+test('the puc and the empresa are in the history too', function () {
+    $this->actingAs($this->owner);
+    $puc = Puc::factory()->create(['concepto' => 'Caja']);
+    $puc->update(['concepto' => 'Caja general']);
+    $empresa = Empresa::factory()->create(['nombre_empresa' => 'Llantas SAS']);
+    $empresa->update(['telefono_empresa' => '3001112233']);
+
+    expect(Activity::where('description', 'Puc editado')->firstOrFail()->properties['attributes']['concepto'])->toBe('Caja general');
+    expect(Activity::where('description', 'Empresa editada')->firstOrFail()->properties['attributes']['telefono_empresa'])->toBe('3001112233');
+});

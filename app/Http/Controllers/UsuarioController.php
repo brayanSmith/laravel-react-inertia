@@ -55,7 +55,7 @@ class UsuarioController extends Controller
             ]);
 
             $usuario->forceFill(['email_verified_at' => now()])->save();
-            $usuario->syncRoles(Role::whereIn('id', $request->validated('roles', []))->get());
+            $usuario->syncRolesWithHistory(Role::whereIn('id', $request->validated('roles', []))->get());
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario created.')]);
@@ -82,7 +82,7 @@ class UsuarioController extends Controller
             }
 
             $usuario->update($data);
-            $usuario->syncRoles(Role::whereIn('id', $request->validated('roles', []))->get());
+            $usuario->syncRolesWithHistory(Role::whereIn('id', $request->validated('roles', []))->get());
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario updated.')]);

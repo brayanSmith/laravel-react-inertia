@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\LogsCambios;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -37,7 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, LogsCambios, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * The profile picture as a public URL; the raw attribute is the stored path.
@@ -49,6 +50,47 @@ class User extends Authenticatable implements PasskeyUser
         return Attribute::make(
             get: fn (?string $path) => $path ? Storage::disk('public')->url($path) : null,
         );
+    }
+
+    /**
+     * Replaces the user's roles and writes the change to the history.
+     *
+     * @param  iterable<Role>  $roles
+     */
+    public function syncRolesWithHistory(iterable $roles): void
+    {
+        $antes = $this->roles()->pluck('name')->sort()->values()->all();
+
+        $this->syncRoles($roles);
+        $this->unsetRelation('roles');
+
+        $despues = $this->roles()->pluck('name')->sort()->values()->all();
+
+        if ($antes === $despues) {
+            return;
+        }
+
+        activity('usuarios')
+            ->performedOn($this)
+            ->event('roles')
+            ->withProperties(['old' => ['roles' => $antes], 'attributes' => ['roles' => $despues]])
+            ->log('Roles del usuario modificados');
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function logCampos(): array
+    {
+        return ['name', 'email', 'tipos_precio_permitidos'];
+    }
+
+    /**
+     * @return array{0: string, 1: bool}
+     */
+    protected function logEtiqueta(): array
+    {
+        return ['Usuario', false];
     }
 
     /** The product prices a user can be allowed to see and use. */
