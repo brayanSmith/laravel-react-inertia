@@ -110,7 +110,7 @@ export default function HistorialIndex({ actividades }: Props) {
                 <Heading
                     variant="small"
                     title="Historial de cambios"
-                    description="Quién creó, editó o eliminó cada registro y qué cambió (pedidos, compras y productos por ahora)"
+                    description="Quién creó, editó o eliminó cada registro y qué cambió (pedidos, compras, productos y clientes por ahora)"
                 />
 
                 <DataTable

@@ -66,6 +66,16 @@ class HistorialController extends Controller
         'valor_detal' => 'Valor detal',
         'valor_mayorista' => 'Valor mayorista',
         'valor_sin_instalacion' => 'Valor sin instalación',
+        'tipo_documento' => 'Tipo de documento',
+        'numero_documento' => 'Número de documento',
+        'razon_social' => 'Razón social',
+        'direccion' => 'Dirección',
+        'telefono' => 'Teléfono',
+        'ciudad' => 'Ciudad',
+        'email' => 'Email',
+        'activo' => 'Activo',
+        'novedad' => 'Novedad',
+        'retenedor_fuente' => 'Retenedor de fuente',
     ];
 
     /** Fields that hold money, shown as $1.234. */
@@ -96,11 +106,7 @@ class HistorialController extends Controller
             ->get();
 
         $nombres = $this->nombres($actividades);
-        $productosPorId = Producto::withTrashed()
-            ->whereIn('id', $actividades->where('subject_type', Producto::class)->pluck('subject_id'))
-            ->get(['id', 'concatenar_codigo_nombre', 'referencia_producto'])
-            ->mapWithKeys(fn (Producto $producto) => [$producto->id => $producto->concatenar_codigo_nombre ?? $producto->referencia_producto])
-            ->all();
+        $registros = $this->registros($actividades);
 
         return Inertia::render('historial/index', [
             'actividades' => $actividades->map(fn (Activity $actividad): array => [
@@ -108,7 +114,7 @@ class HistorialController extends Controller
                 'fecha' => $actividad->created_at->toIso8601String(),
                 'usuario' => $actividad->causer?->name ?? 'Sistema',
                 'modulo' => $this->modulo($actividad),
-                'registro' => $this->registro($actividad, $productosPorId),
+                'registro' => $this->registro($actividad, $registros),
                 'accion' => $actividad->description,
                 'cambios' => $this->cambios($actividad, $nombres),
             ])->values(),
@@ -122,14 +128,15 @@ class HistorialController extends Controller
             Abono::class => 'Pedidos',
             Compra::class => 'Compras',
             Producto::class => 'Productos',
+            Cliente::class => 'Clientes',
             default => class_basename((string) $actividad->subject_type),
         };
     }
 
     /**
-     * @param  array<int, string>  $productos  Product names by id.
+     * @param  array<string, array<int, string>>  $registros  Names of the records by model class and id.
      */
-    private function registro(Activity $actividad, array $productos = []): string
+    private function registro(Activity $actividad, array $registros = []): string
     {
         $propiedades = $actividad->properties;
         $pedidoId = $actividad->subject_type === Abono::class
@@ -139,9 +146,37 @@ class HistorialController extends Controller
         return match ($actividad->subject_type) {
             Abono::class => 'Abono del pedido #'.($pedidoId ?? '?'),
             Compra::class => 'Compra #'.$actividad->subject_id,
-            Producto::class => 'Producto #'.$actividad->subject_id.($productos[$actividad->subject_id] ?? false ? ' · '.$productos[$actividad->subject_id] : ''),
+            Producto::class => 'Producto #'.$actividad->subject_id.$this->nombreDe($registros, Producto::class, $actividad->subject_id),
+            Cliente::class => 'Cliente #'.$actividad->subject_id.$this->nombreDe($registros, Cliente::class, $actividad->subject_id),
             default => 'Pedido #'.$actividad->subject_id,
         };
+    }
+
+    /**
+     * @param  array<string, array<int, string>>  $registros
+     */
+    private function nombreDe(array $registros, string $modelo, int|string $id): string
+    {
+        $nombre = $registros[$modelo][$id] ?? null;
+
+        return $nombre ? ' · '.$nombre : '';
+    }
+
+    /**
+     * The names of the products and clientes the entries are about.
+     *
+     * @param  Collection<int, Activity>  $actividades
+     * @return array<string, array<int, string>>
+     */
+    private function registros(Collection $actividades): array
+    {
+        $idsDe = fn (string $modelo) => $actividades->where('subject_type', $modelo)->pluck('subject_id');
+
+        return [
+            Producto::class => Producto::withTrashed()->whereIn('id', $idsDe(Producto::class))->get(['id', 'concatenar_codigo_nombre', 'referencia_producto'])
+                ->mapWithKeys(fn (Producto $producto) => [$producto->id => $producto->concatenar_codigo_nombre ?? $producto->referencia_producto])->all(),
+            Cliente::class => Cliente::withTrashed()->whereIn('id', $idsDe(Cliente::class))->pluck('razon_social', 'id')->all(),
+        ];
     }
 
     /**

@@ -176,3 +176,34 @@ test('the history records the changes of a producto and hides the prices its rea
     $this->actingAs($this->owner)->delete(route('productos.destroy', [$producto]))->assertRedirect();
     expect(Activity::where('description', 'Producto eliminado')->exists())->toBeTrue();
 });
+
+test('the history records the changes of a cliente', function () {
+    $datos = fn (string $razon, string $telefono) => [
+        'tipo_documento' => 'CC',
+        'numero_documento' => '1234567890',
+        'razon_social' => $razon,
+        'telefono' => $telefono,
+        'retenedor_fuente' => 'NO',
+    ];
+
+    $this->actingAs($this->owner)->post(route('clientes.store'), $datos('Cliente Uno', '3001'))->assertRedirect();
+    $cliente = Cliente::where('numero_documento', '1234567890')->firstOrFail();
+
+    expect(Activity::where('description', 'Cliente creado')->where('subject_id', $cliente->id)->firstOrFail()->causer_id)->toBe($this->owner->id);
+
+    $this->actingAs($this->owner)->patch(route('clientes.update', [$cliente]), $datos('Cliente Uno', '3002'))->assertRedirect();
+
+    $editado = Activity::where('description', 'Cliente editado')->firstOrFail();
+    expect($editado->properties['old']['telefono'])->toBe('3001');
+    expect($editado->properties['attributes']['telefono'])->toBe('3002');
+    expect($editado->properties['attributes'])->not->toHaveKey('razon_social');
+
+    $this->actingAs($this->owner)->delete(route('clientes.destroy', [$cliente]))->assertRedirect();
+    $this->actingAs($this->owner)->patch(route('clientes.restore', [$cliente->id]))->assertRedirect();
+
+    expect(Activity::where('description', 'Cliente eliminado')->exists())->toBeTrue();
+    expect(Activity::where('description', 'Cliente restaurado')->exists())->toBeTrue();
+
+    $this->actingAs($this->owner)->get(route('historial.index'))
+        ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => collect($actividades)->contains(fn ($a) => $a['modulo'] === 'Clientes' && $a['registro'] === 'Cliente #'.$cliente->id.' · Cliente Uno')));
+});
