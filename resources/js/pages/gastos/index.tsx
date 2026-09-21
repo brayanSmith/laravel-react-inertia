@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
+import { formatFechaCorta } from '@/lib/fechas';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import CreateGastoModal from '@/components/create-gasto-modal';
@@ -71,7 +72,7 @@ export default function GastosIndex({
                 label: 'Fecha',
                 filter: 'date',
                 getValue: (gasto) => gasto.fecha_gasto,
-                render: (gasto) => gasto.fecha_gasto,
+                render: (gasto) => formatFechaCorta(gasto.fecha_gasto),
             },
             {
                 key: 'monto',

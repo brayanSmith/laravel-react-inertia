@@ -333,7 +333,7 @@ export default function DataTable<T>({
                             />
                         ))}
                     </colgroup>
-                    <TableHeader className="bg-background sticky top-0 z-20 shadow-sm">
+                    <TableHeader className="bg-muted sticky top-0 z-20 shadow-sm">
                         <TableRow>
                             {table.visibleColumnOrder.map((key) => {
                                 const column = table.columnsMap.get(key)!;

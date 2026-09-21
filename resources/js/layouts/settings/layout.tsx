@@ -32,7 +32,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <div className="px-4 py-6">
+        <div>
             <Heading
                 title="Configuración"
                 description="Administra tu perfil y la configuración de tu cuenta"

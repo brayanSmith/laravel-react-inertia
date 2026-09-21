@@ -141,3 +141,58 @@
         @apply bg-background text-foreground;
     }
 }
+
+/*
+ * Row actions of the tables (edit, delete, view): round, tinted icon buttons.
+ * They are recognised by their icon, so every table gets them without
+ * touching each page.
+ */
+[data-slot='table-cell'] button:has(> svg.lucide-pencil),
+[data-slot='table-cell'] button:has(> svg[class*='lucide-trash']),
+[data-slot='table-cell'] button:has(> svg.lucide-eye) {
+    width: 1.5rem;
+    padding-inline: 0;
+    border-radius: 9999px;
+}
+
+[data-slot='table-cell'] button:has(> svg.lucide-pencil) {
+    background-color: var(--color-blue-100);
+    color: var(--color-blue-700);
+}
+
+[data-slot='table-cell'] button:has(> svg[class*='lucide-trash']) {
+    background-color: var(--color-red-100);
+    color: var(--color-red-700);
+}
+
+[data-slot='table-cell'] button:has(> svg.lucide-eye) {
+    background-color: var(--color-emerald-100);
+    color: var(--color-emerald-700);
+}
+
+[data-slot='table-cell'] button:has(> svg.lucide-pencil):hover {
+    background-color: var(--color-blue-200);
+}
+
+[data-slot='table-cell'] button:has(> svg[class*='lucide-trash']):hover {
+    background-color: var(--color-red-200);
+}
+
+[data-slot='table-cell'] button:has(> svg.lucide-eye):hover {
+    background-color: var(--color-emerald-200);
+}
+
+.dark [data-slot='table-cell'] button:has(> svg.lucide-pencil) {
+    background-color: color-mix(in oklab, var(--color-blue-500) 20%, transparent);
+    color: var(--color-blue-300);
+}
+
+.dark [data-slot='table-cell'] button:has(> svg[class*='lucide-trash']) {
+    background-color: color-mix(in oklab, var(--color-red-500) 20%, transparent);
+    color: var(--color-red-300);
+}
+
+.dark [data-slot='table-cell'] button:has(> svg.lucide-eye) {
+    background-color: color-mix(in oklab, var(--color-emerald-500) 20%, transparent);
+    color: var(--color-emerald-300);
+}

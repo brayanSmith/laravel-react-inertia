@@ -20,7 +20,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
     return (
         <thead
             data-slot="table-header"
-            className={cn('[&_tr]:border-b', className)}
+            className={cn('bg-muted [&_tr]:border-b [&_input]:bg-background [&_[data-slot=select-trigger]]:bg-background', className)}
             {...props}
         />
     );
@@ -80,7 +80,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
         <td
             data-slot="table-cell"
             className={cn(
-                'p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
+                'px-2 py-px align-middle leading-5 whitespace-nowrap [&_[data-slot=button]]:h-6 [&_[data-slot=button]]:px-2 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
                 className,
             )}
             {...props}

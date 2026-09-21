@@ -1,5 +1,5 @@
 import { Form } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Combobox from '@/components/combobox';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,11 @@ export default function EditGastoModal({
     const [bodegaId, setBodegaId] = useState<string>(
         gasto?.bodega_id ? String(gasto.bodega_id) : '',
     );
+
+    // The modal is mounted before a gasto is picked, so follow the selected one.
+    useEffect(() => {
+        setBodegaId(gasto?.bodega_id ? String(gasto.bodega_id) : '');
+    }, [gasto]);
 
     const bodegaOptions = useMemo(
         () =>
@@ -116,7 +121,10 @@ export default function EditGastoModal({
                                             name="fecha_gasto"
                                             type="date"
                                             data-test="edit-gasto-fecha"
-                                            defaultValue={gasto.fecha_gasto}
+                                            defaultValue={gasto.fecha_gasto.slice(
+                                                0,
+                                                10,
+                                            )}
                                             required
                                         />
                                         <InputError

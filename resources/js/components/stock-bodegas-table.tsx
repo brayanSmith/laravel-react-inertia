@@ -1129,7 +1129,7 @@ export default function StockBodegasTable({
                             />
                         ))}
                     </colgroup>
-                    <TableHeader className="bg-background sticky top-0 z-20 shadow-sm">
+                    <TableHeader className="bg-muted sticky top-0 z-20 shadow-sm">
                         <TableRow>
                             {visibleColumnOrder.map((key) => {
                                 const meta = columnDefsMap.get(key)!;

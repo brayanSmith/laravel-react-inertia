@@ -36,7 +36,7 @@ export default function Dashboard({
     return (
         <>
             <Head title="Panel" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl">
                 <DashboardFilters
                     filtros={filtros}
                     bodegas={bodegas}
