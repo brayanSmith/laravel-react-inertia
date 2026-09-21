@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Abono;
 use App\Models\Bodega;
 use App\Models\Cliente;
+use App\Models\Compra;
 use App\Models\Pedido;
+use App\Models\Proveedor;
 use App\Models\Puc;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -42,6 +44,9 @@ class HistorialController extends Controller
         'descripcion' => 'Descripción',
         'productos' => 'Productos',
         'total_a_pagar' => 'Total a pagar',
+        'factura' => 'Factura',
+        'proveedor_id' => 'Proveedor',
+        'observaciones' => 'Observaciones',
     ];
 
     /**
@@ -77,6 +82,7 @@ class HistorialController extends Controller
         return match ($actividad->subject_type) {
             Pedido::class => 'Pedidos',
             Abono::class => 'Pedidos',
+            Compra::class => 'Compras',
             default => class_basename((string) $actividad->subject_type),
         };
     }
@@ -88,9 +94,11 @@ class HistorialController extends Controller
             ? ($propiedades['attributes']['pedido_id'] ?? $propiedades['old']['pedido_id'] ?? null)
             : $actividad->subject_id;
 
-        return $actividad->subject_type === Abono::class
-            ? 'Abono del pedido #'.($pedidoId ?? '?')
-            : 'Pedido #'.$actividad->subject_id;
+        return match ($actividad->subject_type) {
+            Abono::class => 'Abono del pedido #'.($pedidoId ?? '?'),
+            Compra::class => 'Compra #'.$actividad->subject_id,
+            default => 'Pedido #'.$actividad->subject_id,
+        };
     }
 
     /**
@@ -125,7 +133,9 @@ class HistorialController extends Controller
 
         if ($campo === 'productos' && is_array($valor)) {
             return collect($valor)
-                ->map(fn (array $linea): string => sprintf('%s × %s a $%s', $linea['producto'], $linea['cantidad'] + 0, number_format((float) $linea['precio_unitario'], 0, ',', '.')))
+                ->map(fn (array $linea): string => sprintf('%s × %s a $%s', $linea['producto'], $linea['cantidad'] + 0, number_format((float) $linea['precio_unitario'], 0, ',', '.'))
+                    .(isset($linea['bodega']) ? " · {$linea['bodega']}" : '')
+                    .(isset($linea['estado']) ? ' · '.ucfirst(strtolower($linea['estado'])) : ''))
                 ->implode("\n");
         }
 
@@ -148,7 +158,7 @@ class HistorialController extends Controller
      */
     private function nombres(Collection $actividades): array
     {
-        $ids = ['cliente_id' => [], 'user_id' => [], 'vendedor_id' => [], 'bodega_id' => [], 'puc_id' => []];
+        $ids = ['cliente_id' => [], 'proveedor_id' => [], 'user_id' => [], 'vendedor_id' => [], 'bodega_id' => [], 'puc_id' => []];
 
         foreach ($actividades as $actividad) {
             foreach (['attributes', 'old'] as $lado) {
@@ -166,6 +176,7 @@ class HistorialController extends Controller
 
         return [
             'cliente_id' => Cliente::withTrashed()->whereIn('id', $ids['cliente_id'])->pluck('razon_social', 'id')->all(),
+            'proveedor_id' => Proveedor::withTrashed()->whereIn('id', $ids['proveedor_id'])->pluck('nombre_proveedor', 'id')->all(),
             'user_id' => $usuarios,
             'vendedor_id' => $usuarios,
             'bodega_id' => Bodega::whereIn('id', $ids['bodega_id'])->pluck('nombre_bodega', 'id')->all(),

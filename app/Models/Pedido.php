@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsDetalles;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,7 @@ class Pedido extends Model
     //
     use HasFactory;
     use LogsActivity;
+    use LogsDetalles;
     use SoftDeletes;
 
     protected $fillable = [
@@ -98,28 +100,9 @@ class Pedido extends Model
             ->all();
     }
 
-    /**
-     * Writes a "productos" entry to the history when the lines of the pedido
-     * changed (or when there were none before, i.e. on creation).
-     *
-     * @param  list<array{producto: string, cantidad: float, precio_unitario: float}>|null  $antes
-     */
-    public function registrarCambioDetalles(?array $antes, float $totalAntes = 0.0): void
+    private function etiquetaDetalles(): string
     {
-        $despues = $this->resumenDetalles();
-
-        if ($antes === $despues) {
-            return;
-        }
-
-        activity('pedidos')
-            ->performedOn($this)
-            ->event('detalles')
-            ->withProperties([
-                'old' => $antes === null ? [] : ['productos' => $antes, 'total_a_pagar' => $totalAntes],
-                'attributes' => ['productos' => $despues, 'total_a_pagar' => (float) $this->fresh()->total_a_pagar],
-            ])
-            ->log($antes === null ? 'Productos del pedido' : 'Productos del pedido modificados');
+        return 'Productos del pedido';
     }
 
     public function cliente()

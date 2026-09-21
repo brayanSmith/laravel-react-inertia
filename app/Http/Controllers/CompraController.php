@@ -81,6 +81,7 @@ class CompraController extends Controller
             ]);
 
             $this->syncDetalles($compra, $data['detalles']);
+            $compra->registrarCambioDetalles(null);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Compra created.')]);
@@ -127,6 +128,9 @@ class CompraController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($compra, $data): void {
+            $detallesAntes = $compra->resumenDetalles();
+            $totalAntes = (float) $compra->total_a_pagar;
+
             foreach ($compra->detallesCompra as $detalle) {
                 $this->adjustStock($detalle, -1);
             }
@@ -142,6 +146,7 @@ class CompraController extends Controller
             ]);
 
             $this->syncDetalles($compra, $data['detalles']);
+            $compra->registrarCambioDetalles($detallesAntes, $totalAntes);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Compra updated.')]);

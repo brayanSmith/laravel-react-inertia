@@ -2,8 +2,10 @@
 
 use App\Models\Bodega;
 use App\Models\Cliente;
+use App\Models\Compra;
 use App\Models\Pedido;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use App\Models\Puc;
 use App\Models\StockBodega;
 use App\Models\User;
@@ -90,4 +92,41 @@ test('the history page is only for whoever has the permission', function () {
     asignarRol($member, 'Member');
 
     $this->actingAs($member)->get(route('historial.index'))->assertForbidden();
+});
+
+test('the history records who created, edited, received, deleted and restored a compra', function () {
+    $proveedor = Proveedor::factory()->create(['nombre_proveedor' => 'Proveedor Uno']);
+    $compraFormulario = fn (bool $recibido, string $factura = 'FA01', int $cantidad = 2) => [
+        'factura' => $factura,
+        'proveedor_id' => $proveedor->id,
+        'fecha' => '2026-01-10 10:00:00',
+        'detalles' => [['producto_id' => $this->producto->id, 'bodega_id' => $this->bodega->id, 'cantidad' => $cantidad, 'precio_unitario' => 100, 'recibido' => $recibido]],
+    ];
+
+    $this->actingAs($this->owner)->post(route('compras.store'), $compraFormulario(false))->assertRedirect();
+    $compra = Compra::firstOrFail();
+
+    $creada = Activity::where('description', 'Compra creada')->firstOrFail();
+    expect($creada->causer_id)->toBe($this->owner->id);
+    expect(Activity::where('description', 'Productos de la compra')->count())->toBe(1);
+
+    $this->actingAs($this->owner)->patch(route('compras.update', [$compra]), $compraFormulario(true, 'FA99', 4))->assertRedirect();
+
+    $editada = Activity::where('description', 'Compra editada')->firstOrFail();
+    expect($editada->properties['old']['factura'])->toBe('FA01');
+    expect($editada->properties['attributes']['factura'])->toBe('FA99');
+
+    $productos = Activity::where('description', 'Productos de la compra modificados')->firstOrFail();
+    expect($productos->properties['old']['productos'][0]['estado'])->toBe('PENDIENTE');
+    expect($productos->properties['attributes']['productos'][0]['estado'])->toBe('RECIBIDA');
+    expect($productos->properties['attributes']['productos'][0]['cantidad'])->toBe(4);
+
+    $this->actingAs($this->owner)->delete(route('compras.destroy', [$compra]))->assertRedirect();
+    expect(Activity::where('description', 'Compra eliminada')->exists())->toBeTrue();
+
+    $this->actingAs($this->owner)->patch(route('compras.restore', [$compra->id]))->assertRedirect();
+    expect(Activity::where('description', 'Compra restaurada')->exists())->toBeTrue();
+
+    $this->actingAs($this->owner)->get(route('historial.index'))
+        ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => collect($actividades)->contains(fn ($a) => $a['modulo'] === 'Compras' && $a['registro'] === 'Compra #'.$compra->id)));
 });
