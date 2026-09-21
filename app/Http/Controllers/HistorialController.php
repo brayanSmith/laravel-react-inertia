@@ -6,11 +6,14 @@ use App\Models\Abono;
 use App\Models\Bodega;
 use App\Models\Cliente;
 use App\Models\Compra;
+use App\Models\Gasto;
 use App\Models\Marca;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Puc;
+use App\Models\StockInicial;
+use App\Models\Traslado;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +23,26 @@ use Spatie\Activitylog\Models\Activity;
 
 class HistorialController extends Controller
 {
+    /**
+     * The records that leave a history: the module they belong to, how the
+     * record is called and the column that names it (null when it has none).
+     *
+     * @var array<class-string, array{modulo: string, etiqueta: string, nombre: string|null}>
+     */
+    private const REGISTROS = [
+        Pedido::class => ['modulo' => 'Pedidos', 'etiqueta' => 'Pedido', 'nombre' => null],
+        Abono::class => ['modulo' => 'Pedidos', 'etiqueta' => 'Abono', 'nombre' => null],
+        Compra::class => ['modulo' => 'Compras', 'etiqueta' => 'Compra', 'nombre' => null],
+        Producto::class => ['modulo' => 'Productos', 'etiqueta' => 'Producto', 'nombre' => 'concatenar_codigo_nombre'],
+        Cliente::class => ['modulo' => 'Clientes', 'etiqueta' => 'Cliente', 'nombre' => 'razon_social'],
+        Gasto::class => ['modulo' => 'Gastos', 'etiqueta' => 'Gasto', 'nombre' => 'descripcion'],
+        Proveedor::class => ['modulo' => 'Proveedores', 'etiqueta' => 'Proveedor', 'nombre' => 'nombre_proveedor'],
+        StockInicial::class => ['modulo' => 'Stock inicial', 'etiqueta' => 'Stock inicial', 'nombre' => null],
+        Traslado::class => ['modulo' => 'Traslados', 'etiqueta' => 'Traslado', 'nombre' => null],
+        Marca::class => ['modulo' => 'Marcas', 'etiqueta' => 'Marca', 'nombre' => 'marca'],
+        Bodega::class => ['modulo' => 'Bodegas', 'etiqueta' => 'Bodega', 'nombre' => 'nombre_bodega'],
+    ];
+
     /** Names of the logged fields, as people read them. */
     private const CAMPOS = [
         'cliente_id' => 'Cliente',
@@ -76,12 +99,37 @@ class HistorialController extends Controller
         'activo' => 'Activo',
         'novedad' => 'Novedad',
         'retenedor_fuente' => 'Retenedor de fuente',
+        'fecha_gasto' => 'Fecha del gasto',
+        'nombre_proveedor' => 'Nombre',
+        'razon_social_proveedor' => 'Razón social',
+        'nit_proveedor' => 'NIT',
+        'tipo_proveedor' => 'Tipo de proveedor',
+        'categoria_proveedor' => 'Categoría',
+        'departamento_proveedor' => 'Departamento',
+        'ciudad_proveedor' => 'Ciudad',
+        'direccion_proveedor' => 'Dirección',
+        'telefono_proveedor' => 'Teléfono',
+        'banco_proveedor' => 'Banco',
+        'tipo_cuenta_proveedor' => 'Tipo de cuenta',
+        'numero_cuenta_proveedor' => 'Número de cuenta',
+        'convenio' => 'Convenio',
+        'tiempo_respuesta' => 'Tiempo de respuesta',
+        'fabricante' => 'Fabricante',
+        'valor_flete' => 'Valor del flete',
+        'producto_id' => 'Producto',
+        'cantidad' => 'Cantidad',
+        'bodega_donante_id' => 'Bodega de origen',
+        'bodega_destino_id' => 'Bodega de destino',
+        'marca' => 'Marca',
+        'descripcion_marca' => 'Descripción',
+        'nombre_bodega' => 'Nombre',
+        'ubicacion_bodega' => 'Ubicación',
     ];
 
     /** Fields that hold money, shown as $1.234. */
     private const DINERO = [
         'flete', 'descuento', 'reteica', 'retefuente', 'monto', 'con_cuanto_pago', 'cambio', 'total_a_pagar',
-        'costo_producto', 'valor_detal', 'valor_mayorista', 'valor_sin_instalacion',
+        'costo_producto', 'valor_detal', 'valor_mayorista', 'valor_sin_instalacion', 'valor_flete',
     ];
 
     /** Product prices: only for whoever may see that price (see "Precios permitidos"). */
@@ -89,6 +137,12 @@ class HistorialController extends Controller
         'costo_producto' => 'costo',
         'valor_detal' => 'valor_detal',
         'valor_mayorista' => 'valor_mayorista',
+    ];
+
+    /** Fields that hold the id of another record, which is shown by name. */
+    private const REFERENCIAS = [
+        'cliente_id', 'marca_id', 'proveedor_id', 'user_id', 'vendedor_id', 'puc_id', 'producto_id',
+        'bodega_id', 'bodega_donante_id', 'bodega_destino_id',
     ];
 
     /**
@@ -113,7 +167,7 @@ class HistorialController extends Controller
                 'id' => $actividad->id,
                 'fecha' => $actividad->created_at->toIso8601String(),
                 'usuario' => $actividad->causer?->name ?? 'Sistema',
-                'modulo' => $this->modulo($actividad),
+                'modulo' => self::REGISTROS[$actividad->subject_type]['modulo'] ?? class_basename((string) $actividad->subject_type),
                 'registro' => $this->registro($actividad, $registros),
                 'accion' => $actividad->description,
                 'cambios' => $this->cambios($actividad, $nombres),
@@ -121,62 +175,54 @@ class HistorialController extends Controller
         ]);
     }
 
-    private function modulo(Activity $actividad): string
-    {
-        return match ($actividad->subject_type) {
-            Pedido::class => 'Pedidos',
-            Abono::class => 'Pedidos',
-            Compra::class => 'Compras',
-            Producto::class => 'Productos',
-            Cliente::class => 'Clientes',
-            default => class_basename((string) $actividad->subject_type),
-        };
-    }
-
     /**
+     * "Producto #12 · LLANTA 175/70": what the entry is about.
+     *
      * @param  array<string, array<int, string>>  $registros  Names of the records by model class and id.
      */
-    private function registro(Activity $actividad, array $registros = []): string
+    private function registro(Activity $actividad, array $registros): string
     {
-        $propiedades = $actividad->properties;
-        $pedidoId = $actividad->subject_type === Abono::class
-            ? ($propiedades['attributes']['pedido_id'] ?? $propiedades['old']['pedido_id'] ?? null)
-            : $actividad->subject_id;
+        $tipo = (string) $actividad->subject_type;
+        $etiqueta = self::REGISTROS[$tipo]['etiqueta'] ?? class_basename($tipo);
 
-        return match ($actividad->subject_type) {
-            Abono::class => 'Abono del pedido #'.($pedidoId ?? '?'),
-            Compra::class => 'Compra #'.$actividad->subject_id,
-            Producto::class => 'Producto #'.$actividad->subject_id.$this->nombreDe($registros, Producto::class, $actividad->subject_id),
-            Cliente::class => 'Cliente #'.$actividad->subject_id.$this->nombreDe($registros, Cliente::class, $actividad->subject_id),
-            default => 'Pedido #'.$actividad->subject_id,
-        };
+        if ($tipo === Abono::class) {
+            $pedidoId = $actividad->properties['attributes']['pedido_id'] ?? $actividad->properties['old']['pedido_id'] ?? '?';
+
+            return "Abono del pedido #{$pedidoId}";
+        }
+
+        $nombre = $registros[$tipo][$actividad->subject_id] ?? null;
+
+        return "{$etiqueta} #{$actividad->subject_id}".($nombre ? " · {$nombre}" : '');
     }
 
     /**
-     * @param  array<string, array<int, string>>  $registros
-     */
-    private function nombreDe(array $registros, string $modelo, int|string $id): string
-    {
-        $nombre = $registros[$modelo][$id] ?? null;
-
-        return $nombre ? ' · '.$nombre : '';
-    }
-
-    /**
-     * The names of the products and clientes the entries are about.
+     * The names of the records the entries are about.
      *
      * @param  Collection<int, Activity>  $actividades
      * @return array<string, array<int, string>>
      */
     private function registros(Collection $actividades): array
     {
-        $idsDe = fn (string $modelo) => $actividades->where('subject_type', $modelo)->pluck('subject_id');
+        $registros = [];
 
-        return [
-            Producto::class => Producto::withTrashed()->whereIn('id', $idsDe(Producto::class))->get(['id', 'concatenar_codigo_nombre', 'referencia_producto'])
-                ->mapWithKeys(fn (Producto $producto) => [$producto->id => $producto->concatenar_codigo_nombre ?? $producto->referencia_producto])->all(),
-            Cliente::class => Cliente::withTrashed()->whereIn('id', $idsDe(Cliente::class))->pluck('razon_social', 'id')->all(),
-        ];
+        foreach (self::REGISTROS as $modelo => $datos) {
+            if ($datos['nombre'] === null) {
+                continue;
+            }
+
+            $ids = $actividades->where('subject_type', $modelo)->pluck('subject_id');
+
+            if ($ids->isEmpty()) {
+                continue;
+            }
+
+            $consulta = method_exists($modelo, 'withTrashed') ? $modelo::withTrashed() : $modelo::query();
+
+            $registros[$modelo] = $consulta->whereIn('id', $ids)->pluck($datos['nombre'], 'id')->all();
+        }
+
+        return $registros;
     }
 
     /**
@@ -241,11 +287,11 @@ class HistorialController extends Controller
      */
     private function nombres(Collection $actividades): array
     {
-        $ids = ['cliente_id' => [], 'marca_id' => [], 'proveedor_id' => [], 'user_id' => [], 'vendedor_id' => [], 'bodega_id' => [], 'puc_id' => []];
+        $ids = array_fill_keys(self::REFERENCIAS, []);
 
         foreach ($actividades as $actividad) {
             foreach (['attributes', 'old'] as $lado) {
-                foreach (array_keys($ids) as $campo) {
+                foreach (self::REFERENCIAS as $campo) {
                     $valor = $actividad->properties[$lado][$campo] ?? null;
 
                     if ($valor !== null) {
@@ -256,14 +302,18 @@ class HistorialController extends Controller
         }
 
         $usuarios = User::whereIn('id', array_merge($ids['user_id'], $ids['vendedor_id']))->pluck('name', 'id')->all();
+        $bodegas = Bodega::whereIn('id', array_merge($ids['bodega_id'], $ids['bodega_donante_id'], $ids['bodega_destino_id']))->pluck('nombre_bodega', 'id')->all();
 
         return [
             'cliente_id' => Cliente::withTrashed()->whereIn('id', $ids['cliente_id'])->pluck('razon_social', 'id')->all(),
             'marca_id' => Marca::whereIn('id', $ids['marca_id'])->pluck('marca', 'id')->all(),
             'proveedor_id' => Proveedor::withTrashed()->whereIn('id', $ids['proveedor_id'])->pluck('nombre_proveedor', 'id')->all(),
+            'producto_id' => Producto::withTrashed()->whereIn('id', $ids['producto_id'])->pluck('concatenar_codigo_nombre', 'id')->all(),
             'user_id' => $usuarios,
             'vendedor_id' => $usuarios,
-            'bodega_id' => Bodega::whereIn('id', $ids['bodega_id'])->pluck('nombre_bodega', 'id')->all(),
+            'bodega_id' => $bodegas,
+            'bodega_donante_id' => $bodegas,
+            'bodega_destino_id' => $bodegas,
             'puc_id' => Puc::whereIn('id', $ids['puc_id'])->pluck('concatenar_subcuenta_concepto', 'id')->all(),
         ];
     }

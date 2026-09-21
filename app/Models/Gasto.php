@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsCambios;
 use Database\Factories\GastoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ class Gasto extends Model
     /** @use HasFactory<GastoFactory> */
     use HasFactory;
 
+    use LogsCambios;
     use SoftDeletes;
 
     protected $casts = [
@@ -42,5 +44,21 @@ class Gasto extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function logCampos(): array
+    {
+        return ['bodega_id', 'descripcion', 'monto', 'fecha_gasto'];
+    }
+
+    /**
+     * @return array{0: string, 1: bool}
+     */
+    protected function logEtiqueta(): array
+    {
+        return ['Gasto', false];
     }
 }

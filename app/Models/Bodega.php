@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsCambios;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class Bodega extends Model
 {
     use HasFactory;
+    use LogsCambios;
 
     //
     protected $fillable = ['nombre_bodega', 'ubicacion_bodega'];
@@ -60,5 +62,21 @@ class Bodega extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function logCampos(): array
+    {
+        return ['nombre_bodega', 'ubicacion_bodega'];
+    }
+
+    /**
+     * @return array{0: string, 1: bool}
+     */
+    protected function logEtiqueta(): array
+    {
+        return ['Bodega', true];
     }
 }

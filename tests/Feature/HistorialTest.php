@@ -3,12 +3,15 @@
 use App\Models\Bodega;
 use App\Models\Cliente;
 use App\Models\Compra;
+use App\Models\Gasto;
 use App\Models\Marca;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Puc;
 use App\Models\StockBodega;
+use App\Models\StockInicial;
+use App\Models\Traslado;
 use App\Models\User;
 use Spatie\Activitylog\Models\Activity;
 
@@ -207,3 +210,34 @@ test('the history records the changes of a cliente', function () {
     $this->actingAs($this->owner)->get(route('historial.index'))
         ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => collect($actividades)->contains(fn ($a) => $a['modulo'] === 'Clientes' && $a['registro'] === 'Cliente #'.$cliente->id.' · Cliente Uno')));
 });
+
+dataset('registros simples', [
+    'gastos' => ['Gastos', 'Gasto', 'descripcion', fn () => Gasto::factory()->create(['descripcion' => 'Uno']), 'Dos', false],
+    'proveedores' => ['Proveedores', 'Proveedor', 'nombre_proveedor', fn () => Proveedor::factory()->create(['nombre_proveedor' => 'Uno']), 'Dos', false],
+    'marcas' => ['Marcas', 'Marca', 'marca', fn () => Marca::factory()->create(['marca' => 'Uno']), 'Dos', true],
+    'bodegas' => ['Bodegas', 'Bodega', 'nombre_bodega', fn () => Bodega::factory()->create(['nombre_bodega' => 'Uno']), 'Dos', true],
+    'stock inicial' => ['Stock inicial', 'Stock inicial', 'cantidad', fn () => StockInicial::factory()->create(['cantidad' => 5]), 9, false],
+    'traslados' => ['Traslados', 'Traslado', 'cantidad', fn () => Traslado::factory()->create(['cantidad' => 5]), 9, false],
+]);
+
+test('the simple records write their creation, edition and deletion to the history', function (string $modulo, string $etiqueta, string $campo, Closure $crear, string|int $nuevo, bool $femenino) {
+    $this->actingAs($this->owner);
+    $registro = $crear();
+
+    $sufijo = fn (string $base) => $etiqueta.' '.($femenino ? substr($base, 0, -1).'a' : $base);
+
+    $creado = Activity::where('subject_type', $registro::class)->where('subject_id', $registro->id)->where('description', $sufijo('creado'))->firstOrFail();
+    expect($creado->causer_id)->toBe($this->owner->id);
+
+    $registro->update([$campo => $nuevo]);
+
+    $editado = Activity::where('subject_type', $registro::class)->where('description', $sufijo('editado'))->firstOrFail();
+    expect($editado->properties['attributes'][$campo])->toBe($nuevo);
+    expect($editado->properties['attributes'])->toHaveCount(1);
+
+    $registro->delete();
+    expect(Activity::where('subject_type', $registro::class)->where('description', $sufijo('eliminado'))->exists())->toBeTrue();
+
+    $this->get(route('historial.index'))
+        ->assertInertia(fn ($page) => $page->where('actividades', fn ($actividades) => collect($actividades)->contains(fn ($a) => $a['modulo'] === $modulo)));
+})->with('registros simples');

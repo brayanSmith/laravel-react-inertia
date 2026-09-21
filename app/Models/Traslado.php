@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsCambios;
 use Database\Factories\TrasladoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,8 @@ class Traslado extends Model
 {
     /** @use HasFactory<TrasladoFactory> */
     use HasFactory;
+
+    use LogsCambios;
 
     protected $fillable = [
         'bodega_donante_id',
@@ -42,5 +45,21 @@ class Traslado extends Model
     public function producto(): BelongsTo
     {
         return $this->belongsTo(Producto::class, 'producto_id');
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function logCampos(): array
+    {
+        return ['bodega_donante_id', 'bodega_destino_id', 'producto_id', 'cantidad', 'observaciones'];
+    }
+
+    /**
+     * @return array{0: string, 1: bool}
+     */
+    protected function logEtiqueta(): array
+    {
+        return ['Traslado', false];
     }
 }
