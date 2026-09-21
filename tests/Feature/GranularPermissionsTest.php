@@ -310,3 +310,45 @@ test('roles can be deleted and only by whoever may', function () {
 
     expect(Role::where('name', 'Temporal')->exists())->toBeFalse();
 });
+
+test('authorized bodegas limit the POS, dashboard and pedidos general, but not mayorista', function () {
+    [$a, $b] = Bodega::factory()->count(2)->create();
+    $role = Role::create(['name' => 'Sucursal']);
+    $role->bodegas()->sync([$a->id]);
+    $this->miembro->assignRole($role);
+    concederPermisos($this->miembro, ['pos.view', 'pedidos.view', 'pedidos-mayoristas.view', 'dashboard.tabla-bodegas']);
+
+    $enA = Pedido::factory()->create(['bodega_id' => $a->id, 'tipo_precio' => 'DETAL']);
+    Pedido::factory()->create(['bodega_id' => $b->id, 'tipo_precio' => 'DETAL']);
+    Pedido::factory()->create(['bodega_id' => $b->id, 'tipo_precio' => 'MAYORISTA']);
+
+    $this->actingAs($this->miembro)->get(route('pos.index'))
+        ->assertInertia(fn ($page) => $page->has('bodegas', 1)->where('bodegas.0.id', $a->id));
+
+    $this->actingAs($this->miembro)->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page->has('bodegas', 1)->where('bodegas.0.id', $a->id));
+
+    $this->actingAs($this->miembro)->get(route('pedidos.index'))
+        ->assertInertia(fn ($page) => $page->has('pedidos', 1)->where('pedidos.0.id', $enA->id));
+
+    $this->actingAs($this->miembro)->get(route('pedidos-mayoristas.index'))
+        ->assertInertia(fn ($page) => $page->has('pedidos', 1));
+});
+
+test('the sidebar count of pedidos general only counts the authorized bodegas', function () {
+    [$a, $b] = Bodega::factory()->count(2)->create();
+    $role = Role::create(['name' => 'Sucursal']);
+    $role->bodegas()->sync([$a->id]);
+    $this->miembro->assignRole($role);
+    concederPermisos($this->miembro, ['pedidos.view', 'pedidos-mayoristas.view']);
+
+    Pedido::factory()->count(2)->create(['bodega_id' => $a->id, 'tipo_precio' => 'DETAL']);
+    Pedido::factory()->count(3)->create(['bodega_id' => $b->id, 'tipo_precio' => 'DETAL']);
+    Pedido::factory()->count(4)->create(['bodega_id' => $b->id, 'tipo_precio' => 'MAYORISTA']);
+
+    $this->actingAs($this->miembro)->get(route('pedidos.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('navCounts.pedidos', 2)
+            ->where('navCounts.pedidosMayoristas', 4)
+        );
+});

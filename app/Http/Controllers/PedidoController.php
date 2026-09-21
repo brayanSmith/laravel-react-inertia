@@ -68,6 +68,10 @@ class PedidoController extends Controller
                 ])
                 ->when($eliminados, fn ($query) => $query->onlyTrashed())
                 ->where('tipo_precio', $this->tipoPrecio($module))
+                ->when(
+                    $module === 'pedidos' ? $request->user()->idsBodegasPermitidas() : null,
+                    fn ($query, array $bodegaIds) => $query->whereIn('bodega_id', $bodegaIds),
+                )
                 ->orderByDesc('fecha')
                 ->get(),
             'eliminados' => $eliminados,
@@ -252,7 +256,11 @@ class PedidoController extends Controller
                 ->where('inventariable', true)
                 ->orderBy('referencia_producto')
                 ->get(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'valor_detal', 'valor_mayorista', 'costo_producto']),
-            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            // Mayorista is its own section: it always offers every bodega.
+            'bodegas' => Bodega::query()
+                ->when($this->module($request) === 'pedidos', fn ($query) => $query->permitidas())
+                ->orderBy('nombre_bodega')
+                ->get(['id', 'nombre_bodega']),
             'vendedores' => User::orderBy('name')->get(['id', 'name']),
             'pucs' => Puc::orderBy('concatenar_subcuenta_concepto')->get(['id', 'concatenar_subcuenta_concepto']),
         ];

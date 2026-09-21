@@ -37,7 +37,7 @@ class ProductoController extends Controller
         return Inertia::render('productos/index', [
             'productos' => $this->listado($eliminados),
             'eliminados' => $eliminados,
-            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'marcas' => Marca::orderBy('marca')->get(['id', 'marca']),
             'permissions' => $this->permissions($request),
         ]);

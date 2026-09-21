@@ -51,7 +51,7 @@ class StockBodegaController extends Controller
                     ? ['id', 'referencia_producto', 'concatenar_codigo_nombre', 'costo_producto', 'valor_detal', 'valor_mayorista']
                     : ['id', 'referencia_producto', 'concatenar_codigo_nombre']),
             'canViewInversion' => $puedeVerInversion,
-            'bodegas' => Bodega::permitidas()->whereIn('id', $bodegaIds)->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::whereIn('id', $bodegaIds)->get(['id', 'nombre_bodega']),
         ]);
     }
 }

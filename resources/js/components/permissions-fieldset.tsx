@@ -1,4 +1,7 @@
+import { Search } from 'lucide-react';
+import { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     groupPermissionsByResource,
@@ -6,6 +9,12 @@ import {
     permissionLabel,
     resourceLabel,
 } from '@/lib/permissions';
+
+const normalize = (text: string) =>
+    text
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase();
 
 type Props = {
     permissions: string[];
@@ -18,7 +27,16 @@ export default function PermissionsFieldset({
     selected,
     onChange,
 }: Props) {
+    const [search, setSearch] = useState('');
     const groups = groupPermissionsByResource(permissions);
+    const term = normalize(search.trim());
+
+    // The search is by page (module): only the modules whose name matches.
+    const visibleGroups = Object.entries(groups).filter(
+        ([resource]) =>
+            term === '' || normalize(resourceLabel(resource)).includes(term),
+    );
+
     const allSelected =
         permissions.length > 0 && selected.length === permissions.length;
     const someSelected = selected.length > 0 && !allSelected;
@@ -70,66 +88,85 @@ export default function PermissionsFieldset({
                 </div>
             </div>
 
-            <div className="max-h-[45vh] space-y-3 overflow-y-auto pr-1">
-                {Object.entries(groups).map(
-                    ([resource, resourcePermissions]) => {
-                        const groupAllSelected = resourcePermissions.every(
-                            (permission) => selected.includes(permission),
-                        );
+            <div className="relative">
+                <Search className="text-muted-foreground absolute top-2.5 left-3 size-4" />
+                <Input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Buscar página..."
+                    className="pl-9"
+                    data-test="permissions-search"
+                    onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                        }
+                    }}
+                />
+            </div>
 
-                        return (
-                            <div
-                                key={resource}
-                                className="space-y-2 rounded-lg border p-3"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">
-                                        {resourceLabel(resource)}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        className="text-primary text-xs hover:underline"
-                                        onClick={() =>
-                                            toggleGroup(
-                                                resourcePermissions,
-                                                !groupAllSelected,
-                                            )
+            <div className="max-h-[45vh] space-y-3 overflow-y-auto pr-1">
+                {visibleGroups.length === 0 ? (
+                    <p className="text-muted-foreground py-6 text-center text-sm">
+                        No hay páginas que coincidan.
+                    </p>
+                ) : null}
+                {visibleGroups.map(([resource, resourcePermissions]) => {
+                    const groupAllSelected = resourcePermissions.every(
+                        (permission) => selected.includes(permission),
+                    );
+
+                    return (
+                        <div
+                            key={resource}
+                            className="space-y-2 rounded-lg border p-3"
+                        >
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">
+                                    {resourceLabel(resource)}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="text-primary text-xs hover:underline"
+                                    onClick={() =>
+                                        toggleGroup(
+                                            resourcePermissions,
+                                            !groupAllSelected,
+                                        )
+                                    }
+                                >
+                                    {groupAllSelected
+                                        ? 'Deseleccionar todos'
+                                        : 'Seleccionar todos'}
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                {resourcePermissions.map((permission) => (
+                                    <label
+                                        key={permission}
+                                        className="flex items-center gap-2 text-sm"
+                                        title={
+                                            permissionHint(permission) ??
+                                            permission
                                         }
                                     >
-                                        {groupAllSelected
-                                            ? 'Deseleccionar todos'
-                                            : 'Seleccionar todos'}
-                                    </button>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                                    {resourcePermissions.map((permission) => (
-                                        <label
-                                            key={permission}
-                                            className="flex items-center gap-2 text-sm"
-                                            title={
-                                                permissionHint(permission) ??
-                                                permission
-                                            }
-                                        >
-                                            <Checkbox
-                                                checked={selected.includes(
+                                        <Checkbox
+                                            checked={selected.includes(
+                                                permission,
+                                            )}
+                                            onCheckedChange={(checked) =>
+                                                togglePermission(
                                                     permission,
-                                                )}
-                                                onCheckedChange={(checked) =>
-                                                    togglePermission(
-                                                        permission,
-                                                        checked === true,
-                                                    )
-                                                }
-                                            />
-                                            {permissionLabel(permission)}
-                                        </label>
-                                    ))}
-                                </div>
+                                                    checked === true,
+                                                )
+                                            }
+                                        />
+                                        {permissionLabel(permission)}
+                                    </label>
+                                ))}
                             </div>
-                        );
-                    },
-                )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

@@ -31,7 +31,7 @@ class GastoController extends Controller
                 ->when($eliminados, fn ($query) => $query->onlyTrashed())
                 ->get(),
             'eliminados' => $eliminados,
-            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'permissions' => [
                 'canCreate' => $request->user()->can('gastos.create'),
                 'canUpdate' => $request->user()->can('gastos.update'),

@@ -76,7 +76,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * The totals shown as badges in the sidebar: every pedido of each module
      * (DETAL / MAYORISTA) and every compra, so the badge matches what the
-     * listing shows. A count is only computed for the modules the user can
+     * listing shows (pedidos general only counts the authorized bodegas). A count is only computed for the modules the user can
      * open. Compras also carries how many of them are still PENDIENTE.
      *
      * @return array{pedidos: int, pedidosMayoristas: int, compras: int, comprasPendientes: int}
@@ -85,7 +85,9 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             'pedidos' => $user?->can('pedidos.view')
-                ? Pedido::where('tipo_precio', 'DETAL')->count()
+                ? Pedido::where('tipo_precio', 'DETAL')
+                    ->when($user->idsBodegasPermitidas(), fn ($query, array $bodegaIds) => $query->whereIn('bodega_id', $bodegaIds))
+                    ->count()
                 : 0,
             'pedidosMayoristas' => $user?->can('pedidos-mayoristas.view')
                 ? Pedido::where('tipo_precio', 'MAYORISTA')->count()
