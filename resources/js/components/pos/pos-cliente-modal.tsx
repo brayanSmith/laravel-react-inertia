@@ -134,9 +134,14 @@ export default function PosClienteModal({
                             <Button
                                 type="button"
                                 variant="outline"
+                                title="Nuevo cliente"
+                                aria-label="Nuevo cliente"
                                 data-test="pos-cliente-nuevo"
                             >
-                                <Plus /> Nuevo cliente
+                                <Plus />
+                                <span className="hidden md:inline">
+                                    Nuevo cliente
+                                </span>
                             </Button>
                         </CreateClienteModal>
                     ) : null}

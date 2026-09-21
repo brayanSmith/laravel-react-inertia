@@ -1,6 +1,6 @@
 import { Form, Head, router, usePage } from '@inertiajs/react';
 import { useTiposPrecio } from '@/hooks/use-tipos-precio';
-import { History } from 'lucide-react';
+import { History, ShoppingCart } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import PosAddProductModal from '@/components/pos/pos-add-product-modal';
@@ -23,6 +23,15 @@ import { usePosHeader } from '@/hooks/use-pos-header';
 import { usePosVentas } from '@/hooks/use-pos-ventas';
 import { precioParaTipo } from '@/lib/pedido-pricing';
 import { Button } from '@/components/ui/button';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { calcularTotales } from '@/lib/pos-totals';
 import { pedidos as pedidosPos, store } from '@/routes/pos';
 import { voucher as voucherRoute } from '@/routes/pos/pedidos';
 import type {
@@ -49,6 +58,12 @@ type Props = {
     canViewAllPedidos: boolean;
 };
 
+const currencyFormatter = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+});
+
 export default function PosPage({
     clientes,
     productos,
@@ -62,6 +77,9 @@ export default function PosPage({
 }: Props) {
     const userId = usePage().props.auth?.user?.id ?? 0;
     const { tiposPedido } = useTiposPrecio();
+    // From lg up the cart is a side panel; below it, a floating button opens it in a modal.
+    const isDesktop = useMediaQuery('(min-width: 1024px)');
+    const [cartOpen, setCartOpen] = useState(false);
 
     // Sales in progress live in localStorage, so leaving the POS (or a
     // reload) doesn't lose them; each tab is an independent pedido.
@@ -149,6 +167,7 @@ export default function PosPage({
 
     // A finished sale just closes its tab (the last one is emptied instead).
     const finalizarVenta = () => {
+        setCartOpen(false);
         setPagoOpen(false);
         setClienteModalOpen(false);
         setHistorialOpen(false);
@@ -254,6 +273,28 @@ export default function PosPage({
         { ignoreWhenDialog: true },
     );
 
+    const cartPanel = (
+        <PosCartPanel
+            key={ventas.activa.id}
+            cliente={cliente}
+            onOpenClientePicker={() => setClienteModalOpen(true)}
+            onOpenHistorial={() => setHistorialOpen(true)}
+            onProceedToPay={() => setPagoOpen(true)}
+            onReset={handleReset}
+            canProceder={puedeProceder}
+            bodegas={bodegas}
+            vendedores={vendedores}
+            header={header}
+            onFieldChange={handleFieldChange}
+            cart={cart}
+            onEditLine={handleEditLine}
+            errors={pageErrors}
+            processing={processing}
+        />
+    );
+
+    const totalVenta = calcularTotales(cart.totalBruto, header).total;
+
     return (
         <>
             <Head title="POS" />
@@ -287,33 +328,62 @@ export default function PosPage({
                             type="button"
                             className="shadow-lg"
                             onClick={() => setPedidosOpen(true)}
+                            title="Historial de pedidos"
+                            aria-label="Historial de pedidos"
                             data-test="pos-historial-pedidos"
                         >
-                            <History /> Historial de pedidos
+                            <History />
+                            <span className="hidden md:inline">
+                                Historial de pedidos
+                            </span>
                         </Button>
                     </div>
                 </div>
 
-                <div className="lg:sticky lg:top-4">
-                    <PosCartPanel
-                        key={ventas.activa.id}
-                        cliente={cliente}
-                        onOpenClientePicker={() => setClienteModalOpen(true)}
-                        onOpenHistorial={() => setHistorialOpen(true)}
-                        onProceedToPay={() => setPagoOpen(true)}
-                        onReset={handleReset}
-                        canProceder={puedeProceder}
-                        bodegas={bodegas}
-                        vendedores={vendedores}
-                        header={header}
-                        onFieldChange={handleFieldChange}
-                        cart={cart}
-                        onEditLine={handleEditLine}
-                        errors={pageErrors}
-                        processing={processing}
-                    />
-                </div>
+                {isDesktop ? (
+                    <div className="lg:sticky lg:top-4">{cartPanel}</div>
+                ) : null}
             </div>
+
+            {!isDesktop ? (
+                <>
+                    <Button
+                        type="button"
+                        size="lg"
+                        className="fixed right-4 bottom-4 z-40 h-14 gap-2 rounded-full shadow-lg"
+                        onClick={() => setCartOpen(true)}
+                        aria-label="Abrir el carrito"
+                        data-test="pos-cart-fab"
+                    >
+                        <ShoppingCart className="size-5" />
+                        <span className="font-semibold">
+                            {currencyFormatter.format(totalVenta)}
+                        </span>
+                        {cart.lines.length > 0 ? (
+                            <span className="bg-destructive absolute -top-1 -right-1 flex size-6 items-center justify-center rounded-full text-xs font-bold text-white">
+                                {cart.lines.length}
+                            </span>
+                        ) : null}
+                    </Button>
+
+                    <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+                        <SheetContent
+                            side="bottom"
+                            className="max-h-[92vh] gap-0 rounded-t-2xl"
+                        >
+                            <SheetHeader className="border-b py-3 pr-12">
+                                <SheetTitle>Carrito</SheetTitle>
+                                <SheetDescription className="sr-only">
+                                    Datos y productos de la venta
+                                </SheetDescription>
+                            </SheetHeader>
+                            <div className="overflow-y-auto p-2">
+                                {cartPanel}
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </>
+            ) : null}
 
             {/* Only carries the sale's data; the visible UI (and the submit
                 button, in the payment modal) live outside so no dialog is

@@ -63,7 +63,11 @@ export default function PosExitoModal({ voucher, onClose }: Props) {
 
     return (
         <Dialog open onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md" data-test="pos-exito-modal">
+            <DialogContent
+                // Centered even on phones (the other modals rise from the bottom).
+                className="data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:slide-in-from-bottom-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[50%] bottom-auto left-[50%] mx-0 w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] rounded-lg border sm:max-w-md"
+                data-test="pos-exito-modal"
+            >
                 <DialogHeader className="items-center text-center">
                     <CheckCircle2 className="size-12 text-emerald-600" />
                     <DialogTitle className="text-xl">

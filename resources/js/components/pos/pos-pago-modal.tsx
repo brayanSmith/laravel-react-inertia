@@ -148,7 +148,7 @@ export default function PosPagoModal({
     return (
         <Dialog open onOpenChange={(open) => !open && onClose()}>
             <DialogContent
-                className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:max-w-2xl"
+                className="w-full max-w-none p-4 sm:w-[calc(100%-1.5rem)] sm:max-w-2xl sm:p-6"
                 data-test="pos-pago-modal"
             >
                 <DialogHeader>
@@ -195,7 +195,7 @@ export default function PosPagoModal({
                     </ToggleGroup>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                     {numberField('descuento', 'Descuento')}
                     {numberField('flete', 'Flete')}
                     {numberField('reteica', 'Reteica')}
@@ -215,9 +215,11 @@ export default function PosPagoModal({
                     <p className="text-sm font-semibold">Abonos</p>
 
                     <div className="grid gap-3 md:grid-cols-2">
-                        <div className="grid gap-2 md:col-span-2">
+                        <div className="grid min-w-0 gap-2 md:col-span-2">
                             <Label>Método de pago</Label>
                             <Combobox
+                                // A long name wraps onto more lines instead of widening the modal.
+                                className="h-auto min-h-9 whitespace-normal [&>span]:line-clamp-none [&>span]:min-w-0 [&>span]:break-words"
                                 options={pucOptions}
                                 value={pucId}
                                 onValueChange={setPucId}

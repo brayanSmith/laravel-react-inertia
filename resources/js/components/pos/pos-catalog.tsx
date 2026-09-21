@@ -130,10 +130,15 @@ export default function PosCatalog({
                             ref={nuevoProductoRef}
                             type="button"
                             variant="outline"
+                            title="Nuevo producto"
+                            aria-label="Nuevo producto"
                             data-test="pos-nuevo-producto"
                         >
-                            <Plus /> Nuevo producto
-                            <kbd className="text-muted-foreground text-xs">
+                            <Plus />
+                            <span className="hidden md:inline">
+                                Nuevo producto
+                            </span>
+                            <kbd className="text-muted-foreground hidden text-xs md:inline">
                                 F4
                             </kbd>
                         </Button>
@@ -145,11 +150,17 @@ export default function PosCatalog({
                     variant="outline"
                     disabled={refreshing}
                     onClick={onRefresh}
+                    title="Actualizar inventario"
+                    aria-label="Actualizar inventario"
                     data-test="pos-actualizar-inventario"
                 >
                     <RefreshCw className={refreshing ? 'animate-spin' : ''} />
-                    Actualizar inventario
-                    <kbd className="text-muted-foreground text-xs">F7</kbd>
+                    <span className="hidden md:inline">
+                        Actualizar inventario
+                    </span>
+                    <kbd className="text-muted-foreground hidden text-xs md:inline">
+                        F7
+                    </kbd>
                 </Button>
 
                 <Select value={categoria} onValueChange={setCategoria}>
