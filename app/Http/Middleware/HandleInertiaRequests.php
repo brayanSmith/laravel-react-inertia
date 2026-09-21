@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Compra;
 use App\Models\Pedido;
 use App\Models\User;
+use App\Support\Branding;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,7 +43,9 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
-            'name' => config('app.name'),
+            // The app is branded with the company saved in "Empresas".
+            'name' => fn () => app(Branding::class)->name(),
+            'logoUrl' => fn () => app(Branding::class)->logoUrl(),
             'auth' => [
                 'user' => $user,
             ],

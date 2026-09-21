@@ -1,7 +1,6 @@
 import { Form, Head, usePage } from '@inertiajs/react';
-import { useRef, useState } from 'react';
 import Heading from '@/components/heading';
-import ImageDropCropper from '@/components/image-drop-cropper';
+import ImageField from '@/components/image-field';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,25 +16,6 @@ type Props = {
 export default function EmpresaEdit({ empresa, permissions }: Props) {
     const { currentTeam } = usePage().props;
     const teamSlug = currentTeam?.slug ?? '';
-    const [removeLogo, setRemoveLogo] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleImageChange = (file: File | null, removed: boolean) => {
-        setRemoveLogo(removed);
-
-        if (!fileInputRef.current) {
-            return;
-        }
-
-        const dataTransfer = new DataTransfer();
-
-        if (file) {
-            dataTransfer.items.add(file);
-        }
-
-        fileInputRef.current.files = dataTransfer.files;
-    };
-
     return (
         <>
             <Head title="Empresa" />
@@ -138,25 +118,13 @@ export default function EmpresaEdit({ empresa, permissions }: Props) {
                             </div>
 
                             {permissions.canUpdate ? (
-                                <>
-                                    <ImageDropCropper
-                                        label="Logo de la empresa"
-                                        value={empresa?.logo_empresa_url}
-                                        onChange={handleImageChange}
-                                        error={errors.logo_empresa}
-                                    />
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        name="logo_empresa"
-                                        className="hidden"
-                                    />
-                                    <input
-                                        type="hidden"
-                                        name="remove_logo_empresa"
-                                        value={removeLogo ? '1' : '0'}
-                                    />
-                                </>
+                                <ImageField
+                                    name="logo_empresa"
+                                    removeName="remove_logo_empresa"
+                                    label="Logo de la empresa"
+                                    value={empresa?.logo_empresa_url}
+                                    error={errors.logo_empresa}
+                                />
                             ) : null}
 
                             {permissions.canUpdate ? (

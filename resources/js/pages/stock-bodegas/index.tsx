@@ -2,13 +2,19 @@ import { Head } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import StockBodegasTable from '@/components/stock-bodegas-table';
 import { index } from '@/routes/stock-bodegas';
-import type { StockBodega } from '@/types';
+import type { Bodega, StockBodega } from '@/types';
 
 type Props = {
     stockBodegas: StockBodega[];
+    productos: NonNullable<StockBodega['producto']>[];
+    bodegas: Bodega[];
 };
 
-export default function StockBodegasIndex({ stockBodegas }: Props) {
+export default function StockBodegasIndex({
+    stockBodegas,
+    productos,
+    bodegas,
+}: Props) {
     return (
         <>
             <Head title="Stock por bodega" />
@@ -20,7 +26,11 @@ export default function StockBodegasIndex({ stockBodegas }: Props) {
                     description="Consulta el stock actual de los productos por bodega"
                 />
 
-                <StockBodegasTable stockBodegas={stockBodegas} />
+                <StockBodegasTable
+                    stockBodegas={stockBodegas}
+                    productos={productos}
+                    bodegas={bodegas}
+                />
             </div>
         </>
     );

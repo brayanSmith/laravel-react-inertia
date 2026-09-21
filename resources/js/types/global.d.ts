@@ -11,6 +11,8 @@ declare module '@inertiajs/core' {
     export interface InertiaConfig {
         sharedPageProps: {
             name: string;
+            /** The company logo from "Empresas", when one was uploaded. */
+            logoUrl: string | null;
             auth: Auth;
             sidebarOpen: boolean;
             currentTeam: Team | null;

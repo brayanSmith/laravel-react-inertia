@@ -30,16 +30,22 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        @php($branding = app(\App\Support\Branding::class))
+        @if ($branding->logoUrl())
+            <link rel="icon" href="{{ $branding->logoUrl() }}">
+            <link rel="apple-touch-icon" href="{{ $branding->logoUrl() }}">
+        @else
+            <link rel="icon" href="/favicon.ico" sizes="any">
+            <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+            <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        @endif
 
         @fonts
 
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         <x-inertia::head>
-            <title>{{ config('app.name', 'Laravel') }}</title>
+            <title>{{ $branding->name() }}</title>
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">

@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
+import ImageField from '@/components/image-field';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +35,7 @@ export default function Profile({
                 <Heading
                     variant="small"
                     title="Perfil"
-                    description="Actualiza tu nombre y dirección de correo"
+                    description="Actualiza tu foto, nombre y dirección de correo"
                 />
 
                 <Form
@@ -46,6 +47,14 @@ export default function Profile({
                 >
                     {({ processing, errors }) => (
                         <>
+                            <ImageField
+                                name="avatar"
+                                removeName="remove_avatar"
+                                label="Foto de perfil (opcional)"
+                                value={auth.user.avatar}
+                                error={errors.avatar}
+                            />
+
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Nombre</Label>
 

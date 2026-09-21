@@ -39,10 +39,12 @@ import {
 } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import type { StockBodega } from '@/types';
+import type { Bodega, StockBodega } from '@/types';
 
 type Props = {
     stockBodegas: StockBodega[];
+    productos: NonNullable<StockBodega['producto']>[];
+    bodegas: Bodega[];
 };
 
 type Vista = 'stock' | 'inversion';
@@ -511,7 +513,11 @@ function ExpandedDetail({
     );
 }
 
-export default function StockBodegasTable({ stockBodegas }: Props) {
+export default function StockBodegasTable({
+    stockBodegas,
+    productos,
+    bodegas: bodegasProp,
+}: Props) {
     const [vista, setVista] = useState<Vista>('stock');
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
@@ -523,50 +529,44 @@ export default function StockBodegasTable({ stockBodegas }: Props) {
     const pageSize = 25;
     const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
-    const bodegas = useMemo<BodegaOption[]>(() => {
-        const map = new Map<number, string>();
-
-        stockBodegas.forEach((stockBodega) => {
-            if (!map.has(stockBodega.bodega_id)) {
-                map.set(
-                    stockBodega.bodega_id,
-                    stockBodega.bodega?.nombre_bodega ??
-                        `Bodega ${stockBodega.bodega_id}`,
-                );
-            }
-        });
-
-        return Array.from(map.entries())
-            .map(([id, nombre]) => ({ id, nombre }))
-            .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-    }, [stockBodegas]);
+    const bodegas = useMemo<BodegaOption[]>(
+        () =>
+            bodegasProp
+                .map((bodega) => ({
+                    id: bodega.id,
+                    nombre: bodega.nombre_bodega,
+                }))
+                .sort((x, y) => x.nombre.localeCompare(y.nombre, 'es')),
+        [bodegasProp],
+    );
 
     const rows = useMemo<ProductoStockRow[]>(() => {
         const map = new Map<number, ProductoStockRow>();
 
-        stockBodegas.forEach((stockBodega) => {
-            let row = map.get(stockBodega.producto_id);
-
-            if (!row) {
-                row = {
-                    productoId: stockBodega.producto_id,
-                    label:
-                        stockBodega.producto?.concatenar_codigo_nombre ??
-                        stockBodega.producto?.referencia_producto ??
-                        `Producto ${stockBodega.producto_id}`,
-                    producto: stockBodega.producto,
-                    porBodega: new Map(),
-                };
-                map.set(stockBodega.producto_id, row);
-            }
-
-            row.porBodega.set(stockBodega.bodega_id, stockBodega);
+        // Every product is listed; pairs missing from `stockBodegas` are 0.
+        productos.forEach((producto) => {
+            map.set(producto.id, {
+                productoId: producto.id,
+                label:
+                    producto.concatenar_codigo_nombre ??
+                    producto.referencia_producto ??
+                    `Producto ${producto.id}`,
+                producto,
+                porBodega: new Map(),
+            });
         });
 
-        return Array.from(map.values()).sort((a, b) =>
-            a.label.localeCompare(b.label, 'es'),
+        stockBodegas.forEach((stockBodega) => {
+            map.get(stockBodega.producto_id)?.porBodega.set(
+                stockBodega.bodega_id,
+                stockBodega,
+            );
+        });
+
+        return Array.from(map.values()).sort((x, y) =>
+            x.label.localeCompare(y.label, 'es'),
         );
-    }, [stockBodegas]);
+    }, [productos, stockBodegas]);
 
     const columnDefs = useMemo<ColumnMeta[]>(() => {
         const bodegaColumns = bodegas.map((bodega): ColumnMeta => ({
