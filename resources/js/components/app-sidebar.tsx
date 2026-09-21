@@ -70,8 +70,11 @@ export function AppSidebar() {
         href: (slug: string) => NavItem['href'],
         icon: NavItem['icon'],
         badge?: number,
+        badgePendiente?: number,
     ): NavItem[] =>
-        visible && team ? [{ title, href: href(team), icon, badge }] : [];
+        visible && team
+            ? [{ title, href: href(team), icon, badge, badgePendiente }]
+            : [];
 
     const groups: NavGroup[] = [
         {
@@ -136,6 +139,7 @@ export function AppSidebar() {
                 comprasIndex,
                 ShoppingCart,
                 page.props.navCounts?.compras,
+                page.props.navCounts?.comprasPendientes,
             ),
         },
         {

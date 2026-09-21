@@ -5,6 +5,7 @@ import {
     ArrowUpDown,
     Columns3,
     GripVertical,
+    Eye,
     Pencil,
     Search,
     Trash2,
@@ -16,6 +17,7 @@ import DateRangeFilter, {
     type DateRangeValue,
 } from '@/components/date-range-filter';
 import DeleteCompraModal from '@/components/delete-compra-modal';
+import VerCompraModal from '@/components/ver-compra-modal';
 import RestoreButton from '@/components/restore-button';
 import { Badge } from '@/components/ui/badge';
 import Pagination from '@/components/pagination';
@@ -146,7 +148,7 @@ const DEFAULT_COLUMN_WIDTHS: Record<string, number> = {
     subtotal: 130,
     descuento: 120,
     total: 140,
-    acciones: 100,
+    acciones: 160,
 };
 
 const DEFAULT_BODEGA_COLUMN_WIDTH = 220;
@@ -399,7 +401,10 @@ function HeaderCell({
                     <span className="text-muted-foreground">{meta.label}</span>
                 )}
             </div>
-            <ResizeHandle onMouseDown={onResizeStart} />
+            {/* The actions column keeps its fixed width. */}
+            {meta.key !== 'acciones' ? (
+                <ResizeHandle onMouseDown={onResizeStart} />
+            ) : null}
         </TableHead>
     );
 }
@@ -413,6 +418,7 @@ export default function ComprasTable({
     const teamSlug = currentTeam?.slug ?? '';
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [compraToDelete, setCompraToDelete] = useState<Compra | null>(null);
+    const [compraToView, setCompraToView] = useState<Compra | null>(null);
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -448,6 +454,7 @@ export default function ComprasTable({
 
     const columnDefs = useMemo<ColumnMeta[]>(
         () => [
+            ACCIONES_COLUMN,
             ...STATIC_COLUMN_DEFS,
             ...bodegas.map((bodega): ColumnMeta => ({
                 key: bodegaColumnKey(bodega.id),
@@ -455,7 +462,6 @@ export default function ComprasTable({
                 sortable: true,
                 filter: 'text',
             })),
-            ACCIONES_COLUMN,
         ],
         [bodegas],
     );
@@ -898,21 +904,57 @@ export default function ComprasTable({
                 return currencyFormatter.format(Number(compra.total_a_pagar));
             case 'acciones':
                 if (eliminados) {
-                    return permissions.canDelete ? (
-                        <div className="flex justify-end">
-                            <RestoreButton
-                                action={restore([teamSlug, compra.id])}
-                                nombre={`la compra ${compra.factura}`}
-                                aviso="El stock de las líneas recibidas se sumará de nuevo a sus bodegas."
-                                dataTest="restore-compra-button"
-                            />
-                        </div>
-                    ) : null;
+                    return (
+                        <TooltipProvider>
+                            <div className="flex justify-end gap-2">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="view-compra-button"
+                                            onClick={() =>
+                                                setCompraToView(compra)
+                                            }
+                                        >
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Ver</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                                {permissions.canDelete ? (
+                                    <RestoreButton
+                                        action={restore([teamSlug, compra.id])}
+                                        nombre={`la compra ${compra.factura}`}
+                                        aviso="El stock de las líneas recibidas se sumará de nuevo a sus bodegas."
+                                        dataTest="restore-compra-button"
+                                    />
+                                ) : null}
+                            </div>
+                        </TooltipProvider>
+                    );
                 }
 
                 return (
                     <TooltipProvider>
                         <div className="flex justify-end gap-2">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        data-test="view-compra-button"
+                                        onClick={() => setCompraToView(compra)}
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Ver</p>
+                                </TooltipContent>
+                            </Tooltip>
                             {permissions.canUpdate ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1112,6 +1154,11 @@ export default function ComprasTable({
                     />
                 </div>
             )}
+
+            <VerCompraModal
+                compra={compraToView}
+                onClose={() => setCompraToView(null)}
+            />
 
             <DeleteCompraModal
                 teamSlug={teamSlug}

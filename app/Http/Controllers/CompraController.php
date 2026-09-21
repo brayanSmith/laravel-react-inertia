@@ -11,6 +11,7 @@ use App\Models\DetalleCompra;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\StockBodega;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -85,6 +86,21 @@ class CompraController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Compra created.')]);
 
         return to_route('compras.index', ['current_team' => $request->route('current_team')]);
+    }
+
+    /**
+     * The full detail of a compra (header and lines) as JSON, for the
+     * read-only "ver" modal. Loaded on demand so the listing stays light.
+     */
+    public function show(string $current_team, Compra $compra): JsonResponse
+    {
+        Gate::authorize('compras.view');
+
+        return response()->json($compra->load([
+            'proveedor:id,nombre_proveedor,nit_proveedor,telefono_proveedor',
+            'detallesCompra' => fn ($query) => $query->withTrashed()
+                ->with(['producto:id,referencia_producto,concatenar_codigo_nombre', 'bodega:id,nombre_bodega']),
+        ]));
     }
 
     /**

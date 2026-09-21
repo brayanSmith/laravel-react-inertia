@@ -78,9 +78,9 @@ class HandleInertiaRequests extends Middleware
      * The totals shown as badges in the sidebar: every pedido of each module
      * (DETAL / MAYORISTA) and every compra, so the badge matches what the
      * listing shows. A count is only computed for the modules the user can
-     * open.
+     * open. Compras also carries how many of them are still PENDIENTE.
      *
-     * @return array{pedidos: int, pedidosMayoristas: int, compras: int}
+     * @return array{pedidos: int, pedidosMayoristas: int, compras: int, comprasPendientes: int}
      */
     private function navCounts(?User $user): array
     {
@@ -93,6 +93,9 @@ class HandleInertiaRequests extends Middleware
                 : 0,
             'compras' => $user?->can('compras.view')
                 ? Compra::count()
+                : 0,
+            'comprasPendientes' => $user?->can('compras.view')
+                ? Compra::where('estado', 'PENDIENTE')->count()
                 : 0,
         ];
     }

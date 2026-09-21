@@ -82,6 +82,7 @@ Route::prefix('{current_team}')
         Route::get('compras/crear', [CompraController::class, 'create'])->name('compras.create');
         Route::post('compras', [CompraController::class, 'store'])->name('compras.store');
         Route::get('compras/{compra}/editar', [CompraController::class, 'edit'])->name('compras.edit');
+        Route::get('compras/{compra}/ver', [CompraController::class, 'show'])->withTrashed()->name('compras.show');
         Route::patch('compras/{compra}', [CompraController::class, 'update'])->name('compras.update');
         Route::delete('compras/{compra}', [CompraController::class, 'destroy'])->name('compras.destroy');
         Route::patch('compras/{compra}/restaurar', [CompraController::class, 'restore'])->withTrashed()->name('compras.restore');
@@ -90,6 +91,8 @@ Route::prefix('{current_team}')
         Route::get('pedidos/crear', [PedidoController::class, 'create'])->name('pedidos.create');
         Route::post('pedidos', [PedidoController::class, 'store'])->name('pedidos.store');
         Route::get('pedidos/{pedido}/editar', [PedidoController::class, 'edit'])->name('pedidos.edit');
+        Route::get('pedidos/{pedido}/ver', [PedidoController::class, 'show'])->withTrashed()->name('pedidos.show');
+        Route::get('pedidos/{pedido}/voucher', [PedidoController::class, 'voucher'])->name('pedidos.voucher');
         Route::patch('pedidos/{pedido}', [PedidoController::class, 'update'])->name('pedidos.update');
         Route::delete('pedidos/{pedido}', [PedidoController::class, 'destroy'])->name('pedidos.destroy');
         Route::patch('pedidos/{pedido}/restaurar', [PedidoController::class, 'restore'])->withTrashed()->name('pedidos.restore');
@@ -104,6 +107,8 @@ Route::prefix('{current_team}')
         Route::get('pedidos-mayoristas/crear', [PedidoController::class, 'create'])->name('pedidos-mayoristas.create');
         Route::post('pedidos-mayoristas', [PedidoController::class, 'store'])->name('pedidos-mayoristas.store');
         Route::get('pedidos-mayoristas/{pedido}/editar', [PedidoController::class, 'edit'])->name('pedidos-mayoristas.edit');
+        Route::get('pedidos-mayoristas/{pedido}/ver', [PedidoController::class, 'show'])->withTrashed()->name('pedidos-mayoristas.show');
+        Route::get('pedidos-mayoristas/{pedido}/voucher', [PedidoController::class, 'voucher'])->name('pedidos-mayoristas.voucher');
         Route::patch('pedidos-mayoristas/{pedido}', [PedidoController::class, 'update'])->name('pedidos-mayoristas.update');
         Route::delete('pedidos-mayoristas/{pedido}', [PedidoController::class, 'destroy'])->name('pedidos-mayoristas.destroy');
         Route::patch('pedidos-mayoristas/{pedido}/restaurar', [PedidoController::class, 'restore'])->withTrashed()->name('pedidos-mayoristas.restore');

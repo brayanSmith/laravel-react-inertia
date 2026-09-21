@@ -5,6 +5,7 @@ import {
     ArrowUpDown,
     Columns3,
     GripVertical,
+    Eye,
     Pencil,
     Search,
     Trash2,
@@ -16,6 +17,8 @@ import DateRangeFilter, {
     type DateRangeValue,
 } from '@/components/date-range-filter';
 import DeletePedidoModal from '@/components/delete-pedido-modal';
+import VerPedidoModal from '@/components/ver-pedido-modal';
+import VoucherButton from '@/components/voucher-button';
 import RestoreButton from '@/components/restore-button';
 import { Badge } from '@/components/ui/badge';
 import Pagination from '@/components/pagination';
@@ -93,6 +96,13 @@ type ColumnMeta = {
 };
 
 const COLUMN_DEFS: ColumnMeta[] = [
+    {
+        key: 'acciones',
+        label: 'Acciones',
+        sortable: false,
+        filter: 'none',
+        align: 'right',
+    },
     { key: 'id', label: 'ID', sortable: true, filter: 'text' },
     { key: 'bodega', label: 'Bodega', sortable: true, filter: 'text' },
     { key: 'cliente', label: 'Cliente', sortable: true, filter: 'text' },
@@ -147,13 +157,6 @@ const COLUMN_DEFS: ColumnMeta[] = [
         sortable: true,
         filter: 'estado_pago',
     },
-    {
-        key: 'acciones',
-        label: 'Acciones',
-        sortable: false,
-        filter: 'none',
-        align: 'right',
-    },
 ];
 
 const COLUMN_DEFS_MAP = new Map(COLUMN_DEFS.map((meta) => [meta.key, meta]));
@@ -177,7 +180,7 @@ const DEFAULT_COLUMN_WIDTHS: Record<ColumnKey, number> = {
     observacion_pago: 180,
     observacion: 180,
     estado_pago: 120,
-    acciones: 100,
+    acciones: 200,
 };
 
 const MIN_COLUMN_WIDTH = 60;
@@ -468,7 +471,10 @@ function HeaderCell({
                     <span className="text-muted-foreground">{meta.label}</span>
                 )}
             </div>
-            <ResizeHandle onMouseDown={onResizeStart} />
+            {/* The actions column keeps its fixed width. */}
+            {meta.key !== 'acciones' ? (
+                <ResizeHandle onMouseDown={onResizeStart} />
+            ) : null}
         </TableHead>
     );
 }
@@ -483,6 +489,7 @@ export default function PedidosTable({
     const teamSlug = currentTeam?.slug ?? '';
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [pedidoToDelete, setPedidoToDelete] = useState<Pedido | null>(null);
+    const [pedidoToView, setPedidoToView] = useState<Pedido | null>(null);
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<SortKey | null>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -921,24 +928,67 @@ export default function PedidosTable({
                 );
             case 'acciones':
                 if (eliminados) {
-                    return permissions.canDelete ? (
-                        <div className="flex justify-end">
-                            <RestoreButton
-                                action={routes.pedidos.restore([
-                                    teamSlug,
-                                    pedido.id,
-                                ])}
-                                nombre={`el pedido #${pedido.id}`}
-                                aviso="El stock de sus productos se descontará de nuevo de la bodega."
-                                dataTest="restore-pedido-button"
-                            />
-                        </div>
-                    ) : null;
+                    return (
+                        <TooltipProvider>
+                            <div className="flex justify-end gap-2">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="view-pedido-button"
+                                            onClick={() =>
+                                                setPedidoToView(pedido)
+                                            }
+                                        >
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Ver</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                                {permissions.canDelete ? (
+                                    <RestoreButton
+                                        action={routes.pedidos.restore([
+                                            teamSlug,
+                                            pedido.id,
+                                        ])}
+                                        nombre={`el pedido #${pedido.id}`}
+                                        aviso="El stock de sus productos se descontará de nuevo de la bodega."
+                                        dataTest="restore-pedido-button"
+                                    />
+                                ) : null}
+                            </div>
+                        </TooltipProvider>
+                    );
                 }
 
                 return (
                     <TooltipProvider>
                         <div className="flex justify-end gap-2">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        data-test="view-pedido-button"
+                                        onClick={() => setPedidoToView(pedido)}
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Ver</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <VoucherButton
+                                action={routes.pedidos.voucher([
+                                    teamSlug,
+                                    pedido.id,
+                                ])}
+                                dataTest="voucher-pedido-button"
+                            />
                             {permissions.canUpdate ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1133,6 +1183,12 @@ export default function PedidosTable({
                     />
                 </div>
             )}
+
+            <VerPedidoModal
+                pedido={pedidoToView}
+                routes={routes}
+                onClose={() => setPedidoToView(null)}
+            />
 
             <DeletePedidoModal
                 teamSlug={teamSlug}

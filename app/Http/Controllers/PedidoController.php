@@ -13,6 +13,8 @@ use App\Models\Producto;
 use App\Models\Puc;
 use App\Models\Team;
 use App\Services\PedidoService;
+use App\Services\PedidoVoucher;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -101,6 +103,40 @@ class PedidoController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido created.')]);
 
         return to_route("{$module}.index", ['current_team' => $request->route('current_team')]);
+    }
+
+    /**
+     * The full detail of a pedido (header, lines and payments) as JSON, for
+     * the read-only "ver" modal. Loaded on demand so the listing stays light.
+     */
+    public function show(Request $request, string $current_team, Pedido $pedido): JsonResponse
+    {
+        Gate::authorize($this->module($request).'.view');
+
+        $pedido->load([
+            'cliente:id,razon_social,tipo_documento,numero_documento,telefono,ciudad,email,direccion',
+            'bodega:id,nombre_bodega',
+            'user:id,name',
+            'detalles' => fn ($query) => $query->withTrashed()
+                ->with(['producto:id,referencia_producto,concatenar_codigo_nombre', 'bodega:id,nombre_bodega']),
+            'abonos' => fn ($query) => $query->with(['puc:id,concatenar_subcuenta_concepto', 'vendedor:id,name']),
+        ]);
+
+        // What the pedido cost and earned is not for this view.
+        $pedido->detalles->each->makeHidden(['costo_unitario', 'costo_total', 'ganancia_total']);
+
+        return response()->json($pedido);
+    }
+
+    /**
+     * The data of a pedido's payment voucher (the PDF itself is rendered in
+     * the browser), for the "voucher" button of the listing and the modal.
+     */
+    public function voucher(Request $request, string $current_team, Pedido $pedido, PedidoVoucher $voucher): JsonResponse
+    {
+        Gate::authorize($this->module($request).'.view');
+
+        return response()->json($voucher->toArray($pedido));
     }
 
     /**

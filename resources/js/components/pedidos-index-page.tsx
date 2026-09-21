@@ -1,11 +1,9 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
 import TrashToggle from '@/components/trash-toggle';
 import PedidoDetallesTable from '@/components/pedido-detalles-table';
 import PedidosTable from '@/components/pedidos-table';
-import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { Pedido, PedidoPermissions, PedidoRoutes } from '@/types';
 
@@ -76,14 +74,6 @@ export default function PedidosIndexPage({
                             eliminados={eliminados}
                             visible={permissions.canDelete}
                         />
-
-                        {permissions.canCreate && !eliminados ? (
-                            <Button asChild data-test="create-pedido-button">
-                                <Link href={routes.pedidos.create(teamSlug)}>
-                                    <Plus /> Nuevo pedido
-                                </Link>
-                            </Button>
-                        ) : null}
                     </div>
                 </div>
 

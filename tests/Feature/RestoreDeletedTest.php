@@ -182,3 +182,68 @@ test('deleted records are left out of the dashboard figures and back once restor
     $this->actingAs($this->owner)->patch(route('pedidos.restore', [$this->team, $pedido->id]));
     expect($productos())->toBe(2);
 });
+
+test('a pedido and a compra can be viewed in full as JSON, deleted ones included', function () {
+    $bodega = Bodega::factory()->create();
+    $producto = Producto::factory()->create();
+    $pedido = Pedido::factory()->create(['bodega_id' => $bodega->id]);
+    DetallePedido::factory()->create(['pedido_id' => $pedido->id, 'producto_id' => $producto->id, 'cantidad' => 3]);
+    $compra = Compra::factory()->create();
+    DetalleCompra::factory()->create(['compra_id' => $compra->id, 'producto_id' => $producto->id, 'bodega_id' => $bodega->id]);
+
+    $this->actingAs($this->owner)->getJson(route('pedidos.show', [$this->team, $pedido->id]))
+        ->assertOk()
+        ->assertJsonPath('id', $pedido->id)
+        ->assertJsonPath('detalles.0.producto.id', $producto->id)
+        ->assertJsonStructure(['cliente' => ['razon_social'], 'bodega' => ['nombre_bodega'], 'user' => ['name'], 'abonos']);
+
+    $this->actingAs($this->owner)->getJson(route('compras.show', [$this->team, $compra->id]))
+        ->assertOk()
+        ->assertJsonPath('detalles_compra.0.bodega.id', $bodega->id)
+        ->assertJsonStructure(['proveedor' => ['nombre_proveedor']]);
+
+    $pedido->delete();
+    $compra->delete();
+
+    $this->actingAs($this->owner)->getJson(route('pedidos.show', [$this->team, $pedido->id]))->assertOk();
+    $this->actingAs($this->owner)->getJson(route('compras.show', [$this->team, $compra->id]))->assertOk();
+});
+
+test('viewing a pedido or a compra needs the view permission of its module', function () {
+    $pedido = Pedido::factory()->create(['tipo_precio' => 'MAYORISTA']);
+    $compra = Compra::factory()->create();
+
+    $miembro = User::factory()->create();
+    attachTeamMember($this->team, $miembro, 'Member');
+
+    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.show', [$this->team, $pedido->id]))->assertForbidden();
+    $this->actingAs($miembro)->getJson(route('compras.show', [$this->team, $compra->id]))->assertForbidden();
+
+    $miembro->givePermissionTo('compras.view');
+    $this->actingAs($miembro)->getJson(route('compras.show', [$this->team, $compra->id]))->assertOk();
+    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.show', [$this->team, $pedido->id]))->assertForbidden();
+});
+
+test('the pedido detail never exposes what it cost or earned', function () {
+    $pedido = Pedido::factory()->create();
+    DetallePedido::factory()->create(['pedido_id' => $pedido->id, 'costo_unitario' => 40, 'costo_total' => 80, 'ganancia_total' => 120]);
+
+    $json = $this->actingAs($this->owner)->getJson(route('pedidos.show', [$this->team, $pedido->id]))->assertOk()->json();
+
+    expect($json['detalles'][0])->not->toHaveKeys(['costo_unitario', 'costo_total', 'ganancia_total']);
+});
+
+test('a pedido voucher is served to whoever can view the pedidos of that module', function () {
+    $pedido = Pedido::factory()->create(['tipo_precio' => 'MAYORISTA']);
+
+    $this->actingAs($this->owner)->getJson(route('pedidos-mayoristas.voucher', [$this->team, $pedido->id]))
+        ->assertOk()
+        ->assertJsonPath('pedido.id', $pedido->id);
+
+    $miembro = User::factory()->create();
+    attachTeamMember($this->team, $miembro, 'Member');
+    $miembro->givePermissionTo('pedidos.view');
+
+    $this->actingAs($miembro)->getJson(route('pedidos.voucher', [$this->team, $pedido->id]))->assertOk();
+    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.voucher', [$this->team, $pedido->id]))->assertForbidden();
+});

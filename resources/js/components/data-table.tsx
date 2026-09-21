@@ -134,7 +134,10 @@ function HeaderCell<T>({
                     </span>
                 )}
             </div>
-            <ResizeHandle onMouseDown={handlers.onResizeStart} />
+            {/* The actions column keeps its fixed width. */}
+            {column.key !== 'acciones' ? (
+                <ResizeHandle onMouseDown={handlers.onResizeStart} />
+            ) : null}
         </TableHead>
     );
 }
@@ -247,73 +250,77 @@ export default function DataTable<T>({
     return (
         <div className="flex flex-col space-y-6">
             {toolbar ? (
-            <div className="flex items-center justify-between gap-4">
-                <div className="relative max-w-sm flex-1">
-                    <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input
-                        value={table.search}
-                        onChange={(event) =>
-                            table.setSearch(event.target.value)
-                        }
-                        placeholder={searchPlaceholder}
-                        className="pl-9"
-                        data-test={`${dataTestPrefix}-search`}
-                    />
-                </div>
+                <div className="flex items-center justify-between gap-4">
+                    <div className="relative max-w-sm flex-1">
+                        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                        <Input
+                            value={table.search}
+                            onChange={(event) =>
+                                table.setSearch(event.target.value)
+                            }
+                            placeholder={searchPlaceholder}
+                            className="pl-9"
+                            data-test={`${dataTestPrefix}-search`}
+                        />
+                    </div>
 
-                <div className="flex items-center gap-2">
-                    {table.activeFilterCount > 0 ? (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            data-test={`${dataTestPrefix}-clear-filters`}
-                            onClick={table.clearFilters}
-                        >
-                            <X className="size-4" />
-                            Limpiar filtros
-                        </Button>
-                    ) : null}
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-2">
+                        {table.activeFilterCount > 0 ? (
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                data-test={`${dataTestPrefix}-columns-toggle`}
+                                data-test={`${dataTestPrefix}-clear-filters`}
+                                onClick={table.clearFilters}
                             >
-                                <Columns3 className="size-4" />
-                                Columnas
+                                <X className="size-4" />
+                                Limpiar filtros
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            align="end"
-                            className="max-h-80 overflow-y-auto"
-                        >
-                            <DropdownMenuLabel>
-                                Mostrar columnas
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {table.hideableColumns.map((column) => (
-                                <DropdownMenuCheckboxItem
-                                    key={column.key}
-                                    checked={
-                                        !table.hiddenColumns.has(column.key)
-                                    }
-                                    onSelect={(event) => event.preventDefault()}
-                                    onCheckedChange={() =>
-                                        table.toggleColumnVisibility(column.key)
-                                    }
-                                    data-test={`${dataTestPrefix}-column-toggle-${column.key}`}
+                        ) : null}
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    data-test={`${dataTestPrefix}-columns-toggle`}
                                 >
-                                    {column.label}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                    <Columns3 className="size-4" />
+                                    Columnas
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="max-h-80 overflow-y-auto"
+                            >
+                                <DropdownMenuLabel>
+                                    Mostrar columnas
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {table.hideableColumns.map((column) => (
+                                    <DropdownMenuCheckboxItem
+                                        key={column.key}
+                                        checked={
+                                            !table.hiddenColumns.has(column.key)
+                                        }
+                                        onSelect={(event) =>
+                                            event.preventDefault()
+                                        }
+                                        onCheckedChange={() =>
+                                            table.toggleColumnVisibility(
+                                                column.key,
+                                            )
+                                        }
+                                        data-test={`${dataTestPrefix}-column-toggle-${column.key}`}
+                                    >
+                                        {column.label}
+                                    </DropdownMenuCheckboxItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
-            </div>
             ) : null}
 
             <div className="relative max-h-[75vh] w-full overflow-auto rounded-md border">

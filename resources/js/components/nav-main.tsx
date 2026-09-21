@@ -69,7 +69,25 @@ function NavItems({ group }: { group: NavGroup }) {
                             <span>{item.title}</span>
                         </Link>
                     </SidebarMenuButton>
-                    {item.badge ? (
+                    {item.badgePendiente ? (
+                        <div className="pointer-events-none absolute top-1.5 right-1 flex items-center gap-1 group-data-[collapsible=icon]:hidden">
+                            {item.badge ? (
+                                <span
+                                    data-test="nav-badge"
+                                    className="flex h-5 min-w-5 items-center justify-center rounded-md bg-amber-500 px-1 text-xs font-medium text-white tabular-nums"
+                                >
+                                    {item.badge}
+                                </span>
+                            ) : null}
+                            <span
+                                data-test="nav-badge-pendiente"
+                                title="Compras pendientes"
+                                className="flex h-5 min-w-5 items-center justify-center rounded-md bg-red-600 px-1 text-xs font-medium text-white tabular-nums"
+                            >
+                                {item.badgePendiente}
+                            </span>
+                        </div>
+                    ) : item.badge ? (
                         <SidebarMenuBadge
                             data-test="nav-badge"
                             className="bg-amber-500 text-white peer-hover/menu-button:text-white peer-data-[active=true]/menu-button:text-white"

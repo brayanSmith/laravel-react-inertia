@@ -40,6 +40,7 @@ declare module '@inertiajs/core' {
                 pedidos: number;
                 pedidosMayoristas: number;
                 compras: number;
+                comprasPendientes: number;
             };
             [key: string]: unknown;
         };

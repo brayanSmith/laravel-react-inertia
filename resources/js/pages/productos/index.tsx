@@ -93,7 +93,7 @@ const STATIC_COLUMN_WIDTHS: Record<string, number> = {
     detal: 110,
     mayorista: 110,
     sin_instalacion: 130,
-    acciones: 100,
+    acciones: 112,
 };
 
 const DEFAULT_BODEGA_WIDTH = 110;
@@ -392,7 +392,7 @@ export default function ProductosIndex({
     );
 
     const allColumnKeys = useMemo(
-        () => ['imagen', ...columnOrder, 'acciones'],
+        () => ['acciones', 'imagen', ...columnOrder],
         [columnOrder],
     );
 
@@ -758,6 +758,22 @@ export default function ProductosIndex({
                                 </colgroup>
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead className="relative text-right">
+                                            {sorts.length > 0 ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    data-test="productos-reset-sort"
+                                                    onClick={resetSort}
+                                                >
+                                                    <ArrowUpDown className="size-4" />
+                                                    Resetear orden
+                                                </Button>
+                                            ) : (
+                                                'Acciones'
+                                            )}
+                                        </TableHead>
                                         <TableHead className="relative">
                                             Imagen
                                             <ResizeHandle
@@ -778,40 +794,8 @@ export default function ProductosIndex({
                                                 onResizeStart={startResize(key)}
                                             />
                                         ))}
-                                        <TableHead className="relative text-right">
-                                            {sorts.length > 0 ? (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    data-test="productos-reset-sort"
-                                                    onClick={resetSort}
-                                                >
-                                                    <ArrowUpDown className="size-4" />
-                                                    Resetear orden
-                                                </Button>
-                                            ) : (
-                                                'Acciones'
-                                            )}
-                                            <ResizeHandle
-                                                columnKey="acciones"
-                                                onMouseDown={startResize(
-                                                    'acciones',
-                                                )}
-                                            />
-                                        </TableHead>
                                     </TableRow>
                                     <TableRow>
-                                        <TableHead />
-                                        {columnOrder.map((key) => (
-                                            <FilterHead
-                                                key={key}
-                                                columnKey={key}
-                                                accessor={accessors[key]}
-                                                value={filters[key] ?? ''}
-                                                onChange={setFilter}
-                                            />
-                                        ))}
                                         <TableHead className="text-right">
                                             {activeFilterCount > 0 ||
                                             activeGroup ? (
@@ -829,6 +813,16 @@ export default function ProductosIndex({
                                                 </Button>
                                             ) : null}
                                         </TableHead>
+                                        <TableHead />
+                                        {columnOrder.map((key) => (
+                                            <FilterHead
+                                                key={key}
+                                                columnKey={key}
+                                                accessor={accessors[key]}
+                                                value={filters[key] ?? ''}
+                                                onChange={setFilter}
+                                            />
+                                        ))}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -841,51 +835,6 @@ export default function ProductosIndex({
                                             }
                                             className="cursor-pointer"
                                         >
-                                            <TableCell>
-                                                {producto.imagen_producto_url ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(event) => {
-                                                            event.stopPropagation();
-                                                            setPreviewImage(
-                                                                producto.imagen_producto_url,
-                                                            );
-                                                        }}
-                                                        data-test="producto-imagen-preview"
-                                                        className="cursor-zoom-in"
-                                                    >
-                                                        <img
-                                                            src={
-                                                                producto.imagen_producto_url
-                                                            }
-                                                            alt=""
-                                                            loading="lazy"
-                                                            className="h-10 w-10 rounded-md border object-cover transition hover:opacity-80"
-                                                        />
-                                                    </button>
-                                                ) : (
-                                                    <div className="text-muted-foreground flex h-10 w-10 items-center justify-center rounded-md border text-xs">
-                                                        —
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                            {columnOrder.map((key) => (
-                                                <TableCell
-                                                    key={key}
-                                                    className={cn(
-                                                        accessors[key]
-                                                            ?.align ===
-                                                            'right' &&
-                                                            'text-right',
-                                                        accessors[key]?.color,
-                                                    )}
-                                                >
-                                                    {renderCellValue(
-                                                        key,
-                                                        producto,
-                                                    )}
-                                                </TableCell>
-                                            ))}
                                             <TableCell
                                                 className="text-right"
                                                 onClick={(event) =>
@@ -965,6 +914,51 @@ export default function ProductosIndex({
                                                     </TooltipProvider>
                                                 )}
                                             </TableCell>
+                                            <TableCell>
+                                                {producto.imagen_producto_url ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setPreviewImage(
+                                                                producto.imagen_producto_url,
+                                                            );
+                                                        }}
+                                                        data-test="producto-imagen-preview"
+                                                        className="cursor-zoom-in"
+                                                    >
+                                                        <img
+                                                            src={
+                                                                producto.imagen_producto_url
+                                                            }
+                                                            alt=""
+                                                            loading="lazy"
+                                                            className="h-10 w-10 rounded-md border object-cover transition hover:opacity-80"
+                                                        />
+                                                    </button>
+                                                ) : (
+                                                    <div className="text-muted-foreground flex h-10 w-10 items-center justify-center rounded-md border text-xs">
+                                                        —
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                            {columnOrder.map((key) => (
+                                                <TableCell
+                                                    key={key}
+                                                    className={cn(
+                                                        accessors[key]
+                                                            ?.align ===
+                                                            'right' &&
+                                                            'text-right',
+                                                        accessors[key]?.color,
+                                                    )}
+                                                >
+                                                    {renderCellValue(
+                                                        key,
+                                                        producto,
+                                                    )}
+                                                </TableCell>
+                                            ))}
                                         </TableRow>
                                     ))}
                                 </TableBody>

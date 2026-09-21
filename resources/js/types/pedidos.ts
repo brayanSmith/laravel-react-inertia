@@ -106,6 +106,7 @@ export type Pedido = {
     retefuente: string;
     facturacion_electronica: boolean;
     turno: string | null;
+    deleted_at?: string | null;
     cliente?: ClienteOption | null;
     bodega?: { id: number; nombre_bodega: string } | null;
     user?: VendedorOption | null;

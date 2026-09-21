@@ -13,6 +13,8 @@ export type NavItem = {
     isActive?: boolean;
     /** A count shown as a badge; hidden when 0 or missing. */
     badge?: number;
+    /** A second count shown in red next to the badge (e.g. pending items). */
+    badgePendiente?: number;
 };
 
 /** A sidebar section. Without a `label` its items are standalone links. */

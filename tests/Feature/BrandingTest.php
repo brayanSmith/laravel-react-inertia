@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Compra;
 use App\Models\Empresa;
 use App\Models\Team;
 use App\Models\User;
@@ -29,4 +30,19 @@ test('the app is branded with the company name and logo from Empresas', function
         )
         ->assertSee('/storage/empresa/logo.png', false)
         ->assertDontSee('/favicon.ico', false);
+});
+
+test('the sidebar counts the compras and how many are still pending', function () {
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    attachTeamMember($team, $owner, 'Owner');
+
+    Compra::factory()->count(2)->create(['estado' => 'PENDIENTE']);
+    Compra::factory()->create(['estado' => 'RECIBIDA']);
+
+    $this->actingAs($owner)->get(route('dashboard', $team))
+        ->assertInertia(fn ($page) => $page
+            ->where('navCounts.compras', 3)
+            ->where('navCounts.comprasPendientes', 2)
+        );
 });

@@ -55,6 +55,8 @@ export type HeaderCellHandlers = {
 
 const MIN_COLUMN_WIDTH = 60;
 const DEFAULT_COLUMN_WIDTH = 160;
+/** Fits two icon buttons (edit / delete); a column with more passes its own `width`. */
+const ACTIONS_COLUMN_WIDTH = 112;
 const DEFAULT_PAGE_SIZE = 25;
 
 export type UseDataTableOptions<T> = {
@@ -80,7 +82,11 @@ function normalizeColumn<T>(
         filter,
         sortable: column.sortable ?? filter !== 'none',
         hideable: column.hideable ?? filter !== 'none',
-        width: column.width ?? DEFAULT_COLUMN_WIDTH,
+        width:
+            column.width ??
+            (column.key === 'acciones'
+                ? ACTIONS_COLUMN_WIDTH
+                : DEFAULT_COLUMN_WIDTH),
     };
 }
 
@@ -99,8 +105,17 @@ export function useDataTable<T>({
     searchableText,
 }: UseDataTableOptions<T>) {
     const pageSize = paginate ? requestedPageSize : Number.MAX_SAFE_INTEGER;
+    // The "acciones" column always leads, so a row's buttons are at its
+    // start instead of scrolled off at the end of a wide table.
     const normalizedColumns = useMemo(
-        () => columns.map(normalizeColumn),
+        () =>
+            [...columns]
+                .sort(
+                    (a, b) =>
+                        Number(b.key === 'acciones') -
+                        Number(a.key === 'acciones'),
+                )
+                .map(normalizeColumn),
         [columns],
     );
     const columnsMap = useMemo(
