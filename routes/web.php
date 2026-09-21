@@ -8,6 +8,7 @@ use App\Http\Controllers\CotizadorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GastoController;
+use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\InicioSesionController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\PedidoController;
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'verified'])
         Route::delete('gastos/{gasto}', [GastoController::class, 'destroy'])->name('gastos.destroy');
         Route::patch('gastos/{gasto}/restaurar', [GastoController::class, 'restore'])->withTrashed()->name('gastos.restore');
 
+        Route::get('historial', [HistorialController::class, 'index'])->name('historial.index');
         Route::get('inicios-sesion', [InicioSesionController::class, 'index'])->name('inicios-sesion.index');
 
         Route::get('cotizador', [CotizadorController::class, 'index'])->name('cotizador.index');

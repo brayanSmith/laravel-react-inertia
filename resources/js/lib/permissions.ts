@@ -28,6 +28,7 @@ const RESOURCE_LABELS: Record<string, string> = {
     cotizador: 'Cotizador',
     pos: 'POS',
     'inicios-sesion': 'Inicios de sesión',
+    historial: 'Historial de cambios',
     traslados: 'Traslados',
     dashboard: 'Panel',
     team: 'Equipo',

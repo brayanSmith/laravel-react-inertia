@@ -6,11 +6,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Pedido extends Model
 {
     //
     use HasFactory;
+    use LogsActivity;
     use SoftDeletes;
 
     protected $fillable = [
@@ -49,6 +52,75 @@ class Pedido extends Model
         'retefuente' => 'decimal:2',
         'facturacion_electronica' => 'boolean',
     ];
+
+    /**
+     * What gets written to the history. Totals, balance and states are left
+     * out on purpose: they are derived from the products and the abonos,
+     * which are logged on their own.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('pedidos')
+            ->logOnly([
+                'cliente_id', 'fecha', 'user_id', 'bodega_id', 'tipo_precio', 'tipo_pago', 'turno',
+                'placa', 'facturacion_electronica', 'observacion', 'observacion_pago',
+                'flete', 'descuento', 'reteica', 'retefuente',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $event): string => match ($event) {
+                'created' => 'Pedido creado',
+                'updated' => 'Pedido editado',
+                'deleted' => 'Pedido eliminado',
+                'restored' => 'Pedido restaurado',
+                default => "Pedido {$event}",
+            });
+    }
+
+    /**
+     * The lines of the pedido as plain data, to compare before and after an
+     * edit and to write them to the history.
+     *
+     * @return list<array{producto: string, cantidad: float, precio_unitario: float}>
+     */
+    public function resumenDetalles(): array
+    {
+        return $this->detalles()
+            ->with('producto:id,concatenar_codigo_nombre,referencia_producto')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (DetallePedido $detalle): array => [
+                'producto' => $detalle->producto?->concatenar_codigo_nombre ?? $detalle->producto?->referencia_producto ?? 'Producto '.$detalle->producto_id,
+                'cantidad' => (float) $detalle->cantidad,
+                'precio_unitario' => (float) $detalle->precio_unitario,
+            ])
+            ->all();
+    }
+
+    /**
+     * Writes a "productos" entry to the history when the lines of the pedido
+     * changed (or when there were none before, i.e. on creation).
+     *
+     * @param  list<array{producto: string, cantidad: float, precio_unitario: float}>|null  $antes
+     */
+    public function registrarCambioDetalles(?array $antes, float $totalAntes = 0.0): void
+    {
+        $despues = $this->resumenDetalles();
+
+        if ($antes === $despues) {
+            return;
+        }
+
+        activity('pedidos')
+            ->performedOn($this)
+            ->event('detalles')
+            ->withProperties([
+                'old' => $antes === null ? [] : ['productos' => $antes, 'total_a_pagar' => $totalAntes],
+                'attributes' => ['productos' => $despues, 'total_a_pagar' => (float) $this->fresh()->total_a_pagar],
+            ])
+            ->log($antes === null ? 'Productos del pedido' : 'Productos del pedido modificados');
+    }
 
     public function cliente()
     {

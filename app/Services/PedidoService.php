@@ -52,6 +52,7 @@ class PedidoService
 
             $this->syncDetalles($pedido, $data['detalles']);
             $this->registrarAbonos($pedido, $data['abonos'] ?? []);
+            $pedido->registrarCambioDetalles(null);
 
             return $pedido;
         });

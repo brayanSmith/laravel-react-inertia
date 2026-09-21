@@ -31,6 +31,7 @@ class PermissionSeeder extends Seeder
         'cotizador' => ['view'],
         'pos' => ['view', 'create', 'create-producto', 'create-cliente', 'view-all-pedidos'],
         'inicios-sesion' => ['view'],
+        'historial' => ['view'],
         'roles' => ['view', 'create', 'update', 'delete'],
         'dashboard' => ['widget-productos', 'widget-ganancia', 'widget-ajustes', 'tabla-bodegas', 'chart-categorias', 'chart-top-productos', 'chart-pedidos', 'alerta-stock'],
         'traslados' => ['view', 'create', 'update', 'delete'],

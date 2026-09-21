@@ -6,6 +6,7 @@ import {
     Calculator,
     ClipboardList,
     FileText,
+    History,
     LayoutGrid,
     LogIn,
     MonitorSmartphone,
@@ -39,6 +40,7 @@ import { index as comprasIndex } from '@/routes/compras';
 import { index as cotizadorIndex } from '@/routes/cotizador';
 import { edit as empresaEdit } from '@/routes/empresa';
 import { index as gastosIndex } from '@/routes/gastos';
+import { index as historialIndex } from '@/routes/historial';
 import { index as iniciosSesionIndex } from '@/routes/inicios-sesion';
 import { index as marcasIndex } from '@/routes/marcas';
 import { index as pedidosIndex } from '@/routes/pedidos';
@@ -207,6 +209,12 @@ export function AppSidebar() {
                     'Roles y Permisos',
                     rolesIndex,
                     Shield,
+                ),
+                ...entry(
+                    page.props.canViewHistorial,
+                    'Historial de cambios',
+                    historialIndex,
+                    History,
                 ),
                 ...entry(
                     page.props.canViewIniciosSesion,

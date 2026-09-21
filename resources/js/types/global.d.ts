@@ -34,6 +34,7 @@ declare module '@inertiajs/core' {
             canViewStockIniciales: boolean;
             canViewStockBodegas: boolean;
             canViewTraslados: boolean;
+            canViewHistorial: boolean;
             canViewIniciosSesion: boolean;
             /** Record totals shown as sidebar badges. */
             navCounts: {

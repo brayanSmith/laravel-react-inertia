@@ -192,6 +192,9 @@ class PedidoController extends Controller
         $data = $edicion->restringir($pedido, $request->validated(), $request->user(), $module);
 
         DB::transaction(function () use ($pedido, $data, $pedidoService): void {
+            $detallesAntes = $pedido->resumenDetalles();
+            $totalAntes = (float) $pedido->total_a_pagar;
+
             foreach ($pedido->detalles as $detalle) {
                 $pedidoService->adjustStock($detalle, $pedido, 1);
             }
@@ -215,6 +218,7 @@ class PedidoController extends Controller
             ]);
 
             $pedidoService->syncDetalles($pedido, $data['detalles']);
+            $pedido->registrarCambioDetalles($detallesAntes, $totalAntes);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido updated.')]);
