@@ -33,7 +33,14 @@ class CompraController extends Controller
         $eliminados = $this->verEliminados($request, 'compras');
 
         return Inertia::render('compras/index', [
-            'compras' => Compra::with(['proveedor', 'detallesCompra' => fn ($query) => $query->withTrashed()->with(['producto', 'bodega'])])
+            'compras' => Compra::select(['id', 'factura', 'proveedor_id', 'fecha', 'estado', 'subtotal', 'descuento', 'total_a_pagar', 'deleted_at'])
+                ->with([
+                    'proveedor:id,nombre_proveedor',
+                    // Only what the listing shows: the table has a column per bodega with its products.
+                    'detallesCompra' => fn ($query) => $query->withTrashed()
+                        ->select(['id', 'compra_id', 'producto_id', 'bodega_id'])
+                        ->with(['producto:id,referencia_producto,concatenar_codigo_nombre', 'bodega:id,nombre_bodega']),
+                ])
                 ->when($eliminados, fn ($query) => $query->onlyTrashed())
                 ->orderByDesc('fecha')
                 ->get(),

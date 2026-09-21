@@ -55,6 +55,8 @@ export type ProductoPedidoOption = {
     costo_producto: string | null;
     tipo_vehiculo?: string | null;
     stock_bodegas?: StockBodegaOption[];
+    /** Sum of the product's stock over every bodega (the pedidos listing). */
+    stock_total?: number | string | null;
 };
 
 export type PedidoDetalle = {

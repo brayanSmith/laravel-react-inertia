@@ -44,13 +44,25 @@ class PedidoController extends Controller
         $eliminados = $this->verEliminados($request, $module);
 
         return Inertia::render("{$module}/index", [
-            'pedidos' => Pedido::with([
-                'cliente',
-                'bodega',
-                'user',
-                'detalles' => fn ($query) => $query->withTrashed()->with('producto.stockBodegas'),
-                'abonos.puc',
+            // Only the fields the listing shows: every pedido brings its lines,
+            // products and payments, so whole models add up to megabytes.
+            'pedidos' => Pedido::select([
+                'id', 'fecha', 'estado', 'estado_pago', 'tipo_precio', 'turno', 'observacion', 'observacion_pago',
+                'total_a_pagar', 'saldo_pendiente', 'descuento', 'reteica', 'retefuente', 'deleted_at',
+                'cliente_id', 'bodega_id', 'user_id',
             ])
+                ->with([
+                    'cliente:id,razon_social,numero_documento',
+                    'bodega:id,nombre_bodega',
+                    'user:id,name',
+                    'detalles' => fn ($query) => $query->withTrashed()
+                        ->select(['id', 'pedido_id', 'producto_id', 'cantidad', 'precio_unitario', 'subtotal', 'costo_unitario', 'costo_total', 'ganancia_total'])
+                        ->with(['producto' => fn ($query) => $query
+                            ->select(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'tipo_vehiculo'])
+                            ->withSum('stockBodegas as stock_total', 'stock')]),
+                    'abonos:id,pedido_id,puc_id',
+                    'abonos.puc:id,concatenar_subcuenta_concepto',
+                ])
                 ->when($eliminados, fn ($query) => $query->onlyTrashed())
                 ->where('tipo_precio', $this->tipoPrecio($module))
                 ->orderByDesc('fecha')

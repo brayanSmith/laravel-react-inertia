@@ -176,10 +176,7 @@ function productoLabelFor(detalle: PedidoDetalle): string {
 }
 
 function stockTotalFor(detalle: PedidoDetalle): number {
-    return (detalle.producto?.stock_bodegas ?? []).reduce(
-        (sum, stockBodega) => sum + Number(stockBodega.stock ?? 0),
-        0,
-    );
+    return Number(detalle.producto?.stock_total ?? 0);
 }
 
 function getSortValue(row: DetalleRow, key: ColumnKey): string | number {

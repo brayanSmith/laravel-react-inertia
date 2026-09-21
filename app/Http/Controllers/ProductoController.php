@@ -10,9 +10,12 @@ use App\Models\DetalleCompra;
 use App\Models\DetallePedido;
 use App\Models\Marca;
 use App\Models\Producto;
+use App\Models\Proveedor;
+use App\Models\StockBodega;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -31,18 +34,8 @@ class ProductoController extends Controller
 
         $eliminados = $this->verEliminados($request, 'productos');
 
-        $productos = Producto::with([
-            'marca',
-            'stockBodegas',
-            'detalleCompras' => fn ($query) => $query->where('estado_entrega', 'PENDIENTE')->with('compra.proveedor'),
-        ])
-            ->when($eliminados, fn ($query) => $query->onlyTrashed())
-            ->orderBy('referencia_producto')
-            ->get()
-            ->map(fn (Producto $producto) => $this->withListingData($producto));
-
         return Inertia::render('productos/index', [
-            'productos' => $productos,
+            'productos' => $this->listado($eliminados),
             'eliminados' => $eliminados,
             'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'marcas' => Marca::orderBy('marca')->get(['id', 'marca']),
@@ -217,31 +210,84 @@ class ProductoController extends Controller
     }
 
     /**
-     * Build the listing array for a producto, adding stock and pending-purchase summaries.
+     * The productos listing with its stock per bodega and pending purchases.
      *
-     * @return array<string, mixed>
+     * Built from plain rows plus three small queries instead of hydrating
+     * every model with its relations (which took seconds and megabytes): the
+     * listing has thousands of products and only needs a handful of numbers
+     * from each.
+     *
+     * @return list<array<string, mixed>>
      */
-    private function withListingData(Producto $producto): array
+    private function listado(bool $eliminados): array
     {
-        $pendientes = $producto->detalleCompras;
+        $productos = Producto::query()
+            ->when($eliminados, fn ($query) => $query->onlyTrashed())
+            ->orderBy('referencia_producto')
+            ->toBase()
+            ->get([
+                'id', 'categoria', 'tipo', 'inventariable', 'sku', 'ancho', 'perfil', 'construccion', 'rin',
+                'tipo_vehiculo', 'diametro', 'marca_id', 'referencia_producto', 'descripcion_producto',
+                'costo_producto', 'valor_detal', 'valor_mayorista', 'valor_sin_instalacion',
+                'imagen_producto', 'concatenar_codigo_nombre',
+            ]);
 
-        $proveedoresPendientes = $pendientes
-            ->pluck('compra.proveedor.nombre_proveedor')
-            ->filter()
-            ->unique()
-            ->values();
+        $marcas = Marca::pluck('marca', 'id');
 
-        $data = $producto->toArray();
-        $data['stock_total'] = (float) $producto->stockBodegas->sum('stock');
-        $data['pendiente'] = $pendientes->pluck('compra_id')->unique()->count();
-        $data['proveedor_pendiente'] = $proveedoresPendientes->isEmpty()
-            ? null
-            : $proveedoresPendientes->implode(', ');
-        $data['stock_por_bodega'] = $producto->stockBodegas->pluck('stock', 'bodega_id');
+        $stock = StockBodega::query()
+            ->whereIn('producto_id', $productos->pluck('id'))
+            ->get(['producto_id', 'bodega_id', 'stock'])
+            ->groupBy('producto_id');
 
-        unset($data['stock_bodegas'], $data['detalle_compras']);
+        // Pending (not yet received) purchase lines, with their proveedor.
+        $proveedores = (new Proveedor)->getTable();
 
-        return $data;
+        $pendientes = DB::table('detalle_compras')
+            ->join('compras', 'compras.id', '=', 'detalle_compras.compra_id')
+            ->leftJoin($proveedores, "{$proveedores}.id", '=', 'compras.proveedor_id')
+            ->where('detalle_compras.estado_entrega', 'PENDIENTE')
+            ->whereNull('detalle_compras.deleted_at')
+            ->whereNull('compras.deleted_at')
+            ->get(['detalle_compras.producto_id', 'detalle_compras.compra_id', "{$proveedores}.nombre_proveedor"])
+            ->groupBy('producto_id');
+
+        $dinero = fn (mixed $valor): ?string => $valor === null ? null : number_format((float) $valor, 2, '.', '');
+
+        return $productos->map(function (object $producto) use ($marcas, $stock, $pendientes, $dinero): array {
+            $filasStock = $stock->get($producto->id, collect());
+            $filasPendientes = $pendientes->get($producto->id, collect());
+            $proveedores = $filasPendientes->pluck('nombre_proveedor')->filter()->unique()->values();
+
+            return [
+                'id' => $producto->id,
+                'categoria' => $producto->categoria,
+                'tipo' => $producto->tipo,
+                'inventariable' => (bool) $producto->inventariable,
+                'sku' => $producto->sku,
+                'ancho' => $producto->ancho,
+                'perfil' => $producto->perfil,
+                'construccion' => $producto->construccion,
+                'rin' => $producto->rin,
+                'tipo_vehiculo' => $producto->tipo_vehiculo,
+                'diametro' => $producto->diametro,
+                'marca_id' => $producto->marca_id,
+                'marca' => isset($marcas[$producto->marca_id])
+                    ? ['id' => $producto->marca_id, 'marca' => $marcas[$producto->marca_id]]
+                    : null,
+                'referencia_producto' => $producto->referencia_producto,
+                'descripcion_producto' => $producto->descripcion_producto,
+                'costo_producto' => $dinero($producto->costo_producto),
+                'valor_detal' => $dinero($producto->valor_detal),
+                'valor_mayorista' => $dinero($producto->valor_mayorista),
+                'valor_sin_instalacion' => $dinero($producto->valor_sin_instalacion),
+                'imagen_producto_url' => $producto->imagen_producto ? Storage::disk('public')->url($producto->imagen_producto) : null,
+                'concatenar_codigo_nombre' => $producto->concatenar_codigo_nombre,
+                'stock_total' => (float) $filasStock->sum('stock'),
+                'pendiente' => $filasPendientes->pluck('compra_id')->unique()->count(),
+                'proveedor_pendiente' => $proveedores->isEmpty() ? null : $proveedores->implode(', '),
+                'stock_por_bodega' => $filasStock->pluck('stock', 'bodega_id'),
+            ];
+        })->all();
     }
 
     /**
