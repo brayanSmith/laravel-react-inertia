@@ -85,14 +85,14 @@ class CompraController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Compra created.')]);
 
-        return to_route('compras.index', ['current_team' => $request->route('current_team')]);
+        return to_route('compras.index');
     }
 
     /**
      * The full detail of a compra (header and lines) as JSON, for the
      * read-only "ver" modal. Loaded on demand so the listing stays light.
      */
-    public function show(string $current_team, Compra $compra): JsonResponse
+    public function show(Compra $compra): JsonResponse
     {
         Gate::authorize('compras.view');
 
@@ -106,7 +106,7 @@ class CompraController extends Controller
     /**
      * Show the form for editing the specified compra.
      */
-    public function edit(Request $request, string $current_team, Compra $compra): Response
+    public function edit(Request $request, Compra $compra): Response
     {
         Gate::authorize('compras.update');
 
@@ -120,7 +120,7 @@ class CompraController extends Controller
     /**
      * Update the specified compra.
      */
-    public function update(UpdateCompraRequest $request, string $current_team, Compra $compra): RedirectResponse
+    public function update(UpdateCompraRequest $request, Compra $compra): RedirectResponse
     {
         Gate::authorize('compras.update');
 
@@ -146,13 +146,13 @@ class CompraController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Compra updated.')]);
 
-        return to_route('compras.edit', ['current_team' => $current_team, 'compra' => $compra]);
+        return to_route('compras.edit', ['compra' => $compra]);
     }
 
     /**
      * Remove the specified compra.
      */
-    public function destroy(string $current_team, Compra $compra): RedirectResponse
+    public function destroy(Compra $compra): RedirectResponse
     {
         Gate::authorize('compras.delete');
 
@@ -167,7 +167,7 @@ class CompraController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Compra deleted.')]);
 
-        return to_route('compras.index', ['current_team' => $current_team]);
+        return to_route('compras.index');
     }
 
     /**
@@ -237,7 +237,7 @@ class CompraController extends Controller
             'productos' => Producto::whereIn('categoria', ['LLANTA', 'RIN', 'OTRO'])
                 ->orderBy('referencia_producto')
                 ->get(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'costo_producto']),
-            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
         ];
     }
 
@@ -250,6 +250,8 @@ class CompraController extends Controller
             'canCreate' => $request->user()->can('compras.create'),
             'canUpdate' => $request->user()->can('compras.update'),
             'canDelete' => $request->user()->can('compras.delete'),
+            'canViewDeleted' => $request->user()->can('compras.view-deleted'),
+            'canRestore' => $request->user()->can('compras.restore'),
         ];
     }
 
@@ -257,7 +259,7 @@ class CompraController extends Controller
      * Restore a deleted compra with its lines, receiving again the stock
      * of the lines that had been received.
      */
-    public function restore(string $current_team, Compra $compra): RedirectResponse
+    public function restore(Compra $compra): RedirectResponse
     {
         return $this->restaurarRegistro('compras', $compra, __('Compra restored.'), function (Compra $compra): void {
             DB::transaction(function () use ($compra): void {

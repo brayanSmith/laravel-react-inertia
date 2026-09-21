@@ -8,7 +8,6 @@ use App\Models\Marca;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Proveedor;
-use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
@@ -21,14 +20,13 @@ beforeEach(function () {
 
 test('owners can view, create, update and delete productos without a custom role', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
     $marca = Marca::factory()->create(['marca' => 'WANDA']);
 
-    $this->actingAs($owner)->get(route('productos.index', $team))->assertOk();
-    $this->actingAs($owner)->get(route('productos.create', $team))->assertOk();
+    $this->actingAs($owner)->get(route('productos.index'))->assertOk();
+    $this->actingAs($owner)->get(route('productos.create'))->assertOk();
 
-    $response = $this->actingAs($owner)->post(route('productos.store', $team), [
+    $response = $this->actingAs($owner)->post(route('productos.store'), [
         'categoria' => 'LLANTA',
         'tipo' => 'NUEVO',
         'inventariable' => true,
@@ -44,15 +42,15 @@ test('owners can view, create, update and delete productos without a custom role
         'valor_mayorista' => 130000,
     ]);
 
-    $response->assertRedirect(route('productos.index', $team));
+    $response->assertRedirect(route('productos.index'));
 
     $producto = Producto::firstOrFail();
     expect($producto->concatenar_codigo_nombre)->toBe('155R13-WANDA-8PR/WR082/90/88N');
 
-    $this->actingAs($owner)->get(route('productos.show', [$team, $producto]))->assertOk();
-    $this->actingAs($owner)->get(route('productos.edit', [$team, $producto]))->assertOk();
+    $this->actingAs($owner)->get(route('productos.show', [$producto]))->assertOk();
+    $this->actingAs($owner)->get(route('productos.edit', [$producto]))->assertOk();
 
-    $this->actingAs($owner)->patch(route('productos.update', [$team, $producto]), [
+    $this->actingAs($owner)->patch(route('productos.update', [$producto]), [
         'categoria' => 'LLANTA',
         'tipo' => 'NUEVO',
         'ancho' => '155',
@@ -62,33 +60,31 @@ test('owners can view, create, update and delete productos without a custom role
         'marca_id' => $marca->id,
         'referencia_producto' => '155R13',
         'descripcion_producto' => 'Actualizada',
-    ])->assertRedirect(route('productos.index', $team));
+    ])->assertRedirect(route('productos.index'));
 
     expect($producto->fresh()->descripcion_producto)->toBe('Actualizada');
     expect($producto->fresh()->concatenar_codigo_nombre)->toBe('155R13-WANDA-Actualizada');
 
-    $this->actingAs($owner)->delete(route('productos.destroy', [$team, $producto]))
-        ->assertRedirect(route('productos.index', $team));
+    $this->actingAs($owner)->delete(route('productos.destroy', [$producto]))
+        ->assertRedirect(route('productos.index'));
 
     expect(Producto::withTrashed()->find($producto->id)->trashed())->toBeTrue();
 });
 
 test('members without permission cannot view productos', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('productos.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('productos.index'))->assertForbidden();
 });
 
 test('sku must be unique when provided', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     Producto::factory()->create(['sku' => '12345678']);
 
-    $this->actingAs($owner)->post(route('productos.store', $team), [
+    $this->actingAs($owner)->post(route('productos.store'), [
         'categoria' => 'OTRO',
         'tipo' => 'NUEVO',
         'sku' => '12345678',
@@ -97,8 +93,7 @@ test('sku must be unique when provided', function () {
 
 test('the detalles endpoint returns paginated pedido and compra history for a producto', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $producto = Producto::factory()->create();
     $otroProducto = Producto::factory()->create();
@@ -113,7 +108,7 @@ test('the detalles endpoint returns paginated pedido and compra history for a pr
     DetalleCompra::factory()->create(['producto_id' => $producto->id, 'compra_id' => $compra->id]);
     DetalleCompra::factory()->create(['producto_id' => $otroProducto->id]);
 
-    $response = $this->actingAs($owner)->getJson(route('productos.detalles', [$team, $producto]));
+    $response = $this->actingAs($owner)->getJson(route('productos.detalles', [$producto]));
 
     $response->assertOk();
     $response->assertJsonCount(1, 'detallePedidos.data');
@@ -124,45 +119,42 @@ test('the detalles endpoint returns paginated pedido and compra history for a pr
 
 test('members without permission cannot view producto detalles', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
     $producto = Producto::factory()->create();
 
-    $this->actingAs($member)->getJson(route('productos.detalles', [$team, $producto]))->assertForbidden();
+    $this->actingAs($member)->getJson(route('productos.detalles', [$producto]))->assertForbidden();
 });
 
 test('creating a producto from another screen can keep the user there', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $payload = ['categoria' => 'OTRO', 'tipo' => 'NUEVO', 'referencia_producto' => 'X-1'];
 
-    $this->actingAs($owner)->from(route('pos.index', $team))
-        ->post(route('productos.store', $team), $payload + ['stay_on_page' => '1'])
-        ->assertRedirect(route('pos.index', $team));
+    $this->actingAs($owner)->from(route('pos.index'))
+        ->post(route('productos.store'), $payload + ['stay_on_page' => '1'])
+        ->assertRedirect(route('pos.index'));
 
     $this->actingAs($owner)
-        ->post(route('productos.store', $team), ['referencia_producto' => 'X-2'] + $payload)
-        ->assertRedirect(route('productos.index', $team));
+        ->post(route('productos.store'), ['referencia_producto' => 'X-2'] + $payload)
+        ->assertRedirect(route('productos.index'));
 });
 
 test('tipo servicio only pairs with the servicio category', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $base = ['referencia_producto' => 'SRV-1', 'inventariable' => false];
 
     $this->actingAs($owner)
-        ->post(route('productos.store', $team), $base + ['categoria' => 'OTRO', 'tipo' => 'SERVICIO'])
+        ->post(route('productos.store'), $base + ['categoria' => 'OTRO', 'tipo' => 'SERVICIO'])
         ->assertSessionHasErrors('tipo');
 
     $this->actingAs($owner)
-        ->post(route('productos.store', $team), $base + ['categoria' => 'SERVICIO', 'tipo' => 'NUEVO'])
+        ->post(route('productos.store'), $base + ['categoria' => 'SERVICIO', 'tipo' => 'NUEVO'])
         ->assertSessionHasErrors('tipo');
 
     $this->actingAs($owner)
-        ->post(route('productos.store', $team), $base + ['categoria' => 'SERVICIO', 'tipo' => 'SERVICIO'])
+        ->post(route('productos.store'), $base + ['categoria' => 'SERVICIO', 'tipo' => 'SERVICIO'])
         ->assertSessionHasNoErrors();
 });

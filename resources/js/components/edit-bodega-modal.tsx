@@ -16,18 +16,12 @@ import { update } from '@/routes/bodegas';
 import type { Bodega } from '@/types';
 
 type Props = {
-    teamSlug: string;
     bodega: Bodega | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
-export default function EditBodegaModal({
-    teamSlug,
-    bodega,
-    open,
-    onOpenChange,
-}: Props) {
+export default function EditBodegaModal({ bodega, open, onOpenChange }: Props) {
     if (!bodega) {
         return null;
     }
@@ -37,7 +31,7 @@ export default function EditBodegaModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, bodega.id])}
+                    {...update.form([bodega.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

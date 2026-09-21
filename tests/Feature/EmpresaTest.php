@@ -1,17 +1,15 @@
 <?php
 
 use App\Models\Empresa;
-use App\Models\Team;
 use App\Models\User;
 
 test('owners can view and create the company profile without a custom role', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->get(route('empresa.edit', $team))->assertOk();
+    $this->actingAs($owner)->get(route('empresa.edit'))->assertOk();
 
-    $this->actingAs($owner)->patch(route('empresa.update', $team), [
+    $this->actingAs($owner)->patch(route('empresa.update'), [
         'nombre_empresa' => 'Llantas El Sol',
         'nit_empresa' => '900123456-1',
     ])->assertRedirect();
@@ -22,12 +20,11 @@ test('owners can view and create the company profile without a custom role', fun
 
 test('owners can update the existing company profile', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     Empresa::factory()->create(['nombre_empresa' => 'Nombre Original']);
 
-    $this->actingAs($owner)->patch(route('empresa.update', $team), [
+    $this->actingAs($owner)->patch(route('empresa.update'), [
         'nombre_empresa' => 'Nombre Actualizado',
     ])->assertRedirect();
 
@@ -37,12 +34,11 @@ test('owners can update the existing company profile', function () {
 
 test('members without permission cannot view or update the company profile', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('empresa.edit', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('empresa.edit'))->assertForbidden();
 
-    $this->actingAs($member)->patch(route('empresa.update', $team), [
+    $this->actingAs($member)->patch(route('empresa.update'), [
         'nombre_empresa' => 'Intento no autorizado',
     ])->assertForbidden();
 });

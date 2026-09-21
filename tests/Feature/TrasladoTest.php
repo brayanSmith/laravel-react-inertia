@@ -3,7 +3,6 @@
 use App\Models\Bodega;
 use App\Models\Producto;
 use App\Models\StockBodega;
-use App\Models\Team;
 use App\Models\Traslado;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
@@ -17,15 +16,14 @@ beforeEach(function () {
 
 test('owners can view, create, update and delete traslados without a custom role', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
     $producto = Producto::factory()->create();
     $bodegaDonante = Bodega::factory()->create();
     $bodegaDestino = Bodega::factory()->create();
 
-    $this->actingAs($owner)->get(route('traslados.index', $team))->assertOk();
+    $this->actingAs($owner)->get(route('traslados.index'))->assertOk();
 
-    $this->actingAs($owner)->post(route('traslados.store', $team), [
+    $this->actingAs($owner)->post(route('traslados.store'), [
         'producto_id' => $producto->id,
         'bodega_donante_id' => $bodegaDonante->id,
         'bodega_destino_id' => $bodegaDestino->id,
@@ -43,7 +41,7 @@ test('owners can view, create, update and delete traslados without a custom role
     expect((float) $stockDestino->entradas)->toBe(10.0);
     expect((float) $stockDestino->stock)->toBe(10.0);
 
-    $this->actingAs($owner)->patch(route('traslados.update', [$team, $traslado]), [
+    $this->actingAs($owner)->patch(route('traslados.update', [$traslado]), [
         'producto_id' => $producto->id,
         'bodega_donante_id' => $bodegaDonante->id,
         'bodega_destino_id' => $bodegaDestino->id,
@@ -55,7 +53,7 @@ test('owners can view, create, update and delete traslados without a custom role
     expect((float) $stockDonante->fresh()->stock)->toBe(-6.0);
     expect((float) $stockDestino->fresh()->stock)->toBe(6.0);
 
-    $this->actingAs($owner)->delete(route('traslados.destroy', [$team, $traslado]))
+    $this->actingAs($owner)->delete(route('traslados.destroy', [$traslado]))
         ->assertRedirect();
 
     expect(Traslado::find($traslado->id))->toBeNull();
@@ -65,29 +63,26 @@ test('owners can view, create, update and delete traslados without a custom role
 
 test('members without permission cannot view traslados', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('traslados.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('traslados.index'))->assertForbidden();
 });
 
 test('bodega_donante_id, bodega_destino_id, producto_id and cantidad are required', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->post(route('traslados.store', $team), [])
+    $this->actingAs($owner)->post(route('traslados.store'), [])
         ->assertSessionHasErrors(['producto_id', 'bodega_donante_id', 'bodega_destino_id', 'cantidad']);
 });
 
 test('the destination bodega must be different from the donor bodega', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
     $producto = Producto::factory()->create();
     $bodega = Bodega::factory()->create();
 
-    $this->actingAs($owner)->post(route('traslados.store', $team), [
+    $this->actingAs($owner)->post(route('traslados.store'), [
         'producto_id' => $producto->id,
         'bodega_donante_id' => $bodega->id,
         'bodega_destino_id' => $bodega->id,

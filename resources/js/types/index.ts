@@ -16,7 +16,6 @@ export type * from './pucs';
 export type * from './roles';
 export type * from './stock-bodegas';
 export type * from './stock-iniciales';
-export type * from './teams';
 export type * from './traslados';
 export type * from './ui';
 export type * from './usuarios';

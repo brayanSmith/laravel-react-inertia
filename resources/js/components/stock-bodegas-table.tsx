@@ -45,6 +45,8 @@ type Props = {
     stockBodegas: StockBodega[];
     productos: NonNullable<StockBodega['producto']>[];
     bodegas: Bodega[];
+    /** The "Inversión" view (costs and prices) is only offered with `stock-bodegas.view-inversion`. */
+    canViewInversion: boolean;
 };
 
 type Vista = 'stock' | 'inversion';
@@ -517,8 +519,10 @@ export default function StockBodegasTable({
     stockBodegas,
     productos,
     bodegas: bodegasProp,
+    canViewInversion,
 }: Props) {
-    const [vista, setVista] = useState<Vista>('stock');
+    const [vistaElegida, setVista] = useState<Vista>('stock');
+    const vista: Vista = canViewInversion ? vistaElegida : 'stock';
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -1033,32 +1037,36 @@ export default function StockBodegasTable({
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <ToggleGroup
-                        type="single"
-                        variant="outline"
-                        value={vista}
-                        onValueChange={(value) => {
-                            if (value) {
-                                setVista(value as Vista);
-                            }
-                        }}
-                        data-test="stock-bodegas-vista-toggle"
-                    >
-                        <ToggleGroupItem
-                            value="stock"
-                            data-test="stock-bodegas-vista-stock"
-                            className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
+                    {
+                        <ToggleGroup
+                            type="single"
+                            variant="outline"
+                            value={vista}
+                            onValueChange={(value) => {
+                                if (value) {
+                                    setVista(value as Vista);
+                                }
+                            }}
+                            data-test="stock-bodegas-vista-toggle"
                         >
-                            Stock Bodegas
-                        </ToggleGroupItem>
-                        <ToggleGroupItem
-                            value="inversion"
-                            data-test="stock-bodegas-vista-inversion"
-                            className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
-                        >
-                            Inversión
-                        </ToggleGroupItem>
-                    </ToggleGroup>
+                            <ToggleGroupItem
+                                value="stock"
+                                data-test="stock-bodegas-vista-stock"
+                                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
+                            >
+                                Stock Bodegas
+                            </ToggleGroupItem>
+                            {canViewInversion ? (
+                                <ToggleGroupItem
+                                    value="inversion"
+                                    data-test="stock-bodegas-vista-inversion"
+                                    className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
+                                >
+                                    Inversión
+                                </ToggleGroupItem>
+                            ) : null}
+                        </ToggleGroup>
+                    }
 
                     {activeFilterCount > 0 ? (
                         <Button

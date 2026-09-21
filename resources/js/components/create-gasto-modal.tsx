@@ -20,15 +20,10 @@ import { store } from '@/routes/gastos';
 import type { Bodega } from '@/types';
 
 type Props = PropsWithChildren<{
-    teamSlug: string;
     bodegas: Bodega[];
 }>;
 
-export default function CreateGastoModal({
-    teamSlug,
-    bodegas,
-    children,
-}: Props) {
+export default function CreateGastoModal({ bodegas, children }: Props) {
     const [open, setOpen] = useState(false);
     const [bodegaId, setBodegaId] = useState<string>('');
 
@@ -55,7 +50,7 @@ export default function CreateGastoModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...store.form(teamSlug)}
+                    {...store.form()}
                     className="space-y-6"
                     onSuccess={() => handleOpenChange(false)}
                 >

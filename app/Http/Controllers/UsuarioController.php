@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Usuarios\StoreUsuarioRequest;
 use App\Http\Requests\Usuarios\UpdateUsuarioRequest;
-use App\Models\Team;
+use App\Models\Role;
 use App\Models\User;
-use App\Support\TeamRoles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,33 +16,20 @@ use Inertia\Response;
 class UsuarioController extends Controller
 {
     /**
-     * Display a listing of the team's staff users.
+     * Display a listing of the users.
      */
-    public function index(Request $request, string $current_team): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('usuarios.view');
 
-        $team = Team::where('slug', $current_team)->firstOrFail();
-
-        $usuarios = $team->members()->get()->map(function (User $member) use ($team) {
-            $tier = TeamRoles::tierRole($member, $team);
-
-            return [
-                'id' => $member->id,
-                'name' => $member->name,
-                'email' => $member->email,
-                'team_role' => $tier ? strtolower($tier->name) : null,
-                'team_role_label' => $tier?->name,
-                'roles' => $member->roles->whereNotIn('name', TeamRoles::TIERS)->pluck('id')->values(),
-                'is_owner' => $tier?->name === 'Owner',
-            ];
-        });
-
         return Inertia::render('usuarios/index', [
-            'team' => ['slug' => $team->slug],
-            'usuarios' => $usuarios,
-            'availableTeamRoles' => TeamRoles::toRoleOptions(TeamRoles::assignableTierRoles($team)),
-            'availableRoles' => TeamRoles::customRolesQuery($team)->orderBy('name')->get(['id', 'name']),
+            'usuarios' => User::query()->with('roles')->orderBy('name')->get()->map(fn (User $usuario) => [
+                'id' => $usuario->id,
+                'name' => $usuario->name,
+                'email' => $usuario->email,
+                'roles' => $usuario->roles->pluck('id')->values(),
+            ]),
+            'availableRoles' => Role::orderBy('name')->get(['id', 'name']),
             'permissions' => [
                 'canCreate' => $request->user()->can('usuarios.create'),
                 'canUpdate' => $request->user()->can('usuarios.update'),
@@ -53,15 +39,13 @@ class UsuarioController extends Controller
     }
 
     /**
-     * Create a new staff user and attach them to the current team.
+     * Create a new user with the given roles.
      */
-    public function store(StoreUsuarioRequest $request, string $current_team): RedirectResponse
+    public function store(StoreUsuarioRequest $request): RedirectResponse
     {
         Gate::authorize('usuarios.create');
 
-        $team = Team::where('slug', $current_team)->firstOrFail();
-
-        DB::transaction(function () use ($request, $team) {
+        DB::transaction(function () use ($request) {
             $usuario = User::create([
                 'name' => $request->validated('name'),
                 'email' => $request->validated('email'),
@@ -69,16 +53,7 @@ class UsuarioController extends Controller
             ]);
 
             $usuario->forceFill(['email_verified_at' => now()])->save();
-
-            $team->memberships()->create(['user_id' => $usuario->id]);
-
-            TeamRoles::assignTier($usuario, $team, ucfirst($request->validated('team_role')));
-
-            $roles = TeamRoles::customRolesQuery($team)
-                ->whereIn('id', $request->validated('roles', []))
-                ->get();
-
-            TeamRoles::syncCustomRoles($usuario, $team, $roles);
+            $usuario->syncRoles(Role::whereIn('id', $request->validated('roles', []))->get());
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario created.')]);
@@ -87,21 +62,13 @@ class UsuarioController extends Controller
     }
 
     /**
-     * Update the specified staff user.
+     * Update the specified user.
      */
-    public function update(UpdateUsuarioRequest $request, string $current_team, User $usuario): RedirectResponse
+    public function update(UpdateUsuarioRequest $request, User $usuario): RedirectResponse
     {
         Gate::authorize('usuarios.update');
 
-        $team = Team::where('slug', $current_team)->firstOrFail();
-
-        abort_unless($usuario->belongsToTeam($team), 404);
-
-        $tier = TeamRoles::tierRole($usuario, $team);
-
-        abort_if($tier?->name === 'Owner', 403, __('The team owner cannot be edited here.'));
-
-        DB::transaction(function () use ($request, $team, $usuario) {
+        DB::transaction(function () use ($request, $usuario) {
             $data = [
                 'name' => $request->validated('name'),
                 'email' => $request->validated('email'),
@@ -112,14 +79,7 @@ class UsuarioController extends Controller
             }
 
             $usuario->update($data);
-
-            TeamRoles::assignTier($usuario, $team, ucfirst($request->validated('team_role')));
-
-            $roles = TeamRoles::customRolesQuery($team)
-                ->whereIn('id', $request->validated('roles', []))
-                ->get();
-
-            TeamRoles::syncCustomRoles($usuario, $team, $roles);
+            $usuario->syncRoles(Role::whereIn('id', $request->validated('roles', []))->get());
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario updated.')]);
@@ -128,27 +88,15 @@ class UsuarioController extends Controller
     }
 
     /**
-     * Remove the specified staff user from the current team.
+     * Delete the specified user (never yourself).
      */
-    public function destroy(string $current_team, User $usuario): RedirectResponse
+    public function destroy(Request $request, User $usuario): RedirectResponse
     {
         Gate::authorize('usuarios.delete');
 
-        $team = Team::where('slug', $current_team)->firstOrFail();
+        abort_if($request->user()->is($usuario), 403, __('You cannot delete your own user.'));
 
-        abort_unless($usuario->belongsToTeam($team), 404);
-
-        abort_if($team->owner()?->is($usuario), 403, __('The team owner cannot be removed.'));
-
-        DB::transaction(function () use ($team, $usuario) {
-            TeamRoles::clearAllRoles($usuario, $team);
-
-            $team->memberships()->where('user_id', $usuario->id)->delete();
-        });
-
-        if ($usuario->isCurrentTeam($team)) {
-            $usuario->switchTeam($usuario->personalTeam());
-        }
+        $usuario->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Usuario removed.')]);
 

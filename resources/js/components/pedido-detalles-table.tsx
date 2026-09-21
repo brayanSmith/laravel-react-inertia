@@ -400,8 +400,6 @@ export default function PedidoDetallesTable({
     routes,
     eliminados = false,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -773,7 +771,7 @@ export default function PedidoDetallesTable({
 
                 return (
                     <Link
-                        href={routes.pedidos.edit([teamSlug, row.pedidoId])}
+                        href={routes.pedidos.edit([row.pedidoId])}
                         className="text-primary hover:underline"
                     >
                         #{row.pedidoId}

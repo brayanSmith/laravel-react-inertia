@@ -74,11 +74,8 @@ type PedidoDetalleCompleto = Omit<Pedido, 'detalles' | 'abonos'> & {
 
 /** Read-only view of a pedido: header, products, payments and totals. */
 export default function VerPedidoModal({ pedido, routes, onClose }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
-
     const { record, loading, failed } = useFetchedRecord<PedidoDetalleCompleto>(
-        pedido ? routes.pedidos.show([teamSlug, pedido.id]) : null,
+        pedido ? routes.pedidos.show([pedido.id]) : null,
     );
 
     const detalles = record?.detalles ?? [];
@@ -100,10 +97,7 @@ export default function VerPedidoModal({ pedido, routes, onClose }: Props) {
                     {pedido && !pedido.deleted_at ? (
                         <div className="pt-1">
                             <VoucherButton
-                                action={routes.pedidos.voucher([
-                                    teamSlug,
-                                    pedido.id,
-                                ])}
+                                action={routes.pedidos.voucher([pedido.id])}
                                 label="Descargar voucher"
                                 dataTest="ver-pedido-voucher"
                             />

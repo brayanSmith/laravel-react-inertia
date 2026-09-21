@@ -14,14 +14,12 @@ import { destroy } from '@/routes/compras';
 import type { Compra } from '@/types';
 
 type Props = {
-    teamSlug: string;
     compra: Compra | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function DeleteCompraModal({
-    teamSlug,
     compra,
     open,
     onOpenChange,
@@ -33,7 +31,7 @@ export default function DeleteCompraModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, compra.id]), {
+        router.visit(destroy([compra.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

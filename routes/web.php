@@ -15,18 +15,16 @@ use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\PucController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StockBodegaController;
 use App\Http\Controllers\StockInicialController;
-use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\TrasladoController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
-Route::prefix('{current_team}')
-    ->middleware(['auth', 'verified', EnsureTeamMembership::class])
+Route::middleware(['auth', 'verified'])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
@@ -35,6 +33,12 @@ Route::prefix('{current_team}')
         Route::patch('clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
         Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
         Route::patch('clientes/{cliente}/restaurar', [ClienteController::class, 'restore'])->withTrashed()->name('clientes.restore');
+
+        Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+        Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
+        Route::patch('roles/miembros/{user}', [RoleController::class, 'updateMember'])->name('roles.members.update');
+        Route::patch('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
 
         Route::get('usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
         Route::post('usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
@@ -142,10 +146,5 @@ Route::prefix('{current_team}')
         Route::patch('traslados/{traslado}', [TrasladoController::class, 'update'])->name('traslados.update');
         Route::delete('traslados/{traslado}', [TrasladoController::class, 'destroy'])->name('traslados.destroy');
     });
-
-Route::middleware(['auth'])->group(function () {
-    Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
-    Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');
-});
 
 require __DIR__.'/settings.php';

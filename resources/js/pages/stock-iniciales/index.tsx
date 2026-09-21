@@ -34,15 +34,12 @@ export default function StockInicialesIndex({
     bodegas,
     permissions,
 }: Props) {
-    const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [stockInicialToEdit, setStockInicialToEdit] =
         useState<StockInicial | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [stockInicialToDelete, setStockInicialToDelete] =
         useState<StockInicial | null>(null);
-
-    const teamSlug = currentTeam?.slug ?? '';
 
     const openEditDialog = (stockInicial: StockInicial) => {
         setStockInicialToEdit(stockInicial);
@@ -152,7 +149,6 @@ export default function StockInicialesIndex({
 
                     {permissions.canCreate ? (
                         <CreateStockInicialModal
-                            teamSlug={teamSlug}
                             productos={productos}
                             bodegas={bodegas}
                         >
@@ -174,7 +170,6 @@ export default function StockInicialesIndex({
             </div>
 
             <EditStockInicialModal
-                teamSlug={teamSlug}
                 productos={productos}
                 bodegas={bodegas}
                 stockInicial={stockInicialToEdit}
@@ -183,7 +178,6 @@ export default function StockInicialesIndex({
             />
 
             <DeleteStockInicialModal
-                teamSlug={teamSlug}
                 stockInicial={stockInicialToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -192,13 +186,11 @@ export default function StockInicialesIndex({
     );
 }
 
-StockInicialesIndex.layout = (props: {
-    currentTeam?: { slug: string } | null;
-}) => ({
+StockInicialesIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Stock inicial',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

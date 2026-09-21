@@ -1,7 +1,7 @@
 import { Form } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import InputError from '@/components/input-error';
-import PermissionsFieldset from '@/components/permissions-fieldset';
+import RoleAccessFields from '@/components/role-access-fields';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,28 +14,30 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { update } from '@/routes/teams/roles';
-import type { Role, Team } from '@/types';
+import { update } from '@/routes/roles';
+import type { Role, RoleBodegaOption } from '@/types';
 
 type Props = {
-    team: Team;
     permissions: string[];
+    bodegas: RoleBodegaOption[];
     role: Role | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function EditRoleModal({
-    team,
     permissions,
+    bodegas,
     role,
     open,
     onOpenChange,
 }: Props) {
     const [selected, setSelected] = useState<string[]>([]);
+    const [selectedBodegas, setSelectedBodegas] = useState<number[]>([]);
 
     useEffect(() => {
         setSelected(role?.permissions ?? []);
+        setSelectedBodegas(role?.bodegas ?? []);
     }, [role]);
 
     if (!role) {
@@ -47,7 +49,7 @@ export default function EditRoleModal({
             <DialogContent className="sm:max-w-4xl">
                 <Form
                     key={String(open)}
-                    {...update.form([team.slug, role.id])}
+                    {...update.form([role.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >
@@ -74,20 +76,14 @@ export default function EditRoleModal({
                                 <InputError message={errors.name} />
                             </div>
 
-                            <PermissionsFieldset
+                            <RoleAccessFields
                                 permissions={permissions}
                                 selected={selected}
                                 onChange={setSelected}
+                                bodegas={bodegas}
+                                selectedBodegas={selectedBodegas}
+                                onBodegasChange={setSelectedBodegas}
                             />
-
-                            {selected.map((permission) => (
-                                <input
-                                    key={permission}
-                                    type="hidden"
-                                    name="permissions[]"
-                                    value={permission}
-                                />
-                            ))}
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>

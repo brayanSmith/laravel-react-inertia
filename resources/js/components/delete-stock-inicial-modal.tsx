@@ -14,14 +14,12 @@ import { destroy } from '@/routes/stock-iniciales';
 import type { StockInicial } from '@/types';
 
 type Props = {
-    teamSlug: string;
     stockInicial: StockInicial | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function DeleteStockInicialModal({
-    teamSlug,
     stockInicial,
     open,
     onOpenChange,
@@ -33,7 +31,7 @@ export default function DeleteStockInicialModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, stockInicial.id]), {
+        router.visit(destroy([stockInicial.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

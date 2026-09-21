@@ -27,11 +27,11 @@ export default function PedidoCreate(props: Props) {
     );
 }
 
-PedidoCreate.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+PedidoCreate.layout = () => ({
     breadcrumbs: [
         {
             title: 'Pedidos',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
         {
             title: 'Crear',

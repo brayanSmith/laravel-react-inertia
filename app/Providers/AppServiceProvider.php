@@ -2,12 +2,10 @@
 
 namespace App\Providers;
 
-use App\Models\User;
 use App\Support\Branding;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -50,12 +48,5 @@ class AppServiceProvider extends ServiceProvider
             : null,
         );
 
-        Gate::before(function (User $user, string $ability): ?bool {
-            if (! str_contains($ability, '.') || str_starts_with($ability, 'team.')) {
-                return null;
-            }
-
-            return $user->hasRole(['Owner', 'Admin']) ? true : null;
-        });
     }
 }

@@ -14,14 +14,12 @@ import { destroy } from '@/routes/usuarios';
 import type { Usuario } from '@/types';
 
 type Props = {
-    teamSlug: string;
     usuario: Usuario | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function DeleteUsuarioModal({
-    teamSlug,
     usuario,
     open,
     onOpenChange,
@@ -33,7 +31,7 @@ export default function DeleteUsuarioModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, usuario.id]), {
+        router.visit(destroy([usuario.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

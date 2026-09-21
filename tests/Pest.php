@@ -1,9 +1,10 @@
 <?php
 
-use App\Models\Team;
+use App\Models\Role;
 use App\Models\User;
-use App\Support\TeamRoles;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /*
@@ -52,11 +53,19 @@ function something()
     // ..
 }
 
-function attachTeamMember(Team $team, User $user, string $role = 'Owner'): void
+/**
+ * Gives the user a role. Owner and Admin hold the whole catalog of permissions
+ * (there is no bypass), Member none; any other name is an empty custom role.
+ */
+function asignarRol(User $user, string $role = 'Owner'): void
 {
-    TeamRoles::provisionDefaultRoles($team);
+    app(PermissionSeeder::class)->run();
 
-    $team->memberships()->firstOrCreate(['user_id' => $user->id]);
+    $rol = Role::findOrCreate($role, 'web');
 
-    TeamRoles::assignTier($user, $team, $role);
+    if (in_array($role, ['Owner', 'Admin'], true)) {
+        $rol->syncPermissions(Permission::pluck('name')->all());
+    }
+
+    $user->assignRole($rol);
 }

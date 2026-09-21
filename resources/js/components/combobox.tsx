@@ -221,9 +221,7 @@ export default function Combobox({
                                       <button
                                           type="button"
                                           key={option.value}
-                                          onClick={() =>
-                                              handleSelect(option)
-                                          }
+                                          onClick={() => handleSelect(option)}
                                           className={cn(
                                               'hover:bg-accent hover:text-accent-foreground flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm select-none',
                                               option.value === value &&

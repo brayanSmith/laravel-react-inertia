@@ -15,9 +15,6 @@ export default function CompraCreate({
     productos,
     bodegas,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
-
     return (
         <>
             <Head title="Nueva compra" />
@@ -25,13 +22,13 @@ export default function CompraCreate({
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <div className="text-muted-foreground text-sm">
-                        <Link href={index(teamSlug)}>Compras</Link> {'>'} Crear
+                        <Link href={index()}>Compras</Link> {'>'} Crear
                     </div>
                     <h1 className="text-2xl font-bold">Nueva compra</h1>
                 </div>
             </div>
 
-            <Form {...store.form(teamSlug)} className="space-y-6">
+            <Form {...store.form()} className="space-y-6">
                 {({ errors, processing }) => (
                     <CompraFormFields
                         proveedores={proveedores}
@@ -41,7 +38,7 @@ export default function CompraCreate({
                         actions={
                             <>
                                 <Button variant="outline" asChild>
-                                    <Link href={index(teamSlug)}>Cancelar</Link>
+                                    <Link href={index()}>Cancelar</Link>
                                 </Button>
                                 <Button
                                     type="submit"
@@ -59,11 +56,11 @@ export default function CompraCreate({
     );
 }
 
-CompraCreate.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+CompraCreate.layout = () => ({
     breadcrumbs: [
         {
             title: 'Compras',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
         {
             title: 'Crear',

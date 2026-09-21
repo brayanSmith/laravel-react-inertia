@@ -2,6 +2,12 @@ export type Role = {
     id: number;
     name: string;
     permissions: string[];
+    bodegas: number[];
+};
+
+export type RoleBodegaOption = {
+    id: number;
+    nombre_bodega: string;
 };
 
 export type RoleMember = {

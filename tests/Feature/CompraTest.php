@@ -5,7 +5,6 @@ use App\Models\Compra;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\StockBodega;
-use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
@@ -18,18 +17,17 @@ beforeEach(function () {
 
 test('owners can view and create compras with multiple bodega lines', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $proveedor = Proveedor::factory()->create();
     $producto = Producto::factory()->create();
     $bodegaA = Bodega::factory()->create();
     $bodegaB = Bodega::factory()->create();
 
-    $this->actingAs($owner)->get(route('compras.index', $team))->assertOk();
-    $this->actingAs($owner)->get(route('compras.create', $team))->assertOk();
+    $this->actingAs($owner)->get(route('compras.index'))->assertOk();
+    $this->actingAs($owner)->get(route('compras.create'))->assertOk();
 
-    $response = $this->actingAs($owner)->post(route('compras.store', $team), [
+    $response = $this->actingAs($owner)->post(route('compras.store'), [
         'factura' => 'FA01',
         'proveedor_id' => $proveedor->id,
         'fecha' => '2026-01-10 10:00:00',
@@ -70,14 +68,13 @@ test('owners can view and create compras with multiple bodega lines', function (
 
 test('marking all lines as received updates estado and reverting on update adjusts stock', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $proveedor = Proveedor::factory()->create();
     $producto = Producto::factory()->create();
     $bodega = Bodega::factory()->create();
 
-    $this->actingAs($owner)->post(route('compras.store', $team), [
+    $this->actingAs($owner)->post(route('compras.store'), [
         'factura' => 'FA02',
         'proveedor_id' => $proveedor->id,
         'fecha' => '2026-01-10 10:00:00',
@@ -98,7 +95,7 @@ test('marking all lines as received updates estado and reverting on update adjus
     $stock = StockBodega::where('bodega_id', $bodega->id)->where('producto_id', $producto->id)->first();
     expect((float) $stock->stock)->toBe(5.0);
 
-    $this->actingAs($owner)->patch(route('compras.update', [$team, $compra]), [
+    $this->actingAs($owner)->patch(route('compras.update', [$compra]), [
         'factura' => 'FA02',
         'proveedor_id' => $proveedor->id,
         'fecha' => '2026-01-10 10:00:00',
@@ -122,14 +119,13 @@ test('marking all lines as received updates estado and reverting on update adjus
 
 test('deleting a compra reverts received stock', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $proveedor = Proveedor::factory()->create();
     $producto = Producto::factory()->create();
     $bodega = Bodega::factory()->create();
 
-    $this->actingAs($owner)->post(route('compras.store', $team), [
+    $this->actingAs($owner)->post(route('compras.store'), [
         'factura' => 'FA03',
         'proveedor_id' => $proveedor->id,
         'fecha' => '2026-01-10 10:00:00',
@@ -146,7 +142,7 @@ test('deleting a compra reverts received stock', function () {
 
     $compra = Compra::firstOrFail();
 
-    $this->actingAs($owner)->delete(route('compras.destroy', [$team, $compra]))
+    $this->actingAs($owner)->delete(route('compras.destroy', [$compra]))
         ->assertRedirect();
 
     expect(Compra::find($compra->id))->toBeNull();
@@ -157,20 +153,18 @@ test('deleting a compra reverts received stock', function () {
 
 test('members without permission cannot view compras', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('compras.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('compras.index'))->assertForbidden();
 });
 
 test('detalles are required to store a compra', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $proveedor = Proveedor::factory()->create();
 
-    $this->actingAs($owner)->post(route('compras.store', $team), [
+    $this->actingAs($owner)->post(route('compras.store'), [
         'factura' => 'FA04',
         'proveedor_id' => $proveedor->id,
         'fecha' => '2026-01-10 10:00:00',

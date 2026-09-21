@@ -18,9 +18,6 @@ export default function ComprasIndex({
     permissions,
     eliminados,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
-
     return (
         <>
             <Head title="Compras" />
@@ -36,12 +33,12 @@ export default function ComprasIndex({
                     <div className="flex items-center gap-3">
                         <TrashToggle
                             eliminados={eliminados}
-                            visible={permissions.canDelete}
+                            visible={permissions.canViewDeleted}
                         />
 
                         {permissions.canCreate && !eliminados ? (
                             <Button asChild data-test="create-compra-button">
-                                <Link href={create(teamSlug)}>
+                                <Link href={create()}>
                                     <Plus /> Nueva compra
                                 </Link>
                             </Button>
@@ -59,11 +56,11 @@ export default function ComprasIndex({
     );
 }
 
-ComprasIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+ComprasIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Compras',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

@@ -6,7 +6,6 @@ use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Puc;
 use App\Models\StockBodega;
-use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
@@ -19,8 +18,7 @@ beforeEach(function () {
 
 test('owners can view and create pedidos, deducting stock from the bodega', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $cliente = Cliente::factory()->create();
     $vendedor = User::factory()->create();
@@ -36,10 +34,10 @@ test('owners can view and create pedidos, deducting stock from the bodega', func
         'stock' => 20,
     ]);
 
-    $this->actingAs($owner)->get(route('pedidos.index', $team))->assertOk();
-    $this->actingAs($owner)->get(route('pedidos.create', $team))->assertOk();
+    $this->actingAs($owner)->get(route('pedidos.index'))->assertOk();
+    $this->actingAs($owner)->get(route('pedidos.create'))->assertOk();
 
-    $response = $this->actingAs($owner)->post(route('pedidos.store', $team), [
+    $response = $this->actingAs($owner)->post(route('pedidos.store'), [
         'cliente_id' => $cliente->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => $vendedor->id,
@@ -72,8 +70,7 @@ test('owners can view and create pedidos, deducting stock from the bodega', func
 
 test('registering a payment updates totals and marks the pedido as completed once fully paid', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $cliente = Cliente::factory()->create();
     $vendedor = User::factory()->create();
@@ -81,7 +78,7 @@ test('registering a payment updates totals and marks the pedido as completed onc
     $bodega = Bodega::factory()->create();
     $puc = Puc::factory()->create();
 
-    $this->actingAs($owner)->post(route('pedidos.store', $team), [
+    $this->actingAs($owner)->post(route('pedidos.store'), [
         'cliente_id' => $cliente->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => $vendedor->id,
@@ -98,7 +95,7 @@ test('registering a payment updates totals and marks the pedido as completed onc
 
     $pedido = Pedido::firstOrFail();
 
-    $this->actingAs($owner)->post(route('pedidos.abonos.store', [$team, $pedido]), [
+    $this->actingAs($owner)->post(route('pedidos.abonos.store', [$pedido]), [
         'puc_id' => $puc->id,
         'monto' => 200,
         'con_cuanto_pago' => 200,
@@ -112,7 +109,7 @@ test('registering a payment updates totals and marks the pedido as completed onc
 
     $abono = $pedido->abonos()->firstOrFail();
 
-    $this->actingAs($owner)->delete(route('pedidos.abonos.destroy', [$team, $pedido, $abono]))
+    $this->actingAs($owner)->delete(route('pedidos.abonos.destroy', [$pedido, $abono]))
         ->assertRedirect();
 
     $pedido->refresh();
@@ -123,15 +120,14 @@ test('registering a payment updates totals and marks the pedido as completed onc
 
 test('deleting a pedido reverts deducted stock', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $cliente = Cliente::factory()->create();
     $vendedor = User::factory()->create();
     $producto = Producto::factory()->create();
     $bodega = Bodega::factory()->create();
 
-    $this->actingAs($owner)->post(route('pedidos.store', $team), [
+    $this->actingAs($owner)->post(route('pedidos.store'), [
         'cliente_id' => $cliente->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => $vendedor->id,
@@ -148,7 +144,7 @@ test('deleting a pedido reverts deducted stock', function () {
 
     $pedido = Pedido::firstOrFail();
 
-    $this->actingAs($owner)->delete(route('pedidos.destroy', [$team, $pedido]))
+    $this->actingAs($owner)->delete(route('pedidos.destroy', [$pedido]))
         ->assertRedirect();
 
     expect(Pedido::find($pedido->id))->toBeNull();
@@ -159,23 +155,21 @@ test('deleting a pedido reverts deducted stock', function () {
 
 test('members without permission cannot view pedidos', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('pedidos.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('pedidos.index'))->assertForbidden();
 });
 
 test('storing a pedido snapshots the product cost and computes profit per detalle', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $cliente = Cliente::factory()->create();
     $vendedor = User::factory()->create();
     $producto = Producto::factory()->create(['costo_producto' => 60]);
     $bodega = Bodega::factory()->create();
 
-    $this->actingAs($owner)->post(route('pedidos.store', $team), [
+    $this->actingAs($owner)->post(route('pedidos.store'), [
         'cliente_id' => $cliente->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => $vendedor->id,
@@ -199,14 +193,13 @@ test('storing a pedido snapshots the product cost and computes profit per detall
 
 test('detalles are required to store a pedido', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $cliente = Cliente::factory()->create();
     $vendedor = User::factory()->create();
     $bodega = Bodega::factory()->create();
 
-    $this->actingAs($owner)->post(route('pedidos.store', $team), [
+    $this->actingAs($owner)->post(route('pedidos.store'), [
         'cliente_id' => $cliente->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => $vendedor->id,

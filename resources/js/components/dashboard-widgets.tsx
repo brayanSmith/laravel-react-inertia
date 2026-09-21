@@ -3,7 +3,7 @@ import type { ComponentType, ReactNode } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { DashboardResumen } from '@/types';
+import type { DashboardPermisos, DashboardResumen } from '@/types';
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
     style: 'currency',
@@ -98,8 +98,10 @@ function MiniLine({
 
 export default function DashboardWidgets({
     resumen,
+    permisos,
 }: {
     resumen: DashboardResumen;
+    permisos: DashboardPermisos;
 }) {
     const { productosVendidos, valorPedidos, ajustes } = resumen;
 
@@ -108,70 +110,78 @@ export default function DashboardWidgets({
             className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
             data-test="dashboard-widgets"
         >
-            <Widget
-                dataTest="widget-productos-vendidos"
-                icon={Package}
-                title="Total productos vendidos"
-                value={numberFormatter.format(productosVendidos.cantidad)}
-                hint={`Valor: ${money(productosVendidos.valor)}`}
-            >
-                <MiniLine serie={productosVendidos.serie} />
-            </Widget>
+            {permisos['widget-productos'] ? (
+                <Widget
+                    dataTest="widget-productos-vendidos"
+                    icon={Package}
+                    title="Total productos vendidos"
+                    value={numberFormatter.format(productosVendidos.cantidad)}
+                    hint={`Valor: ${money(productosVendidos.valor)}`}
+                >
+                    <MiniLine serie={productosVendidos.serie} />
+                </Widget>
+            ) : null}
 
-            <Widget
-                dataTest="widget-ganancia"
-                icon={TrendingUp}
-                title="Valor ganancia"
-                value={money(resumen.ganancia)}
-                tone={
-                    resumen.ganancia >= 0
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                }
-                hint="Pedidos − (inversión + gastos)"
-            >
-                <dl className="text-muted-foreground grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 pt-2 text-xs">
-                    <dt>
-                        Valor pedidos (
-                        {numberFormatter.format(valorPedidos.cantidad)})
-                    </dt>
-                    <dd className="text-foreground">
-                        {money(valorPedidos.valor)}
-                    </dd>
-                    <dt>Valor inversión</dt>
-                    <dd className="text-foreground">
-                        {money(resumen.inversion)}
-                    </dd>
-                    <dt>Gastos reportados</dt>
-                    <dd className="text-red-600 dark:text-red-400">
-                        {money(resumen.gastos)}
-                    </dd>
-                </dl>
-            </Widget>
+            {permisos['widget-ganancia'] ? (
+                <Widget
+                    dataTest="widget-ganancia"
+                    icon={TrendingUp}
+                    title="Valor ganancia"
+                    value={money(resumen.ganancia)}
+                    tone={
+                        resumen.ganancia >= 0
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
+                    }
+                    hint="Pedidos − (inversión + gastos)"
+                >
+                    <dl className="text-muted-foreground grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 pt-2 text-xs">
+                        <dt>
+                            Valor pedidos (
+                            {numberFormatter.format(valorPedidos.cantidad)})
+                        </dt>
+                        <dd className="text-foreground">
+                            {money(valorPedidos.valor)}
+                        </dd>
+                        <dt>Valor inversión</dt>
+                        <dd className="text-foreground">
+                            {money(resumen.inversion)}
+                        </dd>
+                        <dt>Gastos reportados</dt>
+                        <dd className="text-red-600 dark:text-red-400">
+                            {money(resumen.gastos)}
+                        </dd>
+                    </dl>
+                </Widget>
+            ) : null}
 
-            <Widget
-                dataTest="widget-ajustes"
-                icon={Percent}
-                title="Ajustes"
-                value={money(
-                    ajustes.reteica + ajustes.retefuente + ajustes.descuento,
-                )}
-            >
-                <dl className="text-muted-foreground grid grid-cols-[1fr_auto] gap-x-4 pt-1 text-xs">
-                    <dt>Reteica</dt>
-                    <dd className="text-foreground">
-                        {money(ajustes.reteica)}
-                    </dd>
-                    <dt>Retefuente</dt>
-                    <dd className="text-foreground">
-                        {money(ajustes.retefuente)}
-                    </dd>
-                    <dt>Descuento</dt>
-                    <dd className="text-foreground">
-                        {money(ajustes.descuento)}
-                    </dd>
-                </dl>
-            </Widget>
+            {permisos['widget-ajustes'] ? (
+                <Widget
+                    dataTest="widget-ajustes"
+                    icon={Percent}
+                    title="Ajustes"
+                    value={money(
+                        ajustes.reteica +
+                            ajustes.retefuente +
+                            ajustes.descuento,
+                    )}
+                >
+                    <dl className="text-muted-foreground grid grid-cols-[1fr_auto] gap-x-4 pt-1 text-xs">
+                        <dt>Reteica</dt>
+                        <dd className="text-foreground">
+                            {money(ajustes.reteica)}
+                        </dd>
+                        <dt>Retefuente</dt>
+                        <dd className="text-foreground">
+                            {money(ajustes.retefuente)}
+                        </dd>
+                        <dt>Descuento</dt>
+                        <dd className="text-foreground">
+                            {money(ajustes.descuento)}
+                        </dd>
+                    </dl>
+                </Widget>
+            ) : null}
         </div>
     );
 }

@@ -1,35 +1,11 @@
 <?php
 
-use App\Models\Team;
-use App\Models\TeamInvitation;
 use App\Models\User;
-use Inertia\Testing\AssertableInertia as Assert;
 
 test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
 
     $response->assertOk();
-});
-
-test('registration screen includes team invitation context', function () {
-    $owner = User::factory()->create();
-    $team = Team::factory()->create(['name' => 'Laravel Team']);
-    attachTeamMember($team, $owner, 'Owner');
-
-    $invitation = TeamInvitation::factory()->create([
-        'team_id' => $team->id,
-        'email' => 'invited@example.com',
-        'invited_by' => $owner->id,
-    ]);
-
-    $response = $this->get(route('register', ['invitation' => $invitation->code]));
-
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('auth/register')
-        ->where('teamInvitation.code', $invitation->code)
-        ->where('teamInvitation.teamName', 'Laravel Team'),
-    );
 });
 
 test('new users can register', function () {
@@ -44,4 +20,24 @@ test('new users can register', function () {
 
     $user = User::where('email', 'test@example.com')->first();
     $response->assertRedirect(route('dashboard'));
+});
+
+test('the first registered user becomes administrator and the next ones get no role', function () {
+    $datos = fn (string $email) => [
+        'name' => 'Test User',
+        'email' => $email,
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ];
+
+    $this->post(route('register.store'), $datos('primero@example.com'));
+    $primero = User::where('email', 'primero@example.com')->firstOrFail();
+
+    expect($primero->hasRole('Administrador'))->toBeTrue();
+    expect($primero->can('roles.update'))->toBeTrue();
+
+    auth()->logout();
+    $this->post(route('register.store'), $datos('segundo@example.com'));
+
+    expect(User::where('email', 'segundo@example.com')->firstOrFail()->roles)->toHaveCount(0);
 });

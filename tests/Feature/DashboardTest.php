@@ -6,14 +6,11 @@ use App\Models\DetallePedido;
 use App\Models\Gasto;
 use App\Models\Pedido;
 use App\Models\Producto;
-use App\Models\Team;
-use App\Models\TeamInvitation;
 use App\Models\User;
-use Inertia\Testing\AssertableInertia as Assert;
 
 test('guests are redirected to the login page', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
 
     $response = $this->get(route('dashboard'));
     $response->assertRedirect(route('login'));
@@ -21,7 +18,7 @@ test('guests are redirected to the login page', function () {
 
 test('authenticated users can visit the dashboard', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
 
     $response = $this
         ->actingAs($user)
@@ -30,118 +27,9 @@ test('authenticated users can visit the dashboard', function () {
     $response->assertOk();
 });
 
-test('dashboard includes pending invitations for the authenticated user', function () {
-    $owner = User::factory()->create(['name' => 'Taylor Otwell']);
-    $invitedUser = User::factory()->create(['email' => 'invited@example.com']);
-    $team = Team::factory()->create(['name' => 'Laravel Team']);
-
-    attachTeamMember($team, $owner, 'Owner');
-
-    $invitation = TeamInvitation::factory()->create([
-        'team_id' => $team->id,
-        'email' => 'invited@example.com',
-        'invited_by' => $owner->id,
-    ]);
-
-    $response = $this
-        ->actingAs($invitedUser)
-        ->get(route('dashboard'));
-
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('dashboard')
-        ->has('pendingInvitations', 1)
-        ->where('pendingInvitations.0.code', $invitation->code)
-        ->where('pendingInvitations.0.inviterName', 'Taylor Otwell')
-        ->where('pendingInvitations.0.team.name', 'Laravel Team')
-        ->where('pendingInvitations.0.team.slug', $team->slug)
-        ->missing('pendingInvitations.0.teamName'),
-    );
-});
-
-test('dashboard does not include accepted invitations', function () {
-    $owner = User::factory()->create();
-    $invitedUser = User::factory()->create(['email' => 'invited@example.com']);
-    $team = Team::factory()->create();
-
-    attachTeamMember($team, $owner, 'Owner');
-
-    TeamInvitation::factory()->accepted()->create([
-        'team_id' => $team->id,
-        'email' => 'invited@example.com',
-        'invited_by' => $owner->id,
-    ]);
-
-    $response = $this
-        ->actingAs($invitedUser)
-        ->get(route('dashboard'));
-
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('dashboard')
-        ->has('pendingInvitations', 0),
-    );
-});
-
-test('dashboard excludes expired invitations without deleting them', function () {
-    $owner = User::factory()->create();
-    $invitedUser = User::factory()->create(['email' => 'invited@example.com']);
-    $team = Team::factory()->create();
-
-    attachTeamMember($team, $owner, 'Owner');
-
-    $invitation = TeamInvitation::factory()->expired()->create([
-        'team_id' => $team->id,
-        'email' => 'invited@example.com',
-        'invited_by' => $owner->id,
-    ]);
-
-    $response = $this
-        ->actingAs($invitedUser)
-        ->get(route('dashboard'));
-
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('dashboard')
-        ->has('pendingInvitations', 0),
-    );
-
-    $this->assertDatabaseHas('team_invitations', [
-        'id' => $invitation->id,
-    ]);
-});
-
-test('dashboard does not include or delete other users invitations', function () {
-    $owner = User::factory()->create();
-    $invitedUser = User::factory()->create(['email' => 'invited@example.com']);
-    $team = Team::factory()->create();
-
-    attachTeamMember($team, $owner, 'Owner');
-
-    $invitation = TeamInvitation::factory()->expired()->create([
-        'team_id' => $team->id,
-        'email' => 'someone@example.com',
-        'invited_by' => $owner->id,
-    ]);
-
-    $response = $this
-        ->actingAs($invitedUser)
-        ->get(route('dashboard'));
-
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('dashboard')
-        ->has('pendingInvitations', 0),
-    );
-
-    $this->assertDatabaseHas('team_invitations', [
-        'id' => $invitation->id,
-    ]);
-});
-
 test('the dashboard counts units per bodega and tipo, grouping mayorista orders apart', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
     $bodega = Bodega::factory()->create(['nombre_bodega' => 'Central']);
 
     $nuevo = Producto::factory()->create(['tipo' => 'NUEVO']);
@@ -160,7 +48,7 @@ test('the dashboard counts units per bodega and tipo, grouping mayorista orders 
     }
 
     $this->actingAs($user)
-        ->get(route('dashboard', $team))
+        ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('cantidadPorBodega.filas.0.almacen', 'Central')
@@ -176,7 +64,7 @@ test('the dashboard counts units per bodega and tipo, grouping mayorista orders 
 
 test('the dashboard summarizes sales, investment, expenses, profit and adjustments', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
     $bodega = Bodega::factory()->create();
     $producto = Producto::factory()->create();
 
@@ -198,7 +86,7 @@ test('the dashboard summarizes sales, investment, expenses, profit and adjustmen
     Gasto::factory()->create(['monto' => 150]);
 
     $this->actingAs($user)
-        ->get(route('dashboard', $team))
+        ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('resumen.productosVendidos.cantidad', 4)
@@ -217,7 +105,7 @@ test('the dashboard summarizes sales, investment, expenses, profit and adjustmen
 
 test('the dashboard filters narrow the widgets and the table, leaving expenses out of product filters', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
     $central = Bodega::factory()->create(['nombre_bodega' => 'Central']);
     $norte = Bodega::factory()->create(['nombre_bodega' => 'Norte']);
     $carro = Producto::factory()->create(['tipo_vehiculo' => 'CARRO']);
@@ -242,7 +130,7 @@ test('the dashboard filters narrow the widgets and the table, leaving expenses o
     Gasto::factory()->create(['bodega_id' => $norte->id, 'monto' => 90, 'fecha_gasto' => '2026-04-05']);
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['current_team' => $team->slug, 'bodega_ids' => [$central->id]]))
+        ->get(route('dashboard', ['bodega_ids' => [$central->id]]))
         ->assertInertia(fn ($page) => $page
             ->where('resumen.productosVendidos.cantidad', 5)
             ->where('resumen.gastos', 40)
@@ -250,14 +138,14 @@ test('the dashboard filters narrow the widgets and the table, leaving expenses o
         );
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['current_team' => $team->slug, 'desde' => '2026-04-01', 'hasta' => '2026-04-30']))
+        ->get(route('dashboard', ['desde' => '2026-04-01', 'hasta' => '2026-04-30']))
         ->assertInertia(fn ($page) => $page
             ->where('resumen.productosVendidos.cantidad', 5)
             ->where('resumen.gastos', 90)
         );
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['current_team' => $team->slug, 'tipo_vehiculo' => 'MOTO']))
+        ->get(route('dashboard', ['tipo_vehiculo' => 'MOTO']))
         ->assertInertia(fn ($page) => $page
             ->where('resumen.productosVendidos.cantidad', 3)
             ->where('resumen.valorPedidos.valor', 300)
@@ -265,7 +153,7 @@ test('the dashboard filters narrow the widgets and the table, leaving expenses o
         );
 
     $this->actingAs($user)
-        ->get(route('dashboard', ['current_team' => $team->slug, 'producto_ids' => [$carro->id, $moto->id]]))
+        ->get(route('dashboard', ['producto_ids' => [$carro->id, $moto->id]]))
         ->assertInertia(fn ($page) => $page
             ->where('resumen.productosVendidos.cantidad', 10)
             ->where('filtros.producto_ids', [(string) $carro->id, (string) $moto->id])
@@ -274,7 +162,7 @@ test('the dashboard filters narrow the widgets and the table, leaving expenses o
 
 test('the product filter only lists products that have orders or purchases', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
 
     $vendido = Producto::factory()->create();
     $comprado = Producto::factory()->create();
@@ -284,7 +172,7 @@ test('the product filter only lists products that have orders or purchases', fun
     DetalleCompra::factory()->create(['producto_id' => $comprado->id]);
 
     $this->actingAs($user)
-        ->get(route('dashboard', $team))
+        ->get(route('dashboard'))
         ->assertInertia(fn ($page) => $page
             ->has('productosFiltro', 2)
             ->where('productosFiltro', fn ($productos) => collect($productos)->pluck('id')->sort()->values()->all() === [$vendido->id, $comprado->id]
@@ -294,7 +182,7 @@ test('the product filter only lists products that have orders or purchases', fun
 
 test('mayorista works as one more bodega in the filter', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
     $central = Bodega::factory()->create(['nombre_bodega' => 'Central']);
     $producto = Producto::factory()->create();
 
@@ -305,7 +193,7 @@ test('mayorista works as one more bodega in the filter', function () {
     Gasto::factory()->create(['bodega_id' => $central->id, 'monto' => 30]);
 
     $consultar = fn (array $bodegas) => $this->actingAs($user)
-        ->get(route('dashboard', ['current_team' => $team->slug, 'bodega_ids' => $bodegas]));
+        ->get(route('dashboard', ['bodega_ids' => $bodegas]));
 
     $consultar(['mayorista'])->assertInertia(fn ($page) => $page
         ->has('cantidadPorBodega.filas', 1)
@@ -332,7 +220,7 @@ test('mayorista works as one more bodega in the filter', function () {
 
 test('the dashboard feeds the charts with categories, best sellers and orders per date', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
     $bodega = Bodega::factory()->create();
 
     $llanta = Producto::factory()->create(['categoria' => 'LLANTA', 'concatenar_codigo_nombre' => 'LLA-1 Llanta']);
@@ -346,7 +234,7 @@ test('the dashboard feeds the charts with categories, best sellers and orders pe
     }
 
     $this->actingAs($user)
-        ->get(route('dashboard', $team))
+        ->get(route('dashboard'))
         ->assertInertia(fn ($page) => $page
             ->where('graficos.categorias.0.categoria', 'LLANTA')
             ->where('graficos.categorias.0.cantidad', 7)
@@ -365,7 +253,7 @@ test('the dashboard feeds the charts with categories, best sellers and orders pe
 
 test('the dashboard chart carries sales value, cost and expenses per date', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
     $bodega = Bodega::factory()->create();
     $producto = Producto::factory()->create();
 
@@ -381,7 +269,7 @@ test('the dashboard chart carries sales value, cost and expenses per date', func
     Gasto::factory()->create(['bodega_id' => $bodega->id, 'fecha_gasto' => '2026-03-02', 'monto' => 10]);
 
     $this->actingAs($user)
-        ->get(route('dashboard', $team))
+        ->get(route('dashboard'))
         ->assertInertia(fn ($page) => $page
             ->where('graficos.pedidosPorFecha.0.valor', 500)
             ->where('graficos.pedidosPorFecha.0.inversion', 300)
@@ -392,7 +280,7 @@ test('the dashboard chart carries sales value, cost and expenses per date', func
 
 test('the chart adds up to the same figures as the widgets', function () {
     $user = User::factory()->create();
-    $team = $user->currentTeam;
+    asignarRol($user);
     $bodega = Bodega::factory()->create();
     $producto = Producto::factory()->create();
 
@@ -413,7 +301,7 @@ test('the chart adds up to the same figures as the widgets', function () {
     Gasto::factory()->create(['bodega_id' => $bodega->id, 'fecha_gasto' => '2026-03-03', 'monto' => 50]);
 
     $this->actingAs($user)
-        ->get(route('dashboard', $team))
+        ->get(route('dashboard'))
         ->assertInertia(function ($page) {
             $props = $page->toArray()['props'];
             $dias = $props['graficos']['pedidosPorFecha'];

@@ -34,9 +34,7 @@ export default function CotizadorForm({
     const [resultados, setResultados] = useState<CotizadorProducto[]>([]);
     const [salida, setSalida] = useState('');
     const [copiado, setCopiado] = useState(false);
-    const [imagenExpandida, setImagenExpandida] = useState<string | null>(
-        null,
-    );
+    const [imagenExpandida, setImagenExpandida] = useState<string | null>(null);
 
     const buscarProducto = () => {
         const referenciaBuscada = referencia.trim();

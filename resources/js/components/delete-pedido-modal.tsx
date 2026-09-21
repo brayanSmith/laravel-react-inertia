@@ -13,7 +13,6 @@ import {
 import type { Pedido, PedidoRoutes } from '@/types';
 
 type Props = {
-    teamSlug: string;
     pedido: Pedido | null;
     routes: PedidoRoutes;
     open: boolean;
@@ -21,7 +20,6 @@ type Props = {
 };
 
 export default function DeletePedidoModal({
-    teamSlug,
     pedido,
     routes,
     open,
@@ -34,7 +32,7 @@ export default function DeletePedidoModal({
             return;
         }
 
-        router.visit(routes.pedidos.destroy([teamSlug, pedido.id]), {
+        router.visit(routes.pedidos.destroy([pedido.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

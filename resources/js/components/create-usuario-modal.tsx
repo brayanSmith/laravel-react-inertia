@@ -17,39 +17,24 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { store } from '@/routes/usuarios';
-import type { RoleOption, TeamRole, UsuarioRoleOption } from '@/types';
+import type { UsuarioRoleOption } from '@/types';
 
 type Props = PropsWithChildren<{
-    teamSlug: string;
-    availableTeamRoles: RoleOption[];
     availableRoles: UsuarioRoleOption[];
 }>;
 
 export default function CreateUsuarioModal({
-    teamSlug,
-    availableTeamRoles,
     availableRoles,
     children,
 }: Props) {
     const [open, setOpen] = useState(false);
-    const [teamRole, setTeamRole] = useState(
-        availableTeamRoles[0]?.value ?? 'member',
-    );
     const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
 
     const handleOpenChange = (nextOpen: boolean) => {
         setOpen(nextOpen);
 
         if (!nextOpen) {
-            setTeamRole(availableTeamRoles[0]?.value ?? 'member');
             setSelectedRoles([]);
         }
     };
@@ -68,7 +53,7 @@ export default function CreateUsuarioModal({
             <DialogContent className="sm:max-w-lg">
                 <Form
                     key={String(open)}
-                    {...store.form(teamSlug)}
+                    {...store.form()}
                     className="space-y-6"
                     onSuccess={() => handleOpenChange(false)}
                 >
@@ -130,42 +115,9 @@ export default function CreateUsuarioModal({
                                     />
                                 </div>
 
-                                <div className="grid gap-2">
-                                    <Label>Rol del equipo</Label>
-                                    <Select
-                                        value={teamRole}
-                                        onValueChange={(value) =>
-                                            setTeamRole(value as TeamRole)
-                                        }
-                                    >
-                                        <SelectTrigger
-                                            data-test="create-usuario-team-role"
-                                            className="w-full"
-                                        >
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableTeamRoles.map((role) => (
-                                                <SelectItem
-                                                    key={role.value}
-                                                    value={role.value}
-                                                >
-                                                    {role.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <input
-                                        type="hidden"
-                                        name="team_role"
-                                        value={teamRole}
-                                    />
-                                    <InputError message={errors.team_role} />
-                                </div>
-
                                 {availableRoles.length > 0 ? (
                                     <div className="grid gap-2">
-                                        <Label>Roles personalizados</Label>
+                                        <Label>Roles</Label>
                                         <div className="flex flex-wrap gap-3">
                                             {availableRoles.map((role) => (
                                                 <label

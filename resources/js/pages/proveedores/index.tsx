@@ -35,7 +35,6 @@ export default function ProveedoresIndex({
     permissions,
     eliminados,
 }: Props) {
-    const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [proveedorToEdit, setProveedorToEdit] = useState<Proveedor | null>(
         null,
@@ -43,8 +42,6 @@ export default function ProveedoresIndex({
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [proveedorToDelete, setProveedorToDelete] =
         useState<Proveedor | null>(null);
-
-    const teamSlug = currentTeam?.slug ?? '';
 
     const openEditDialog = (proveedor: Proveedor) => {
         setProveedorToEdit(proveedor);
@@ -107,10 +104,10 @@ export default function ProveedoresIndex({
                 filter: 'none',
                 render: (proveedor) =>
                     eliminados ? (
-                        permissions.canDelete ? (
+                        permissions.canRestore ? (
                             <div className="flex justify-end">
                                 <RestoreButton
-                                    action={restore([teamSlug, proveedor.id])}
+                                    action={restore([proveedor.id])}
                                     nombre={`el proveedor ${proveedor.nombre_proveedor}`}
                                     dataTest="restore-proveedor-button"
                                 />
@@ -164,7 +161,7 @@ export default function ProveedoresIndex({
             },
         ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [permissions, eliminados, teamSlug],
+        [permissions, eliminados],
     );
 
     return (
@@ -182,11 +179,11 @@ export default function ProveedoresIndex({
                     <div className="flex items-center gap-3">
                         <TrashToggle
                             eliminados={eliminados}
-                            visible={permissions.canDelete}
+                            visible={permissions.canViewDeleted}
                         />
 
                         {permissions.canCreate && !eliminados ? (
-                            <CreateProveedorModal teamSlug={teamSlug}>
+                            <CreateProveedorModal>
                                 <Button data-test="create-proveedor-button">
                                     <Plus /> Nuevo proveedor
                                 </Button>
@@ -206,14 +203,12 @@ export default function ProveedoresIndex({
             </div>
 
             <EditProveedorModal
-                teamSlug={teamSlug}
                 proveedor={proveedorToEdit}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
             />
 
             <DeleteProveedorModal
-                teamSlug={teamSlug}
                 proveedor={proveedorToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -222,13 +217,11 @@ export default function ProveedoresIndex({
     );
 }
 
-ProveedoresIndex.layout = (props: {
-    currentTeam?: { slug: string } | null;
-}) => ({
+ProveedoresIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Proveedores',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

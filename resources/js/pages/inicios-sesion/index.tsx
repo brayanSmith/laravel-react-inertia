@@ -138,13 +138,11 @@ export default function IniciosSesionIndex({ inicios }: Props) {
     );
 }
 
-IniciosSesionIndex.layout = (props: {
-    currentTeam?: { slug: string } | null;
-}) => ({
+IniciosSesionIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Inicios de sesión',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

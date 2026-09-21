@@ -10,8 +10,6 @@ type Props = {
 };
 
 export default function ProductoCreate({ marcas }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleImageChange = (file: File | null) => {
@@ -35,14 +33,13 @@ export default function ProductoCreate({ marcas }: Props) {
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <div className="text-muted-foreground text-sm">
-                        <Link href={index(teamSlug)}>Productos</Link> {'>'}{' '}
-                        Crear
+                        <Link href={index()}>Productos</Link> {'>'} Crear
                     </div>
                     <h1 className="text-2xl font-bold">Nuevo producto</h1>
                 </div>
             </div>
 
-            <Form {...store.form(teamSlug)} className="space-y-6">
+            <Form {...store.form()} className="space-y-6">
                 {({ errors, processing }) => (
                     <>
                         <ProductoFormFields
@@ -59,7 +56,7 @@ export default function ProductoCreate({ marcas }: Props) {
 
                         <div className="flex justify-end gap-2">
                             <Button variant="outline" asChild>
-                                <Link href={index(teamSlug)}>Cancelar</Link>
+                                <Link href={index()}>Cancelar</Link>
                             </Button>
                             <Button
                                 type="submit"
@@ -76,11 +73,11 @@ export default function ProductoCreate({ marcas }: Props) {
     );
 }
 
-ProductoCreate.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+ProductoCreate.layout = () => ({
     breadcrumbs: [
         {
             title: 'Productos',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
         {
             title: 'Crear',

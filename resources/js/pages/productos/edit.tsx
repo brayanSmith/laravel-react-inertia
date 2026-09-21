@@ -13,8 +13,6 @@ type Props = {
 };
 
 export default function ProductoEdit({ producto, marcas, permissions }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [removeImage, setRemoveImage] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -44,15 +42,15 @@ export default function ProductoEdit({ producto, marcas, permissions }: Props) {
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <div className="text-muted-foreground text-sm">
-                        <Link href={index(teamSlug)}>Productos</Link> {'>'}{' '}
-                        {nombre} {'>'} Editar
+                        <Link href={index()}>Productos</Link> {'>'} {nombre}{' '}
+                        {'>'} Editar
                     </div>
                     <h1 className="text-2xl font-bold">Editar {nombre}</h1>
                 </div>
 
                 <div className="flex gap-2">
                     <Button variant="outline" asChild>
-                        <Link href={show([teamSlug, producto.id])}>Ver</Link>
+                        <Link href={show([producto.id])}>Ver</Link>
                     </Button>
                     {permissions.canDelete ? (
                         <Button
@@ -66,10 +64,7 @@ export default function ProductoEdit({ producto, marcas, permissions }: Props) {
                 </div>
             </div>
 
-            <Form
-                {...update.form([teamSlug, producto.id])}
-                className="space-y-6"
-            >
+            <Form {...update.form([producto.id])} className="space-y-6">
                 {({ errors, processing }) => (
                     <>
                         <ProductoFormFields
@@ -94,7 +89,7 @@ export default function ProductoEdit({ producto, marcas, permissions }: Props) {
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => router.visit(index(teamSlug))}
+                                onClick={() => router.visit(index())}
                             >
                                 Cancelar
                             </Button>
@@ -111,7 +106,6 @@ export default function ProductoEdit({ producto, marcas, permissions }: Props) {
             </Form>
 
             <DeleteProductoModal
-                teamSlug={teamSlug}
                 producto={producto}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -120,11 +114,11 @@ export default function ProductoEdit({ producto, marcas, permissions }: Props) {
     );
 }
 
-ProductoEdit.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+ProductoEdit.layout = () => ({
     breadcrumbs: [
         {
             title: 'Productos',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

@@ -35,6 +35,8 @@ class ClienteController extends Controller
                 'canCreate' => $request->user()->can('clientes.create'),
                 'canUpdate' => $request->user()->can('clientes.update'),
                 'canDelete' => $request->user()->can('clientes.delete'),
+                'canViewDeleted' => $request->user()->can('clientes.view-deleted'),
+                'canRestore' => $request->user()->can('clientes.restore'),
             ],
         ]);
     }
@@ -44,7 +46,12 @@ class ClienteController extends Controller
      */
     public function store(StoreClienteRequest $request): RedirectResponse
     {
-        Gate::authorize('clientes.create');
+        // From the POS (`desde_pos`) `pos.create-cliente` is enough.
+        abort_unless(
+            $request->user()->can('clientes.create')
+                || ($request->boolean('desde_pos') && $request->user()->can('pos.create-cliente')),
+            403,
+        );
 
         $data = $request->validated();
 
@@ -62,7 +69,7 @@ class ClienteController extends Controller
     /**
      * Update the specified cliente.
      */
-    public function update(UpdateClienteRequest $request, string $current_team, Cliente $cliente): RedirectResponse
+    public function update(UpdateClienteRequest $request, Cliente $cliente): RedirectResponse
     {
         Gate::authorize('clientes.update');
 
@@ -89,7 +96,7 @@ class ClienteController extends Controller
     /**
      * Remove the specified cliente.
      */
-    public function destroy(string $current_team, Cliente $cliente): RedirectResponse
+    public function destroy(Cliente $cliente): RedirectResponse
     {
         Gate::authorize('clientes.delete');
 
@@ -103,7 +110,7 @@ class ClienteController extends Controller
     /**
      * Restore a deleted cliente.
      */
-    public function restore(string $current_team, Cliente $cliente): RedirectResponse
+    public function restore(Cliente $cliente): RedirectResponse
     {
         return $this->restaurarRegistro('clientes', $cliente, __('Cliente restored.'));
     }

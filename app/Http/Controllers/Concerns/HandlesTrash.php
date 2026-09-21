@@ -10,19 +10,19 @@ use Inertia\Inertia;
 
 /**
  * The "deleted records" view and the restore action shared by every
- * soft-deleting module. Seeing and restoring deleted records needs the same
- * permission as deleting them (`{resource}.delete`).
+ * soft-deleting module. Seeing the deleted records needs `{resource}.view-deleted`
+ * and restoring them `{resource}.restore`.
  */
 trait HandlesTrash
 {
     /**
      * Whether this request asks for the deleted records (`?eliminados=1`)
-     * and the user may see them.
+     * and the user may see them (`{resource}.view-deleted`).
      */
     protected function verEliminados(Request $request, string $permissionResource): bool
     {
         return $request->boolean('eliminados')
-            && $request->user()->can("{$permissionResource}.delete");
+            && $request->user()->can("{$permissionResource}.view-deleted");
     }
 
     /**
@@ -39,7 +39,7 @@ trait HandlesTrash
         string $message,
         ?callable $afterRestore = null,
     ): RedirectResponse {
-        Gate::authorize("{$permissionResource}.delete");
+        Gate::authorize("{$permissionResource}.restore");
 
         $model->restore();
 

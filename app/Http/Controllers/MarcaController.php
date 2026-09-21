@@ -47,7 +47,7 @@ class MarcaController extends Controller
     /**
      * Update the specified marca.
      */
-    public function update(UpdateMarcaRequest $request, string $current_team, Marca $marca): RedirectResponse
+    public function update(UpdateMarcaRequest $request, Marca $marca): RedirectResponse
     {
         Gate::authorize('marcas.update');
 
@@ -61,7 +61,7 @@ class MarcaController extends Controller
     /**
      * Remove the specified marca.
      */
-    public function destroy(string $current_team, Marca $marca): RedirectResponse
+    public function destroy(Marca $marca): RedirectResponse
     {
         Gate::authorize('marcas.delete');
 

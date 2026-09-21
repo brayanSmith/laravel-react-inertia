@@ -19,7 +19,6 @@ import { update } from '@/routes/traslados';
 import type { Bodega, ProductoOption, Traslado } from '@/types';
 
 type Props = {
-    teamSlug: string;
     productos: ProductoOption[];
     bodegas: Bodega[];
     traslado: Traslado | null;
@@ -28,7 +27,6 @@ type Props = {
 };
 
 export default function EditTrasladoModal({
-    teamSlug,
     productos,
     bodegas,
     traslado,
@@ -85,7 +83,7 @@ export default function EditTrasladoModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, traslado.id])}
+                    {...update.form([traslado.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

@@ -14,18 +14,12 @@ import { destroy } from '@/routes/gastos';
 import type { Gasto } from '@/types';
 
 type Props = {
-    teamSlug: string;
     gasto: Gasto | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
-export default function DeleteGastoModal({
-    teamSlug,
-    gasto,
-    open,
-    onOpenChange,
-}: Props) {
+export default function DeleteGastoModal({ gasto, open, onOpenChange }: Props) {
     const [processing, setProcessing] = useState(false);
 
     const deleteGasto = () => {
@@ -33,7 +27,7 @@ export default function DeleteGastoModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, gasto.id]), {
+        router.visit(destroy([gasto.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

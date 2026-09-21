@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Support\TeamRoles;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
@@ -15,23 +14,25 @@ class PermissionSeeder extends Seeder
      * @var array<string, array<string>>
      */
     protected array $catalog = [
-        'clientes' => ['view', 'create', 'update', 'delete'],
+        'clientes' => ['view', 'create', 'update', 'delete', 'view-deleted', 'restore'],
         'usuarios' => ['view', 'create', 'update', 'delete'],
         'bodegas' => ['view', 'create', 'update', 'delete'],
-        'proveedores' => ['view', 'create', 'update', 'delete'],
+        'proveedores' => ['view', 'create', 'update', 'delete', 'view-deleted', 'restore'],
         'marcas' => ['view', 'create', 'update', 'delete'],
         'puc' => ['view', 'create', 'update', 'delete'],
         'empresa' => ['view', 'update'],
-        'productos' => ['view', 'create', 'update', 'delete'],
-        'gastos' => ['view', 'create', 'update', 'delete'],
-        'compras' => ['view', 'create', 'update', 'delete'],
-        'pedidos' => ['view', 'create', 'update', 'delete'],
-        'pedidos-mayoristas' => ['view', 'create', 'update', 'delete'],
+        'productos' => ['view', 'create', 'update', 'delete', 'view-deleted', 'restore'],
+        'gastos' => ['view', 'create', 'update', 'delete', 'view-deleted', 'restore'],
+        'compras' => ['view', 'create', 'update', 'delete', 'view-deleted', 'restore'],
+        'pedidos' => ['view', 'create', 'update', 'delete', 'view-deleted', 'restore', 'view-detalle', 'create-abono', 'update-abono', 'delete-abono', 'create-detalle', 'update-detalle', 'delete-detalle', 'update-datos'],
+        'pedidos-mayoristas' => ['view', 'create', 'update', 'delete', 'view-deleted', 'restore', 'view-detalle', 'create-abono', 'update-abono', 'delete-abono', 'create-detalle', 'update-detalle', 'delete-detalle', 'update-datos'],
         'stock-iniciales' => ['view', 'create', 'update', 'delete'],
-        'stock-bodegas' => ['view'],
+        'stock-bodegas' => ['view', 'view-inversion'],
         'cotizador' => ['view'],
-        'pos' => ['view', 'create'],
+        'pos' => ['view', 'create', 'create-producto', 'create-cliente', 'view-all-pedidos'],
         'inicios-sesion' => ['view'],
+        'roles' => ['view', 'create', 'update', 'delete'],
+        'dashboard' => ['widget-productos', 'widget-ganancia', 'widget-ajustes', 'tabla-bodegas', 'chart-categorias', 'chart-top-productos', 'chart-pedidos'],
         'traslados' => ['view', 'create', 'update', 'delete'],
     ];
 
@@ -46,8 +47,5 @@ class PermissionSeeder extends Seeder
             }
         }
 
-        foreach (TeamRoles::TEAM_PERMISSIONS as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
-        }
     }
 }

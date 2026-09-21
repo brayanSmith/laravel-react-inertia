@@ -17,11 +17,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { store } from '@/routes/marcas';
 
-type Props = PropsWithChildren<{
-    teamSlug: string;
-}>;
+type Props = PropsWithChildren<{}>;
 
-export default function CreateMarcaModal({ teamSlug, children }: Props) {
+export default function CreateMarcaModal({ children }: Props) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -30,7 +28,7 @@ export default function CreateMarcaModal({ teamSlug, children }: Props) {
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...store.form(teamSlug)}
+                    {...store.form()}
                     className="space-y-6"
                     onSuccess={() => setOpen(false)}
                 >

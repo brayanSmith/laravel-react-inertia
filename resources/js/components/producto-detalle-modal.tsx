@@ -49,7 +49,12 @@ type Props = {
 type SortDirection = 'asc' | 'desc';
 
 type PedidoSortKey =
-    'id' | 'fecha' | 'cliente' | 'cantidad' | 'precio_unitario' | 'subtotal';
+    | 'id'
+    | 'fecha'
+    | 'cliente'
+    | 'cantidad'
+    | 'precio_unitario'
+    | 'subtotal';
 
 type CompraSortKey =
     | 'id'
@@ -303,8 +308,6 @@ export default function ProductoDetalleModal({
     open,
     onOpenChange,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const { submit } = useHttp();
 
     const [pedidosPage, setPedidosPage] = useState(1);
@@ -339,7 +342,7 @@ export default function ProductoDetalleModal({
         setLoading(true);
 
         submit(
-            detalles([teamSlug, producto.id], {
+            detalles([producto.id], {
                 query: {
                     pedidos_page: pedidosPage,
                     compras_page: comprasPage,
@@ -366,7 +369,7 @@ export default function ProductoDetalleModal({
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, producto, pedidosPage, comprasPage, teamSlug]);
+    }, [open, producto, pedidosPage, comprasPage]);
 
     const sortedPedidos = useMemo(
         () =>
@@ -662,7 +665,6 @@ export default function ProductoDetalleModal({
                                                 >
                                                     <Link
                                                         href={editPedido([
-                                                            teamSlug,
                                                             detalle.pedido_id,
                                                         ])}
                                                         target="_blank"
@@ -815,7 +817,6 @@ export default function ProductoDetalleModal({
                                                 >
                                                     <Link
                                                         href={editCompra([
-                                                            teamSlug,
                                                             detalle.compra_id,
                                                         ])}
                                                         target="_blank"

@@ -17,14 +17,12 @@ import { store } from '@/routes/productos';
 import type { MarcaOption } from '@/types';
 
 type Props = PropsWithChildren<{
-    teamSlug: string;
     marcas: MarcaOption[];
     /** Keep the user on the current screen after saving (e.g. the POS). */
     stayOnPage?: boolean;
 }>;
 
 export default function CreateProductoModal({
-    teamSlug,
     marcas,
     stayOnPage = false,
     children,
@@ -52,7 +50,7 @@ export default function CreateProductoModal({
             <DialogContent className="max-h-[90vh] w-full overflow-y-auto sm:max-w-3xl lg:max-w-5xl">
                 <Form
                     key={String(open)}
-                    {...store.form(teamSlug)}
+                    {...store.form()}
                     className="space-y-6"
                     onSuccess={() => setOpen(false)}
                 >

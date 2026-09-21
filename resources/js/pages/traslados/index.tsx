@@ -34,15 +34,12 @@ export default function TrasladosIndex({
     bodegas,
     permissions,
 }: Props) {
-    const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [trasladoToEdit, setTrasladoToEdit] = useState<Traslado | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [trasladoToDelete, setTrasladoToDelete] = useState<Traslado | null>(
         null,
     );
-
-    const teamSlug = currentTeam?.slug ?? '';
 
     const openEditDialog = (traslado: Traslado) => {
         setTrasladoToEdit(traslado);
@@ -160,7 +157,6 @@ export default function TrasladosIndex({
 
                     {permissions.canCreate ? (
                         <CreateTrasladoModal
-                            teamSlug={teamSlug}
                             productos={productos}
                             bodegas={bodegas}
                         >
@@ -182,7 +178,6 @@ export default function TrasladosIndex({
             </div>
 
             <EditTrasladoModal
-                teamSlug={teamSlug}
                 productos={productos}
                 bodegas={bodegas}
                 traslado={trasladoToEdit}
@@ -191,7 +186,6 @@ export default function TrasladosIndex({
             />
 
             <DeleteTrasladoModal
-                teamSlug={teamSlug}
                 traslado={trasladoToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -200,11 +194,11 @@ export default function TrasladosIndex({
     );
 }
 
-TrasladosIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+TrasladosIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Traslados',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

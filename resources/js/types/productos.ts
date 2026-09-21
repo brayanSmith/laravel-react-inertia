@@ -42,6 +42,8 @@ export type ProductoPermissions = {
     canCreate: boolean;
     canUpdate: boolean;
     canDelete: boolean;
+    canViewDeleted: boolean;
+    canRestore: boolean;
 };
 
 export type LaravelPaginator<T> = {
@@ -137,6 +139,17 @@ export type DashboardFiltros = {
     tipo_vehiculo: string;
     producto_ids: string[];
 };
+
+export type DashboardParte =
+    | 'widget-productos'
+    | 'widget-ganancia'
+    | 'widget-ajustes'
+    | 'tabla-bodegas'
+    | 'chart-categorias'
+    | 'chart-top-productos'
+    | 'chart-pedidos';
+
+export type DashboardPermisos = Record<DashboardParte, boolean>;
 
 export type DashboardBodegaOption = { id: number; nombre_bodega: string };
 

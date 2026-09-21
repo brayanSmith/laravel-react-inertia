@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\StockBodega;
-use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
@@ -11,11 +10,10 @@ beforeEach(function () {
 
 test('owners can view stock por bodega without a custom role', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
     $stockBodega = StockBodega::factory()->create(['stock_inicial' => 5, 'entradas' => 3, 'salidas' => 1, 'stock' => 7]);
 
-    $response = $this->actingAs($owner)->get(route('stock-bodegas.index', $team))->assertOk();
+    $response = $this->actingAs($owner)->get(route('stock-bodegas.index'))->assertOk();
 
     $response->assertInertia(fn ($page) => $page
         ->component('stock-bodegas/index')
@@ -29,19 +27,17 @@ test('owners can view stock por bodega without a custom role', function () {
 
 test('members without permission cannot view stock por bodega', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('stock-bodegas.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('stock-bodegas.index'))->assertForbidden();
 });
 
 test('pairs with nothing in them are not sent, but their product still is', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
     $vacio = StockBodega::factory()->create(['stock_inicial' => 0, 'entradas' => 0, 'salidas' => 0, 'stock' => 0]);
 
-    $this->actingAs($owner)->get(route('stock-bodegas.index', $team))
+    $this->actingAs($owner)->get(route('stock-bodegas.index'))
         ->assertInertia(fn ($page) => $page
             ->has('stockBodegas', 0)
             ->has('productos', 1)

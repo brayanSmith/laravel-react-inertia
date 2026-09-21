@@ -30,13 +30,11 @@ export default function PedidosMayoristasIndex({
     );
 }
 
-PedidosMayoristasIndex.layout = (props: {
-    currentTeam?: { slug: string } | null;
-}) => ({
+PedidosMayoristasIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Pedidos Mayorista',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

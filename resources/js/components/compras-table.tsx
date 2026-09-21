@@ -414,8 +414,6 @@ export default function ComprasTable({
     permissions,
     eliminados = false,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [compraToDelete, setCompraToDelete] = useState<Compra | null>(null);
     const [compraToView, setCompraToView] = useState<Compra | null>(null);
@@ -924,9 +922,9 @@ export default function ComprasTable({
                                         <p>Ver</p>
                                     </TooltipContent>
                                 </Tooltip>
-                                {permissions.canDelete ? (
+                                {permissions.canRestore ? (
                                     <RestoreButton
-                                        action={restore([teamSlug, compra.id])}
+                                        action={restore([compra.id])}
                                         nombre={`la compra ${compra.factura}`}
                                         aviso="El stock de las líneas recibidas se sumará de nuevo a sus bodegas."
                                         dataTest="restore-compra-button"
@@ -964,12 +962,7 @@ export default function ComprasTable({
                                             data-test="edit-compra-button"
                                             asChild
                                         >
-                                            <Link
-                                                href={edit([
-                                                    teamSlug,
-                                                    compra.id,
-                                                ])}
-                                            >
+                                            <Link href={edit([compra.id])}>
                                                 <Pencil className="h-4 w-4" />
                                             </Link>
                                         </Button>
@@ -1161,7 +1154,6 @@ export default function ComprasTable({
             />
 
             <DeleteCompraModal
-                teamSlug={teamSlug}
                 compra={compraToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}

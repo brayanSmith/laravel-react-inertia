@@ -1,6 +1,11 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { groupPermissionsByResource } from '@/lib/permissions';
+import {
+    groupPermissionsByResource,
+    permissionHint,
+    permissionLabel,
+    resourceLabel,
+} from '@/lib/permissions';
 
 type Props = {
     permissions: string[];
@@ -78,8 +83,8 @@ export default function PermissionsFieldset({
                                 className="space-y-2 rounded-lg border p-3"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium capitalize">
-                                        {resource}
+                                    <span className="text-sm font-medium">
+                                        {resourceLabel(resource)}
                                     </span>
                                     <button
                                         type="button"
@@ -96,11 +101,15 @@ export default function PermissionsFieldset({
                                             : 'Seleccionar todos'}
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                                     {resourcePermissions.map((permission) => (
                                         <label
                                             key={permission}
                                             className="flex items-center gap-2 text-sm"
+                                            title={
+                                                permissionHint(permission) ??
+                                                permission
+                                            }
                                         >
                                             <Checkbox
                                                 checked={selected.includes(
@@ -113,7 +122,7 @@ export default function PermissionsFieldset({
                                                     )
                                                 }
                                             />
-                                            {permission}
+                                            {permissionLabel(permission)}
                                         </label>
                                     ))}
                                 </div>

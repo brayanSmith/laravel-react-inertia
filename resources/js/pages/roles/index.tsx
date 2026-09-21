@@ -13,21 +13,21 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { edit, index } from '@/routes/teams';
-import { update as updateMemberRoles } from '@/routes/teams/members/roles';
-import type { Role, RoleMember, Team } from '@/types';
+import { index } from '@/routes/roles';
+import { update as updateMemberRoles } from '@/routes/roles/members';
+import type { Role, RoleBodegaOption, RoleMember } from '@/types';
 
 type Props = {
-    team: Team;
     roles: Role[];
     permissions: string[];
+    bodegas: RoleBodegaOption[];
     members: RoleMember[];
 };
 
-export default function TeamRolesIndex({
-    team,
+export default function RolesIndex({
     roles,
     permissions,
+    bodegas,
     members,
 }: Props) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -54,7 +54,7 @@ export default function TeamRolesIndex({
             ? member.roles.filter((id) => id !== role.id)
             : [...member.roles, role.id];
 
-        router.visit(updateMemberRoles([team.slug, member.id]), {
+        router.visit(updateMemberRoles(member.id), {
             data: { roles: nextRoleIds },
             preserveScroll: true,
         });
@@ -62,9 +62,9 @@ export default function TeamRolesIndex({
 
     return (
         <>
-            <Head title={`Roles - ${team.name}`} />
+            <Head title="Roles y permisos" />
 
-            <h1 className="sr-only">Roles para {team.name}</h1>
+            <h1 className="sr-only">Roles y permisos</h1>
 
             <div className="flex flex-col space-y-10">
                 <div className="space-y-6">
@@ -75,7 +75,10 @@ export default function TeamRolesIndex({
                             description="Crea roles y elige qué permisos otorga cada uno"
                         />
 
-                        <CreateRoleModal team={team} permissions={permissions}>
+                        <CreateRoleModal
+                            permissions={permissions}
+                            bodegas={bodegas}
+                        >
                             <Button data-test="create-role-button">
                                 <Plus /> Crear rol
                             </Button>
@@ -228,15 +231,14 @@ export default function TeamRolesIndex({
             </div>
 
             <EditRoleModal
-                team={team}
                 permissions={permissions}
+                bodegas={bodegas}
                 role={roleToEdit}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
             />
 
             <DeleteRoleModal
-                team={team}
                 role={roleToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -245,19 +247,11 @@ export default function TeamRolesIndex({
     );
 }
 
-TeamRolesIndex.layout = (props: { team: { name: string; slug: string } }) => ({
+RolesIndex.layout = () => ({
     breadcrumbs: [
         {
-            title: 'Teams',
+            title: 'Roles y permisos',
             href: index(),
-        },
-        {
-            title: props.team.name,
-            href: edit(props.team.slug),
-        },
-        {
-            title: 'Roles',
-            href: edit(props.team.slug),
         },
     ],
 });

@@ -114,8 +114,23 @@ export type Pedido = {
     abonos?: PedidoAbono[];
 };
 
+/** What the user may do on the pedido edit form (each one is its own permission). */
+export type PedidoEditPermissions = {
+    canDelete: boolean;
+    canCreateAbono: boolean;
+    canUpdateAbono: boolean;
+    canDeleteAbono: boolean;
+    canCreateDetalle: boolean;
+    canUpdateDetalle: boolean;
+    canDeleteDetalle: boolean;
+    canUpdateDatos: boolean;
+};
+
 export type PedidoPermissions = {
     canCreate: boolean;
     canUpdate: boolean;
     canDelete: boolean;
+    canViewDeleted: boolean;
+    canRestore: boolean;
+    canViewDetalle: boolean;
 };

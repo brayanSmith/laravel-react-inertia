@@ -30,7 +30,7 @@ class TrasladoController extends Controller
                 ->where('inventariable', true)
                 ->orderBy('referencia_producto')
                 ->get(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'costo_producto']),
-            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'permissions' => [
                 'canCreate' => $request->user()->can('traslados.create'),
                 'canUpdate' => $request->user()->can('traslados.update'),
@@ -62,7 +62,7 @@ class TrasladoController extends Controller
     /**
      * Update the specified traslado.
      */
-    public function update(UpdateTrasladoRequest $request, string $current_team, Traslado $traslado): RedirectResponse
+    public function update(UpdateTrasladoRequest $request, Traslado $traslado): RedirectResponse
     {
         Gate::authorize('traslados.update');
 
@@ -84,7 +84,7 @@ class TrasladoController extends Controller
     /**
      * Remove the specified traslado.
      */
-    public function destroy(string $current_team, Traslado $traslado): RedirectResponse
+    public function destroy(Traslado $traslado): RedirectResponse
     {
         Gate::authorize('traslados.delete');
 

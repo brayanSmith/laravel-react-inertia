@@ -26,9 +26,9 @@ export default function PedidosIndexPage({
     title,
     description,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
-    const [vista, setVista] = useState<VistaPedidos>('pedido');
+    const [vistaElegida, setVista] = useState<VistaPedidos>('pedido');
+    // Without the permission there is only the by-pedido view.
+    const vista = permissions.canViewDetalle ? vistaElegida : 'pedido';
 
     return (
         <>
@@ -43,36 +43,40 @@ export default function PedidosIndexPage({
                     />
 
                     <div className="flex items-center gap-3">
-                        <ToggleGroup
-                            type="single"
-                            variant="outline"
-                            value={vista}
-                            onValueChange={(value) => {
-                                if (value) {
-                                    setVista(value as VistaPedidos);
-                                }
-                            }}
-                            data-test="pedidos-vista-toggle"
-                        >
-                            <ToggleGroupItem
-                                value="pedido"
-                                data-test="pedidos-vista-pedido"
-                                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
+                        {
+                            <ToggleGroup
+                                type="single"
+                                variant="outline"
+                                value={vista}
+                                onValueChange={(value) => {
+                                    if (value) {
+                                        setVista(value as VistaPedidos);
+                                    }
+                                }}
+                                data-test="pedidos-vista-toggle"
                             >
-                                Por pedido
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                                value="detalle"
-                                data-test="pedidos-vista-detalle"
-                                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
-                            >
-                                Por detalle
-                            </ToggleGroupItem>
-                        </ToggleGroup>
+                                <ToggleGroupItem
+                                    value="pedido"
+                                    data-test="pedidos-vista-pedido"
+                                    className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
+                                >
+                                    Por pedido
+                                </ToggleGroupItem>
+                                {permissions.canViewDetalle ? (
+                                    <ToggleGroupItem
+                                        value="detalle"
+                                        data-test="pedidos-vista-detalle"
+                                        className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90"
+                                    >
+                                        Por detalle
+                                    </ToggleGroupItem>
+                                ) : null}
+                            </ToggleGroup>
+                        }
 
                         <TrashToggle
                             eliminados={eliminados}
-                            visible={permissions.canDelete}
+                            visible={permissions.canViewDeleted}
                         />
                     </div>
                 </div>

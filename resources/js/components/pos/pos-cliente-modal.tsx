@@ -16,7 +16,6 @@ import type { ClienteOption } from '@/types';
 type Props = {
     clientes: ClienteOption[];
     selectedId: string;
-    teamSlug: string;
     /** Whether the user may register a new cliente from here. */
     canCreate: boolean;
     onSelect: (clienteId: string) => void;
@@ -48,7 +47,6 @@ function searchText(cliente: ClienteOption): string {
 export default function PosClienteModal({
     clientes,
     selectedId,
-    teamSlug,
     canCreate,
     onSelect,
     onClose,
@@ -127,7 +125,7 @@ export default function PosClienteModal({
 
                     {canCreate ? (
                         <CreateClienteModal
-                            teamSlug={teamSlug}
+                            fromPos
                             onCreated={() => {
                                 awaitingNew.current = true;
                                 selectNewCliente();

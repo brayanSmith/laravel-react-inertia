@@ -21,11 +21,13 @@ import type {
 } from '@/types';
 
 type Props = {
-    teamSlug: string;
     pedido: Pedido;
     routes: PedidoRoutes;
     pucs: PucOption[];
     vendedores: VendedorOption[];
+    canCreate?: boolean;
+    canUpdate?: boolean;
+    canDelete?: boolean;
 };
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -36,11 +38,13 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 });
 
 export default function PedidoAbonosCard({
-    teamSlug,
     pedido,
     routes,
     pucs,
     vendedores,
+    canCreate = true,
+    canUpdate = true,
+    canDelete = true,
 }: Props) {
     const [registrarOpen, setRegistrarOpen] = useState(false);
     const [editAbono, setEditAbono] = useState<PedidoAbono | null>(null);
@@ -55,15 +59,17 @@ export default function PedidoAbonosCard({
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     Abonos Registrados
                 </div>
-                <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    data-test="registrar-pago-button"
-                    onClick={() => setRegistrarOpen(true)}
-                >
-                    Registrar Pago
-                </Button>
+                {canCreate ? (
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        data-test="registrar-pago-button"
+                        onClick={() => setRegistrarOpen(true)}
+                    >
+                        Registrar Pago
+                    </Button>
+                ) : null}
             </div>
 
             {abonos.length === 0 ? (
@@ -99,7 +105,8 @@ export default function PedidoAbonosCard({
                                     data-test="pedido-abono-row"
                                 >
                                     <TableCell>
-                                        {abono.puc?.concatenar_subcuenta_concepto ??
+                                        {abono.puc
+                                            ?.concatenar_subcuenta_concepto ??
                                             '—'}
                                     </TableCell>
                                     <TableCell>
@@ -132,28 +139,32 @@ export default function PedidoAbonosCard({
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                data-test="edit-abono-button"
-                                                onClick={() =>
-                                                    setEditAbono(abono)
-                                                }
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                data-test="delete-abono-button"
-                                                onClick={() =>
-                                                    setDeleteAbono(abono)
-                                                }
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            {canUpdate ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    data-test="edit-abono-button"
+                                                    onClick={() =>
+                                                        setEditAbono(abono)
+                                                    }
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                            ) : null}
+                                            {canDelete ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    data-test="delete-abono-button"
+                                                    onClick={() =>
+                                                        setDeleteAbono(abono)
+                                                    }
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            ) : null}
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -164,7 +175,6 @@ export default function PedidoAbonosCard({
             )}
 
             <RegistrarPagoModal
-                teamSlug={teamSlug}
                 pedido={pedido}
                 routes={routes}
                 pucs={pucs}
@@ -174,7 +184,6 @@ export default function PedidoAbonosCard({
             />
 
             <EditAbonoModal
-                teamSlug={teamSlug}
                 pedido={pedido}
                 routes={routes}
                 abono={editAbono}
@@ -189,7 +198,6 @@ export default function PedidoAbonosCard({
             />
 
             <DeleteAbonoModal
-                teamSlug={teamSlug}
                 pedido={pedido}
                 routes={routes}
                 abono={deleteAbono}

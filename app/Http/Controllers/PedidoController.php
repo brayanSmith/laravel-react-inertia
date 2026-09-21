@@ -11,7 +11,8 @@ use App\Models\DetallePedido;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Puc;
-use App\Models\Team;
+use App\Models\User;
+use App\Services\PedidoEdicion;
 use App\Services\PedidoService;
 use App\Services\PedidoVoucher;
 use Illuminate\Http\JsonResponse;
@@ -102,14 +103,14 @@ class PedidoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido created.')]);
 
-        return to_route("{$module}.index", ['current_team' => $request->route('current_team')]);
+        return to_route("{$module}.index");
     }
 
     /**
      * The full detail of a pedido (header, lines and payments) as JSON, for
      * the read-only "ver" modal. Loaded on demand so the listing stays light.
      */
-    public function show(Request $request, string $current_team, Pedido $pedido): JsonResponse
+    public function show(Request $request, Pedido $pedido): JsonResponse
     {
         Gate::authorize($this->module($request).'.view');
 
@@ -132,7 +133,7 @@ class PedidoController extends Controller
      * The data of a pedido's payment voucher (the PDF itself is rendered in
      * the browser), for the "voucher" button of the listing and the modal.
      */
-    public function voucher(Request $request, string $current_team, Pedido $pedido, PedidoVoucher $voucher): JsonResponse
+    public function voucher(Request $request, Pedido $pedido, PedidoVoucher $voucher): JsonResponse
     {
         Gate::authorize($this->module($request).'.view');
 
@@ -142,7 +143,7 @@ class PedidoController extends Controller
     /**
      * Show the form for editing the specified pedido.
      */
-    public function edit(Request $request, string $current_team, Pedido $pedido): Response
+    public function edit(Request $request, Pedido $pedido): Response
     {
         $module = $this->module($request);
 
@@ -158,20 +159,30 @@ class PedidoController extends Controller
                 'bodega',
             ]),
             ...$this->formData($request),
-            'permissions' => ['canDelete' => $request->user()->can("{$module}.delete")],
+            'permissions' => [
+                'canDelete' => $request->user()->can("{$module}.delete"),
+                'canCreateAbono' => $request->user()->can("{$module}.create-abono"),
+                'canUpdateAbono' => $request->user()->can("{$module}.update-abono"),
+                'canDeleteAbono' => $request->user()->can("{$module}.delete-abono"),
+                'canCreateDetalle' => $request->user()->can("{$module}.create-detalle"),
+                'canUpdateDetalle' => $request->user()->can("{$module}.update-detalle"),
+                'canDeleteDetalle' => $request->user()->can("{$module}.delete-detalle"),
+                'canUpdateDatos' => $request->user()->can("{$module}.update-datos"),
+            ],
         ]);
     }
 
     /**
      * Update the specified pedido.
      */
-    public function update(UpdatePedidoRequest $request, PedidoService $pedidoService, string $current_team, Pedido $pedido): RedirectResponse
+    public function update(UpdatePedidoRequest $request, PedidoService $pedidoService, PedidoEdicion $edicion, Pedido $pedido): RedirectResponse
     {
         $module = $this->module($request);
 
         Gate::authorize("{$module}.update");
 
-        $data = $request->validated();
+        // Only what the user is allowed to change (data, products) is applied.
+        $data = $edicion->restringir($pedido, $request->validated(), $request->user(), $module);
 
         DB::transaction(function () use ($pedido, $data, $pedidoService): void {
             foreach ($pedido->detalles as $detalle) {
@@ -201,13 +212,13 @@ class PedidoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido updated.')]);
 
-        return to_route("{$module}.edit", ['current_team' => $current_team, 'pedido' => $pedido]);
+        return to_route("{$module}.edit", ['pedido' => $pedido]);
     }
 
     /**
      * Remove the specified pedido.
      */
-    public function destroy(Request $request, PedidoService $pedidoService, string $current_team, Pedido $pedido): RedirectResponse
+    public function destroy(Request $request, PedidoService $pedidoService, Pedido $pedido): RedirectResponse
     {
         $module = $this->module($request);
 
@@ -224,7 +235,7 @@ class PedidoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido deleted.')]);
 
-        return to_route("{$module}.index", ['current_team' => $current_team]);
+        return to_route("{$module}.index");
     }
 
     /**
@@ -232,7 +243,6 @@ class PedidoController extends Controller
      */
     private function formData(Request $request): array
     {
-        $team = Team::where('slug', $request->route('current_team'))->firstOrFail();
 
         return [
             'clientes' => Cliente::orderBy('razon_social')->get([
@@ -242,8 +252,8 @@ class PedidoController extends Controller
                 ->where('inventariable', true)
                 ->orderBy('referencia_producto')
                 ->get(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'valor_detal', 'valor_mayorista', 'costo_producto']),
-            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
-            'vendedores' => $team->members()->get(['users.id', 'users.name']),
+            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'vendedores' => User::orderBy('name')->get(['id', 'name']),
             'pucs' => Puc::orderBy('concatenar_subcuenta_concepto')->get(['id', 'concatenar_subcuenta_concepto']),
         ];
     }
@@ -257,6 +267,9 @@ class PedidoController extends Controller
             'canCreate' => $request->user()->can("{$module}.create"),
             'canUpdate' => $request->user()->can("{$module}.update"),
             'canDelete' => $request->user()->can("{$module}.delete"),
+            'canViewDeleted' => $request->user()->can("{$module}.view-deleted"),
+            'canRestore' => $request->user()->can("{$module}.restore"),
+            'canViewDetalle' => $request->user()->can("{$module}.view-detalle"),
         ];
     }
 
@@ -281,7 +294,7 @@ class PedidoController extends Controller
      * Restore a deleted pedido with its lines, taking their stock out of
      * the bodega again.
      */
-    public function restore(Request $request, PedidoService $pedidoService, string $current_team, Pedido $pedido): RedirectResponse
+    public function restore(Request $request, PedidoService $pedidoService, Pedido $pedido): RedirectResponse
     {
         return $this->restaurarRegistro($this->module($request), $pedido, __('Pedido restored.'), function (Pedido $pedido) use ($pedidoService): void {
             DB::transaction(function () use ($pedido, $pedidoService): void {

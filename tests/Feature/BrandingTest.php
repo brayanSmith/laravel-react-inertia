@@ -2,17 +2,15 @@
 
 use App\Models\Compra;
 use App\Models\Empresa;
-use App\Models\Team;
 use App\Models\User;
 use App\Support\Branding;
 
 test('the app is branded with the company name and logo from Empresas', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $this->actingAs($owner)
-        ->get(route('dashboard', $team))
+        ->get(route('dashboard'))
         ->assertInertia(fn ($page) => $page
             ->where('name', config('app.name'))
             ->where('logoUrl', null)
@@ -23,7 +21,7 @@ test('the app is branded with the company name and logo from Empresas', function
     app()->forgetInstance(Branding::class);
 
     $this->actingAs($owner)
-        ->get(route('dashboard', $team))
+        ->get(route('dashboard'))
         ->assertInertia(fn ($page) => $page
             ->where('name', 'Llantas del Norte')
             ->where('logoUrl', '/storage/empresa/logo.png')
@@ -34,13 +32,12 @@ test('the app is branded with the company name and logo from Empresas', function
 
 test('the sidebar counts the compras and how many are still pending', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     Compra::factory()->count(2)->create(['estado' => 'PENDIENTE']);
     Compra::factory()->create(['estado' => 'RECIBIDA']);
 
-    $this->actingAs($owner)->get(route('dashboard', $team))
+    $this->actingAs($owner)->get(route('dashboard'))
         ->assertInertia(fn ($page) => $page
             ->where('navCounts.compras', 3)
             ->where('navCounts.comprasPendientes', 2)

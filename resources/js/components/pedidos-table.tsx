@@ -485,8 +485,6 @@ export default function PedidosTable({
     routes,
     eliminados = false,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [pedidoToDelete, setPedidoToDelete] = useState<Pedido | null>(null);
     const [pedidoToView, setPedidoToView] = useState<Pedido | null>(null);
@@ -948,10 +946,9 @@ export default function PedidosTable({
                                         <p>Ver</p>
                                     </TooltipContent>
                                 </Tooltip>
-                                {permissions.canDelete ? (
+                                {permissions.canRestore ? (
                                     <RestoreButton
                                         action={routes.pedidos.restore([
-                                            teamSlug,
                                             pedido.id,
                                         ])}
                                         nombre={`el pedido #${pedido.id}`}
@@ -983,10 +980,7 @@ export default function PedidosTable({
                                 </TooltipContent>
                             </Tooltip>
                             <VoucherButton
-                                action={routes.pedidos.voucher([
-                                    teamSlug,
-                                    pedido.id,
-                                ])}
+                                action={routes.pedidos.voucher([pedido.id])}
                                 dataTest="voucher-pedido-button"
                             />
                             {permissions.canUpdate ? (
@@ -1000,7 +994,6 @@ export default function PedidosTable({
                                         >
                                             <Link
                                                 href={routes.pedidos.edit([
-                                                    teamSlug,
                                                     pedido.id,
                                                 ])}
                                             >
@@ -1191,7 +1184,6 @@ export default function PedidosTable({
             />
 
             <DeletePedidoModal
-                teamSlug={teamSlug}
                 pedido={pedidoToDelete}
                 routes={routes}
                 open={deleteDialogOpen}

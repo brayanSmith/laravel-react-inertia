@@ -10,7 +10,6 @@ use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\StockBodega;
-use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
@@ -22,8 +21,7 @@ beforeEach(function () {
     }
 
     $this->owner = User::factory()->create();
-    $this->team = Team::factory()->create();
-    attachTeamMember($this->team, $this->owner, 'Owner');
+    asignarRol($this->owner, 'Owner');
 });
 
 dataset('modulos simples', [
@@ -37,19 +35,19 @@ test('the deleted records can be listed and restored', function (string $ruta, s
     $registro = $crear();
     $registro->delete();
 
-    $this->actingAs($this->owner)->get(route("{$ruta}.index", $this->team))
+    $this->actingAs($this->owner)->get(route("{$ruta}.index"))
         ->assertInertia(fn ($page) => $page->has($prop, 0)->where('eliminados', false));
 
-    $this->actingAs($this->owner)->get(route("{$ruta}.index", [$this->team, 'eliminados' => 1]))
+    $this->actingAs($this->owner)->get(route("{$ruta}.index", ['eliminados' => 1]))
         ->assertInertia(fn ($page) => $page->has($prop, 1)->where('eliminados', true));
 
     $this->actingAs($this->owner)
-        ->patch(route("{$ruta}.restore", [$this->team, $registro->id]))
+        ->patch(route("{$ruta}.restore", [$registro->id]))
         ->assertRedirect();
 
     expect($registro->fresh()->trashed())->toBeFalse();
 
-    $this->actingAs($this->owner)->get(route("{$ruta}.index", $this->team))
+    $this->actingAs($this->owner)->get(route("{$ruta}.index"))
         ->assertInertia(fn ($page) => $page->has($prop, 1));
 })->with('modulos simples');
 
@@ -58,17 +56,17 @@ test('restoring needs the delete permission', function (string $ruta, string $pr
     $registro->delete();
 
     $miembro = User::factory()->create();
-    attachTeamMember($this->team, $miembro, 'Member');
+    asignarRol($miembro, 'Member');
     $miembro->givePermissionTo("{$ruta}.view");
 
     $this->actingAs($miembro)
-        ->patch(route("{$ruta}.restore", [$this->team, $registro->id]))
+        ->patch(route("{$ruta}.restore", [$registro->id]))
         ->assertForbidden();
 
     expect($registro->fresh()->trashed())->toBeTrue();
 
     // Without the delete permission the deleted list is not offered either.
-    $this->actingAs($miembro)->get(route("{$ruta}.index", [$this->team, 'eliminados' => 1]))
+    $this->actingAs($miembro)->get(route("{$ruta}.index", ['eliminados' => 1]))
         ->assertInertia(fn ($page) => $page->where('eliminados', false));
 })->with('modulos simples');
 
@@ -77,7 +75,7 @@ test('a deleted pedido keeps its lines, and restoring it takes the stock out aga
     $producto = Producto::factory()->create();
     StockBodega::create(['bodega_id' => $bodega->id, 'producto_id' => $producto->id, 'stock_inicial' => 10, 'entradas' => 0, 'salidas' => 0, 'stock' => 10]);
 
-    $this->actingAs($this->owner)->post(route('pedidos.store', $this->team), [
+    $this->actingAs($this->owner)->post(route('pedidos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => User::factory()->create()->id,
@@ -90,19 +88,19 @@ test('a deleted pedido keeps its lines, and restoring it takes the stock out aga
     $stock = fn () => (float) StockBodega::firstOrFail()->stock;
     expect($stock())->toBe(6.0);
 
-    $this->actingAs($this->owner)->delete(route('pedidos.destroy', [$this->team, $pedido]));
+    $this->actingAs($this->owner)->delete(route('pedidos.destroy', [$pedido]));
 
     expect($stock())->toBe(10.0);
     expect(DetallePedido::withTrashed()->where('pedido_id', $pedido->id)->count())->toBe(1);
     expect($pedido->fresh()->detalles)->toHaveCount(0);
 
-    $this->actingAs($this->owner)->get(route('pedidos.index', [$this->team, 'eliminados' => 1]))
+    $this->actingAs($this->owner)->get(route('pedidos.index', ['eliminados' => 1]))
         ->assertInertia(fn ($page) => $page
             ->has('pedidos', 1)
             ->where('pedidos.0.detalles.0.producto_id', $producto->id)
         );
 
-    $this->actingAs($this->owner)->patch(route('pedidos.restore', [$this->team, $pedido->id]))->assertRedirect();
+    $this->actingAs($this->owner)->patch(route('pedidos.restore', [$pedido->id]))->assertRedirect();
 
     expect($stock())->toBe(6.0);
     expect(Pedido::find($pedido->id)->detalles)->toHaveCount(1);
@@ -113,7 +111,7 @@ test('a deleted mayorista pedido is restored through its own module', function (
     $pedido->delete();
 
     $this->actingAs($this->owner)
-        ->patch(route('pedidos-mayoristas.restore', [$this->team, $pedido->id]))
+        ->patch(route('pedidos-mayoristas.restore', [$pedido->id]))
         ->assertRedirect();
 
     expect($pedido->fresh()->trashed())->toBeFalse();
@@ -125,7 +123,7 @@ test('editing a pedido replaces its lines for good instead of piling up deleted 
     $pedido = Pedido::factory()->create(['bodega_id' => $bodega->id]);
     DetallePedido::factory()->create(['pedido_id' => $pedido->id, 'producto_id' => $producto->id]);
 
-    $this->actingAs($this->owner)->patch(route('pedidos.update', [$this->team, $pedido]), [
+    $this->actingAs($this->owner)->patch(route('pedidos.update', [$pedido]), [
         'cliente_id' => $pedido->cliente_id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => $pedido->user_id,
@@ -142,7 +140,7 @@ test('a deleted compra keeps its lines, and restoring it receives the stock agai
     $producto = Producto::factory()->create();
     $proveedor = Proveedor::factory()->create();
 
-    $this->actingAs($this->owner)->post(route('compras.store', $this->team), [
+    $this->actingAs($this->owner)->post(route('compras.store'), [
         'factura' => 'F-1',
         'proveedor_id' => $proveedor->id,
         'fecha' => '2026-01-10 10:00:00',
@@ -153,15 +151,15 @@ test('a deleted compra keeps its lines, and restoring it receives the stock agai
     $stock = fn () => (float) StockBodega::firstOrFail()->stock;
     expect($stock())->toBe(5.0);
 
-    $this->actingAs($this->owner)->delete(route('compras.destroy', [$this->team, $compra]));
+    $this->actingAs($this->owner)->delete(route('compras.destroy', [$compra]));
 
     expect($stock())->toBe(0.0);
     expect(DetalleCompra::withTrashed()->where('compra_id', $compra->id)->count())->toBe(1);
 
-    $this->actingAs($this->owner)->get(route('compras.index', [$this->team, 'eliminados' => 1]))
+    $this->actingAs($this->owner)->get(route('compras.index', ['eliminados' => 1]))
         ->assertInertia(fn ($page) => $page->has('compras', 1)->has('compras.0.detalles_compra', 1));
 
-    $this->actingAs($this->owner)->patch(route('compras.restore', [$this->team, $compra->id]))->assertRedirect();
+    $this->actingAs($this->owner)->patch(route('compras.restore', [$compra->id]))->assertRedirect();
 
     expect($stock())->toBe(5.0);
     expect(Compra::find($compra->id)->detallesCompra)->toHaveCount(1);
@@ -172,14 +170,14 @@ test('deleted records are left out of the dashboard figures and back once restor
     $pedido = Pedido::factory()->create(['bodega_id' => $bodega->id, 'fecha' => '2026-03-02', 'total_a_pagar' => 500]);
     DetallePedido::factory()->create(['pedido_id' => $pedido->id, 'cantidad' => 2, 'subtotal' => 500]);
 
-    $productos = fn () => $this->actingAs($this->owner)->get(route('dashboard', $this->team))->viewData('page')['props']['resumen']['productosVendidos']['cantidad'];
+    $productos = fn () => $this->actingAs($this->owner)->get(route('dashboard'))->viewData('page')['props']['resumen']['productosVendidos']['cantidad'];
 
     expect($productos())->toBe(2);
 
-    $this->actingAs($this->owner)->delete(route('pedidos.destroy', [$this->team, $pedido]));
+    $this->actingAs($this->owner)->delete(route('pedidos.destroy', [$pedido]));
     expect($productos())->toBe(0);
 
-    $this->actingAs($this->owner)->patch(route('pedidos.restore', [$this->team, $pedido->id]));
+    $this->actingAs($this->owner)->patch(route('pedidos.restore', [$pedido->id]));
     expect($productos())->toBe(2);
 });
 
@@ -191,13 +189,13 @@ test('a pedido and a compra can be viewed in full as JSON, deleted ones included
     $compra = Compra::factory()->create();
     DetalleCompra::factory()->create(['compra_id' => $compra->id, 'producto_id' => $producto->id, 'bodega_id' => $bodega->id]);
 
-    $this->actingAs($this->owner)->getJson(route('pedidos.show', [$this->team, $pedido->id]))
+    $this->actingAs($this->owner)->getJson(route('pedidos.show', [$pedido->id]))
         ->assertOk()
         ->assertJsonPath('id', $pedido->id)
         ->assertJsonPath('detalles.0.producto.id', $producto->id)
         ->assertJsonStructure(['cliente' => ['razon_social'], 'bodega' => ['nombre_bodega'], 'user' => ['name'], 'abonos']);
 
-    $this->actingAs($this->owner)->getJson(route('compras.show', [$this->team, $compra->id]))
+    $this->actingAs($this->owner)->getJson(route('compras.show', [$compra->id]))
         ->assertOk()
         ->assertJsonPath('detalles_compra.0.bodega.id', $bodega->id)
         ->assertJsonStructure(['proveedor' => ['nombre_proveedor']]);
@@ -205,8 +203,8 @@ test('a pedido and a compra can be viewed in full as JSON, deleted ones included
     $pedido->delete();
     $compra->delete();
 
-    $this->actingAs($this->owner)->getJson(route('pedidos.show', [$this->team, $pedido->id]))->assertOk();
-    $this->actingAs($this->owner)->getJson(route('compras.show', [$this->team, $compra->id]))->assertOk();
+    $this->actingAs($this->owner)->getJson(route('pedidos.show', [$pedido->id]))->assertOk();
+    $this->actingAs($this->owner)->getJson(route('compras.show', [$compra->id]))->assertOk();
 });
 
 test('viewing a pedido or a compra needs the view permission of its module', function () {
@@ -214,21 +212,21 @@ test('viewing a pedido or a compra needs the view permission of its module', fun
     $compra = Compra::factory()->create();
 
     $miembro = User::factory()->create();
-    attachTeamMember($this->team, $miembro, 'Member');
+    asignarRol($miembro, 'Member');
 
-    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.show', [$this->team, $pedido->id]))->assertForbidden();
-    $this->actingAs($miembro)->getJson(route('compras.show', [$this->team, $compra->id]))->assertForbidden();
+    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.show', [$pedido->id]))->assertForbidden();
+    $this->actingAs($miembro)->getJson(route('compras.show', [$compra->id]))->assertForbidden();
 
     $miembro->givePermissionTo('compras.view');
-    $this->actingAs($miembro)->getJson(route('compras.show', [$this->team, $compra->id]))->assertOk();
-    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.show', [$this->team, $pedido->id]))->assertForbidden();
+    $this->actingAs($miembro)->getJson(route('compras.show', [$compra->id]))->assertOk();
+    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.show', [$pedido->id]))->assertForbidden();
 });
 
 test('the pedido detail never exposes what it cost or earned', function () {
     $pedido = Pedido::factory()->create();
     DetallePedido::factory()->create(['pedido_id' => $pedido->id, 'costo_unitario' => 40, 'costo_total' => 80, 'ganancia_total' => 120]);
 
-    $json = $this->actingAs($this->owner)->getJson(route('pedidos.show', [$this->team, $pedido->id]))->assertOk()->json();
+    $json = $this->actingAs($this->owner)->getJson(route('pedidos.show', [$pedido->id]))->assertOk()->json();
 
     expect($json['detalles'][0])->not->toHaveKeys(['costo_unitario', 'costo_total', 'ganancia_total']);
 });
@@ -236,14 +234,14 @@ test('the pedido detail never exposes what it cost or earned', function () {
 test('a pedido voucher is served to whoever can view the pedidos of that module', function () {
     $pedido = Pedido::factory()->create(['tipo_precio' => 'MAYORISTA']);
 
-    $this->actingAs($this->owner)->getJson(route('pedidos-mayoristas.voucher', [$this->team, $pedido->id]))
+    $this->actingAs($this->owner)->getJson(route('pedidos-mayoristas.voucher', [$pedido->id]))
         ->assertOk()
         ->assertJsonPath('pedido.id', $pedido->id);
 
     $miembro = User::factory()->create();
-    attachTeamMember($this->team, $miembro, 'Member');
+    asignarRol($miembro, 'Member');
     $miembro->givePermissionTo('pedidos.view');
 
-    $this->actingAs($miembro)->getJson(route('pedidos.voucher', [$this->team, $pedido->id]))->assertOk();
-    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.voucher', [$this->team, $pedido->id]))->assertForbidden();
+    $this->actingAs($miembro)->getJson(route('pedidos.voucher', [$pedido->id]))->assertOk();
+    $this->actingAs($miembro)->getJson(route('pedidos-mayoristas.voucher', [$pedido->id]))->assertForbidden();
 });

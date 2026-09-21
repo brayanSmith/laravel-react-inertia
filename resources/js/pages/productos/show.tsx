@@ -24,8 +24,6 @@ function Field({
 }
 
 export default function ProductoShow({ producto }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const nombre = producto.concatenar_codigo_nombre || 'Producto';
 
     return (
@@ -35,14 +33,13 @@ export default function ProductoShow({ producto }: Props) {
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <div className="text-muted-foreground text-sm">
-                        <Link href={index(teamSlug)}>Productos</Link> {'>'}{' '}
-                        {nombre}
+                        <Link href={index()}>Productos</Link> {'>'} {nombre}
                     </div>
                     <h1 className="text-2xl font-bold">{nombre}</h1>
                 </div>
 
                 <Button asChild>
-                    <Link href={edit([teamSlug, producto.id])}>
+                    <Link href={edit([producto.id])}>
                         <Pencil /> Editar
                     </Link>
                 </Button>
@@ -129,11 +126,11 @@ export default function ProductoShow({ producto }: Props) {
     );
 }
 
-ProductoShow.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+ProductoShow.layout = () => ({
     breadcrumbs: [
         {
             title: 'Productos',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

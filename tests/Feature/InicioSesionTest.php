@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\InicioSesion;
-use App\Models\Team;
 use App\Models\User;
 use App\Support\UserAgent;
 use Spatie\Permission\Models\Permission;
@@ -46,38 +45,37 @@ test('the user agent reader tells apart the common browsers and devices', functi
         ->toMatchArray(['navegador' => 'Safari', 'sistema_operativo' => 'iOS', 'dispositivo' => 'Móvil']);
 });
 
-test('the page lists only the logins of the team members, newest first', function () {
+test('the page lists the logins, newest first', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $miembro = User::factory()->create();
-    attachTeamMember($team, $miembro, 'Member');
+    asignarRol($miembro, 'Member');
     $ajeno = User::factory()->create();
 
     InicioSesion::factory()->create(['user_id' => $miembro->id, 'nombre' => 'Antiguo', 'created_at' => now()->subDay()]);
     InicioSesion::factory()->create(['user_id' => $owner->id, 'nombre' => 'Reciente', 'created_at' => now()]);
-    InicioSesion::factory()->create(['user_id' => $ajeno->id, 'nombre' => 'De otro equipo']);
+    InicioSesion::factory()->create(['user_id' => $ajeno->id, 'nombre' => 'Otro', 'created_at' => now()->subDays(2)]);
 
     $this->actingAs($owner)
-        ->get(route('inicios-sesion.index', $team))
+        ->get(route('inicios-sesion.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('inicios-sesion/index')
-            ->has('inicios', 2)
+            ->has('inicios', 3)
             ->where('inicios.0.nombre', 'Reciente')
             ->where('inicios.1.nombre', 'Antiguo')
+            ->where('inicios.2.nombre', 'Otro')
         );
 });
 
 test('members without permission cannot view the logins', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('inicios-sesion.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('inicios-sesion.index'))->assertForbidden();
 
     $member->givePermissionTo('inicios-sesion.view');
 
-    $this->actingAs($member)->get(route('inicios-sesion.index', $team))->assertOk();
+    $this->actingAs($member)->get(route('inicios-sesion.index'))->assertOk();
 });

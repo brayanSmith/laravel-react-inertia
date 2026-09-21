@@ -32,14 +32,12 @@ import type {
 } from '@/types';
 
 type Props = {
-    teamSlug: string;
     proveedor: Proveedor | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function EditProveedorModal({
-    teamSlug,
     proveedor,
     open,
     onOpenChange,
@@ -90,7 +88,7 @@ export default function EditProveedorModal({
             <DialogContent className="sm:max-w-3xl">
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, proveedor.id])}
+                    {...update.form([proveedor.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

@@ -23,13 +23,10 @@ type Props = {
 };
 
 export default function PucsIndex({ pucs, permissions }: Props) {
-    const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [pucToEdit, setPucToEdit] = useState<Puc | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [pucToDelete, setPucToDelete] = useState<Puc | null>(null);
-
-    const teamSlug = currentTeam?.slug ?? '';
 
     const openEditDialog = (puc: Puc) => {
         setPucToEdit(puc);
@@ -88,9 +85,7 @@ export default function PucsIndex({ pucs, permissions }: Props) {
                                             variant="ghost"
                                             size="sm"
                                             data-test="edit-puc-button"
-                                            onClick={() =>
-                                                openEditDialog(puc)
-                                            }
+                                            onClick={() => openEditDialog(puc)}
                                         >
                                             <Pencil className="h-4 w-4" />
                                         </Button>
@@ -141,7 +136,7 @@ export default function PucsIndex({ pucs, permissions }: Props) {
                     />
 
                     {permissions.canCreate ? (
-                        <CreatePucModal teamSlug={teamSlug}>
+                        <CreatePucModal>
                             <Button data-test="create-puc-button">
                                 <Plus /> Nueva cuenta
                             </Button>
@@ -160,14 +155,12 @@ export default function PucsIndex({ pucs, permissions }: Props) {
             </div>
 
             <EditPucModal
-                teamSlug={teamSlug}
                 puc={pucToEdit}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
             />
 
             <DeletePucModal
-                teamSlug={teamSlug}
                 puc={pucToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -176,11 +169,11 @@ export default function PucsIndex({ pucs, permissions }: Props) {
     );
 }
 
-PucsIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+PucsIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'PUC',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

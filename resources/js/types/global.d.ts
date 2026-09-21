@@ -1,5 +1,4 @@
 import type { Auth } from '@/types/auth';
-import type { Team } from '@/types/teams';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -15,8 +14,7 @@ declare module '@inertiajs/core' {
             logoUrl: string | null;
             auth: Auth;
             sidebarOpen: boolean;
-            currentTeam: Team | null;
-            teams: Team[];
+            canViewRoles: boolean;
             canViewClientes: boolean;
             canViewUsuarios: boolean;
             canViewBodegas: boolean;

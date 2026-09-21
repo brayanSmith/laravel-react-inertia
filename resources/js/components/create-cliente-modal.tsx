@@ -30,14 +30,15 @@ import type { RetenedorFuente, TipoDocumento } from '@/types';
 const TIPOS_DOCUMENTO: TipoDocumento[] = ['CC', 'NIT', 'CE', 'TI', 'PASAPORTE'];
 
 type Props = PropsWithChildren<{
-    teamSlug: string;
     /** Called after the cliente was created and the modal closed. */
     onCreated?: () => void;
+    /** Created from the POS: the server then accepts `pos.create-cliente` too. */
+    fromPos?: boolean;
 }>;
 
 export default function CreateClienteModal({
-    teamSlug,
     onCreated,
+    fromPos = false,
     children,
 }: Props) {
     const [open, setOpen] = useState(false);
@@ -77,7 +78,7 @@ export default function CreateClienteModal({
             <DialogContent className="sm:max-w-2xl">
                 <Form
                     key={String(open)}
-                    {...store.form(teamSlug)}
+                    {...store.form()}
                     className="space-y-6"
                     onSuccess={() => {
                         handleOpenChange(false);
@@ -86,6 +87,13 @@ export default function CreateClienteModal({
                 >
                     {({ errors, processing }) => (
                         <>
+                            {fromPos ? (
+                                <input
+                                    type="hidden"
+                                    name="desde_pos"
+                                    value="1"
+                                />
+                            ) : null}
                             <DialogHeader>
                                 <DialogTitle>Nuevo cliente</DialogTitle>
                                 <DialogDescription>

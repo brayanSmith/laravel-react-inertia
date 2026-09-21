@@ -32,11 +32,9 @@ import type {
     TipoProveedor,
 } from '@/types';
 
-type Props = PropsWithChildren<{
-    teamSlug: string;
-}>;
+type Props = PropsWithChildren<{}>;
 
-export default function CreateProveedorModal({ teamSlug, children }: Props) {
+export default function CreateProveedorModal({ children }: Props) {
     const [open, setOpen] = useState(false);
     const [tipoProveedor, setTipoProveedor] =
         useState<TipoProveedor>('REMISIONADO');
@@ -77,7 +75,7 @@ export default function CreateProveedorModal({ teamSlug, children }: Props) {
             <DialogContent className="sm:max-w-3xl">
                 <Form
                     key={String(open)}
-                    {...store.form(teamSlug)}
+                    {...store.form()}
                     className="space-y-6"
                     onSuccess={() => handleOpenChange(false)}
                 >

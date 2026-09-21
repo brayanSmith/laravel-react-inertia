@@ -23,7 +23,6 @@ import type {
 } from '@/types';
 
 type Props = {
-    teamSlug: string;
     pedido: Pedido;
     routes: PedidoRoutes;
     abono: PedidoAbono | null;
@@ -41,7 +40,6 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 });
 
 export default function EditAbonoModal({
-    teamSlug,
     pedido,
     routes,
     abono,
@@ -81,9 +79,7 @@ export default function EditAbonoModal({
     useEffect(() => {
         if (abono) {
             setPucId(abono.puc_id ? String(abono.puc_id) : '');
-            setVendedorId(
-                abono.vendedor_id ? String(abono.vendedor_id) : '',
-            );
+            setVendedorId(abono.vendedor_id ? String(abono.vendedor_id) : '');
             setMonto(abono.monto ?? '');
             setConCuantoPago(abono.con_cuanto_pago ?? '');
         }
@@ -105,11 +101,7 @@ export default function EditAbonoModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...routes.abonos.update.form([
-                        teamSlug,
-                        pedido.id,
-                        abono.id,
-                    ])}
+                    {...routes.abonos.update.form([pedido.id, abono.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >
@@ -210,9 +202,7 @@ export default function EditAbonoModal({
                                         name="vendedor_id"
                                         value={vendedorId}
                                     />
-                                    <InputError
-                                        message={errors.vendedor_id}
-                                    />
+                                    <InputError message={errors.vendedor_id} />
                                 </div>
 
                                 <div className="grid gap-2">
@@ -225,9 +215,7 @@ export default function EditAbonoModal({
                                         data-test="edit-abono-descripcion"
                                         defaultValue={abono.descripcion ?? ''}
                                     />
-                                    <InputError
-                                        message={errors.descripcion}
-                                    />
+                                    <InputError message={errors.descripcion} />
                                 </div>
                             </div>
 

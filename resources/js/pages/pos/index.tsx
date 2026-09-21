@@ -18,17 +18,18 @@ type Props = {
     marcas: MarcaOption[];
     canCreateProducto: boolean;
     canCreateCliente: boolean;
+    canViewAllPedidos: boolean;
 };
 
 export default function PosIndex(props: Props) {
     return <PosPage {...props} />;
 }
 
-PosIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+PosIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'POS',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

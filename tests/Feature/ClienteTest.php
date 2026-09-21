@@ -1,11 +1,9 @@
 <?php
 
 use App\Models\Cliente;
-use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     Permission::findOrCreate('clientes.view');
@@ -16,9 +14,7 @@ beforeEach(function () {
 
 test('owners can view, create, update and delete clientes without a custom role', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
-    $owner->switchTeam($team);
+    asignarRol($owner, 'Owner');
 
     $this->actingAs($owner)->get(route('clientes.index'))->assertOk();
 
@@ -47,21 +43,15 @@ test('owners can view, create, update and delete clientes without a custom role'
 
 test('members without a role cannot view clientes', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
-    $member->switchTeam($team);
+    asignarRol($member, 'Member');
 
     $this->actingAs($member)->get(route('clientes.index'))->assertForbidden();
 });
 
 test('members with a role granting clientes.view can see the list but not create', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
-    $member->switchTeam($team);
-
-    app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
-    $role = Role::create(['name' => 'Vendedor', 'team_id' => $team->id]);
+    asignarRol($member, 'Member');
+    $role = Role::create(['name' => 'Vendedor']);
     $role->syncPermissions(['clientes.view']);
     $member->syncRoles([$role]);
 

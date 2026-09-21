@@ -1,27 +1,19 @@
 <?php
 
-namespace App\Http\Requests\Teams;
+namespace App\Http\Requests\Roles;
 
-use App\Models\Team;
-use App\Support\TeamRoles;
+use App\Models\Role;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
 
-class SaveTeamRoleRequest extends FormRequest
+class SaveRoleRequest extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        $team = $this->route('team');
-
-        abort_if(! $team instanceof Team, 404);
-
         $role = $this->route('role');
 
         return [
@@ -29,14 +21,14 @@ class SaveTeamRoleRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::notIn(TeamRoles::TIERS),
                 Rule::unique('roles', 'name')
-                    ->where('team_id', $team->id)
                     ->where('guard_name', 'web')
                     ->ignore($role instanceof Role ? $role->id : null),
             ],
             'permissions' => ['array'],
             'permissions.*' => ['string', 'exists:permissions,name'],
+            'bodegas' => ['array'],
+            'bodegas.*' => ['integer', 'exists:bodegas,id'],
         ];
     }
 }

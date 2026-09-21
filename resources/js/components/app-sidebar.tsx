@@ -23,7 +23,6 @@ import {
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { TeamSwitcher } from '@/components/team-switcher';
 import {
     Sidebar,
     SidebarContent,
@@ -48,33 +47,27 @@ import { index as posIndex } from '@/routes/pos';
 import { index as productosIndex } from '@/routes/productos';
 import { index as proveedoresIndex } from '@/routes/proveedores';
 import { index as pucsIndex } from '@/routes/pucs';
+import { index as rolesIndex } from '@/routes/roles';
 import { index as stockBodegasIndex } from '@/routes/stock-bodegas';
 import { index as stockInicialesIndex } from '@/routes/stock-iniciales';
-import { index as rolesIndex } from '@/routes/teams/roles';
 import { index as trasladosIndex } from '@/routes/traslados';
 import { index as usuariosIndex } from '@/routes/usuarios';
 import type { NavGroup, NavItem } from '@/types';
 
 export function AppSidebar() {
     const page = usePage();
-    const team = page.props.currentTeam?.slug;
-    const dashboardUrl = team ? dashboard(team) : '/';
-    const canManageRoles =
-        page.props.currentTeam?.role === 'owner' ||
-        page.props.currentTeam?.role === 'admin';
+    const dashboardUrl = dashboard();
 
     // Every entry is shown only when the user has the permission for it.
     const entry = (
         visible: boolean,
         title: string,
-        href: (slug: string) => NavItem['href'],
+        href: () => NavItem['href'],
         icon: NavItem['icon'],
         badge?: number,
         badgePendiente?: number,
     ): NavItem[] =>
-        visible && team
-            ? [{ title, href: href(team), icon, badge, badgePendiente }]
-            : [];
+        visible ? [{ title, href: href(), icon, badge, badgePendiente }] : [];
 
     const groups: NavGroup[] = [
         {
@@ -210,7 +203,7 @@ export function AppSidebar() {
             label: 'Seguridad',
             items: [
                 ...entry(
-                    canManageRoles,
+                    page.props.canViewRoles,
                     'Roles y Permisos',
                     rolesIndex,
                     Shield,
@@ -235,11 +228,6 @@ export function AppSidebar() {
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <TeamSwitcher />
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>

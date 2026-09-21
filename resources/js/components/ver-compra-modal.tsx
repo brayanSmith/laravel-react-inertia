@@ -58,11 +58,8 @@ type CompraDetalleCompleto = Omit<Compra, 'detalles_compra' | 'proveedor'> & {
 
 /** Read-only view of a compra: header, products and totals. */
 export default function VerCompraModal({ compra, onClose }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
-
     const { record, loading, failed } = useFetchedRecord<CompraDetalleCompleto>(
-        compra ? show([teamSlug, compra.id]) : null,
+        compra ? show([compra.id]) : null,
     );
 
     const detalles = record?.detalles_compra ?? [];

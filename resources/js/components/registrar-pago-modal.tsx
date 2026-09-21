@@ -17,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import type { Pedido, PedidoRoutes, PucOption, VendedorOption } from '@/types';
 
 type Props = {
-    teamSlug: string;
     pedido: Pedido;
     routes: PedidoRoutes;
     pucs: PucOption[];
@@ -34,7 +33,6 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 });
 
 export default function RegistrarPagoModal({
-    teamSlug,
     pedido,
     routes,
     pucs,
@@ -96,7 +94,7 @@ export default function RegistrarPagoModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...routes.abonos.store.form([teamSlug, pedido.id])}
+                    {...routes.abonos.store.form([pedido.id])}
                     className="space-y-6"
                     onSuccess={() => {
                         onOpenChange(false);
@@ -174,7 +172,7 @@ export default function RegistrarPagoModal({
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm">
+                                <div className="bg-muted flex items-center justify-between rounded-md px-3 py-2 text-sm">
                                     <span className="text-muted-foreground">
                                         Cambio
                                     </span>
@@ -198,9 +196,7 @@ export default function RegistrarPagoModal({
                                         name="vendedor_id"
                                         value={vendedorId}
                                     />
-                                    <InputError
-                                        message={errors.vendedor_id}
-                                    />
+                                    <InputError message={errors.vendedor_id} />
                                 </div>
 
                                 <div className="grid gap-2">
@@ -212,9 +208,7 @@ export default function RegistrarPagoModal({
                                         name="descripcion"
                                         data-test="abono-descripcion"
                                     />
-                                    <InputError
-                                        message={errors.descripcion}
-                                    />
+                                    <InputError message={errors.descripcion} />
                                 </div>
                             </div>
 

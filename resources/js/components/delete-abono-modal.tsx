@@ -13,7 +13,6 @@ import {
 import type { Pedido, PedidoAbono, PedidoRoutes } from '@/types';
 
 type Props = {
-    teamSlug: string;
     pedido: Pedido;
     routes: PedidoRoutes;
     abono: PedidoAbono | null;
@@ -22,7 +21,6 @@ type Props = {
 };
 
 export default function DeleteAbonoModal({
-    teamSlug,
     pedido,
     routes,
     abono,
@@ -36,7 +34,7 @@ export default function DeleteAbonoModal({
             return;
         }
 
-        router.visit(routes.abonos.destroy([teamSlug, pedido.id, abono.id]), {
+        router.visit(routes.abonos.destroy([pedido.id, abono.id]), {
             method: 'delete',
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
@@ -50,9 +48,9 @@ export default function DeleteAbonoModal({
                 <DialogHeader>
                     <DialogTitle>Eliminar pago</DialogTitle>
                     <DialogDescription>
-                        ¿Estás seguro de eliminar este abono? El saldo
-                        pendiente del pedido se recalculará y esta acción no
-                        se puede deshacer.
+                        ¿Estás seguro de eliminar este abono? El saldo pendiente
+                        del pedido se recalculará y esta acción no se puede
+                        deshacer.
                     </DialogDescription>
                 </DialogHeader>
 

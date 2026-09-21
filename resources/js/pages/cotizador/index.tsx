@@ -33,11 +33,11 @@ export default function CotizadorIndex({
     );
 }
 
-CotizadorIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+CotizadorIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Cotizador',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

@@ -168,7 +168,7 @@ export default function MultiCombobox({
                             type="button"
                             onClick={seleccionarTodo}
                             disabled={todosMarcados}
-                            className="text-primary hover:underline text-sm disabled:opacity-50"
+                            className="text-primary text-sm hover:underline disabled:opacity-50"
                         >
                             Seleccionar todo
                         </button>

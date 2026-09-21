@@ -14,18 +14,12 @@ import { destroy } from '@/routes/pucs';
 import type { Puc } from '@/types';
 
 type Props = {
-    teamSlug: string;
     puc: Puc | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
-export default function DeletePucModal({
-    teamSlug,
-    puc,
-    open,
-    onOpenChange,
-}: Props) {
+export default function DeletePucModal({ puc, open, onOpenChange }: Props) {
     const [processing, setProcessing] = useState(false);
 
     const deletePuc = () => {
@@ -33,7 +27,7 @@ export default function DeletePucModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, puc.id]), {
+        router.visit(destroy([puc.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

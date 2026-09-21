@@ -44,6 +44,8 @@ type Props = {
     marcas: MarcaOption[];
     canCreateProducto: boolean;
     canCreateCliente: boolean;
+    /** Without it the history only lists the user's own pedidos (no vendedor filter). */
+    canViewAllPedidos: boolean;
 };
 
 export default function PosPage({
@@ -55,15 +57,13 @@ export default function PosPage({
     marcas,
     canCreateProducto,
     canCreateCliente,
+    canViewAllPedidos,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
-
     const userId = usePage().props.auth?.user?.id ?? 0;
 
     // Sales in progress live in localStorage, so leaving the POS (or a
     // reload) doesn't lose them; each tab is an independent pedido.
-    const ventas = usePosVentas(`pos:ventas:v1:${userId}:${teamSlug}`);
+    const ventas = usePosVentas(`pos:ventas:v1:${userId}`);
     const { header, setField, resetVenta } = usePosHeader(
         ventas.activa.header,
         ventas.setHeader,
@@ -260,7 +260,6 @@ export default function PosPage({
                         reservedByProducto={cart.reservedByProducto}
                         tipoPrecio={header.tipoPrecio}
                         onAdd={handleSelect}
-                        teamSlug={teamSlug}
                         marcas={marcas}
                         canCreateProducto={canCreateProducto}
                         searchRef={searchRef}
@@ -307,7 +306,7 @@ export default function PosPage({
                 ever nested inside this form. */}
             <Form
                 className="hidden"
-                {...store.form(teamSlug)}
+                {...store.form()}
                 id={POS_CHECKOUT_FORM_ID}
                 transform={(data) => ({
                     ...data,
@@ -450,7 +449,6 @@ export default function PosPage({
                 <PosClienteModal
                     clientes={clientes}
                     selectedId={header.clienteId}
-                    teamSlug={teamSlug}
                     canCreate={canCreateCliente}
                     onSelect={(clienteId) => {
                         setField('clienteId', clienteId);
@@ -463,7 +461,6 @@ export default function PosPage({
             {historialOpen && cliente ? (
                 <PosClienteHistorialModal
                     cliente={cliente}
-                    teamSlug={teamSlug}
                     onClose={() => setHistorialOpen(false)}
                 />
             ) : null}
@@ -501,15 +498,13 @@ export default function PosPage({
                     title="Historial de pedidos"
                     showCliente
                     defaultHoy
-                    vendedores={vendedores}
+                    vendedores={canViewAllPedidos ? vendedores : undefined}
                     buildRoute={({ desde, hasta, user_id, page }) =>
-                        pedidosPos(teamSlug, {
+                        pedidosPos({
                             query: { desde, hasta, user_id, page },
                         })
                     }
-                    buildVoucherRoute={(pedidoId) =>
-                        voucherRoute([teamSlug, pedidoId])
-                    }
+                    buildVoucherRoute={(pedidoId) => voucherRoute([pedidoId])}
                     onClose={() => setPedidosOpen(false)}
                 />
             ) : null}

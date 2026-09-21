@@ -37,7 +37,7 @@ class ProductoController extends Controller
         return Inertia::render('productos/index', [
             'productos' => $this->listado($eliminados),
             'eliminados' => $eliminados,
-            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'marcas' => Marca::orderBy('marca')->get(['id', 'marca']),
             'permissions' => $this->permissions($request),
         ]);
@@ -61,7 +61,12 @@ class ProductoController extends Controller
      */
     public function store(StoreProductoRequest $request): RedirectResponse
     {
-        Gate::authorize('productos.create');
+        // From the POS (`stay_on_page`) `pos.create-producto` is enough.
+        abort_unless(
+            $request->user()->can('productos.create')
+                || ($request->boolean('stay_on_page') && $request->user()->can('pos.create-producto')),
+            403,
+        );
 
         $data = $request->validated();
 
@@ -80,13 +85,13 @@ class ProductoController extends Controller
             return back();
         }
 
-        return to_route('productos.index', ['current_team' => $request->route('current_team')]);
+        return to_route('productos.index');
     }
 
     /**
      * Display the specified producto.
      */
-    public function show(Request $request, string $current_team, Producto $producto): Response
+    public function show(Request $request, Producto $producto): Response
     {
         Gate::authorize('productos.view');
 
@@ -101,7 +106,7 @@ class ProductoController extends Controller
      * paginated independently so a product with a long history doesn't
      * require loading every record at once.
      */
-    public function detalles(Request $request, string $current_team, Producto $producto): JsonResponse
+    public function detalles(Request $request, Producto $producto): JsonResponse
     {
         Gate::authorize('productos.view');
 
@@ -139,7 +144,7 @@ class ProductoController extends Controller
     /**
      * Show the form for editing the specified producto.
      */
-    public function edit(Request $request, string $current_team, Producto $producto): Response
+    public function edit(Request $request, Producto $producto): Response
     {
         Gate::authorize('productos.update');
 
@@ -153,7 +158,7 @@ class ProductoController extends Controller
     /**
      * Update the specified producto.
      */
-    public function update(UpdateProductoRequest $request, string $current_team, Producto $producto): RedirectResponse
+    public function update(UpdateProductoRequest $request, Producto $producto): RedirectResponse
     {
         Gate::authorize('productos.update');
 
@@ -176,13 +181,13 @@ class ProductoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Producto updated.')]);
 
-        return to_route('productos.index', ['current_team' => $current_team]);
+        return to_route('productos.index');
     }
 
     /**
      * Remove the specified producto.
      */
-    public function destroy(string $current_team, Producto $producto): RedirectResponse
+    public function destroy(Producto $producto): RedirectResponse
     {
         Gate::authorize('productos.delete');
 
@@ -190,7 +195,7 @@ class ProductoController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Producto deleted.')]);
 
-        return to_route('productos.index', ['current_team' => $current_team]);
+        return to_route('productos.index');
     }
 
     /**
@@ -299,13 +304,15 @@ class ProductoController extends Controller
             'canCreate' => $request->user()->can('productos.create'),
             'canUpdate' => $request->user()->can('productos.update'),
             'canDelete' => $request->user()->can('productos.delete'),
+            'canViewDeleted' => $request->user()->can('productos.view-deleted'),
+            'canRestore' => $request->user()->can('productos.restore'),
         ];
     }
 
     /**
      * Restore a deleted producto.
      */
-    public function restore(string $current_team, Producto $producto): RedirectResponse
+    public function restore(Producto $producto): RedirectResponse
     {
         return $this->restaurarRegistro('productos', $producto, __('Producto restored.'));
     }

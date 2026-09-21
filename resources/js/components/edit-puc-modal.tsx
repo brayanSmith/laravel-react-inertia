@@ -36,18 +36,12 @@ const TIPOS_PUC: { value: TipoPuc; label: string }[] = [
 ];
 
 type Props = {
-    teamSlug: string;
     puc: Puc | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
-export default function EditPucModal({
-    teamSlug,
-    puc,
-    open,
-    onOpenChange,
-}: Props) {
+export default function EditPucModal({ puc, open, onOpenChange }: Props) {
     const [tipo, setTipo] = useState<TipoPuc>('1');
 
     useEffect(() => {
@@ -65,7 +59,7 @@ export default function EditPucModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, puc.id])}
+                    {...update.form([puc.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

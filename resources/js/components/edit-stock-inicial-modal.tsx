@@ -18,7 +18,6 @@ import { update } from '@/routes/stock-iniciales';
 import type { Bodega, ProductoOption, StockInicial } from '@/types';
 
 type Props = {
-    teamSlug: string;
     productos: ProductoOption[];
     bodegas: Bodega[];
     stockInicial: StockInicial | null;
@@ -27,7 +26,6 @@ type Props = {
 };
 
 export default function EditStockInicialModal({
-    teamSlug,
     productos,
     bodegas,
     stockInicial,
@@ -80,7 +78,7 @@ export default function EditStockInicialModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, stockInicial.id])}
+                    {...update.form([stockInicial.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

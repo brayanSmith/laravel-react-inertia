@@ -14,18 +14,12 @@ import { destroy } from '@/routes/marcas';
 import type { Marca } from '@/types';
 
 type Props = {
-    teamSlug: string;
     marca: Marca | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
-export default function DeleteMarcaModal({
-    teamSlug,
-    marca,
-    open,
-    onOpenChange,
-}: Props) {
+export default function DeleteMarcaModal({ marca, open, onOpenChange }: Props) {
     const [processing, setProcessing] = useState(false);
 
     const deleteMarca = () => {
@@ -33,7 +27,7 @@ export default function DeleteMarcaModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, marca.id]), {
+        router.visit(destroy([marca.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

@@ -6,7 +6,6 @@ use App\Models\Bodega;
 use App\Models\Gasto;
 use App\Models\Pedido;
 use App\Models\Producto;
-use App\Models\TeamInvitation;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -19,33 +18,17 @@ class DashboardController extends Controller
     public function __invoke(Request $request): Response
     {
         $filtros = $this->filtros($request);
-        $email = strtolower($request->user()->email);
-
-        $pendingInvitations = TeamInvitation::query()
-            ->with(['inviter', 'team'])
-            ->whereRaw('LOWER(email) = ?', [$email])
-            ->whereNull('accepted_at')
-            ->where(fn ($query) => $query
-                ->whereNull('expires_at')
-                ->orWhere('expires_at', '>=', now()))
-            ->latest()
-            ->get()
-            ->map(fn (TeamInvitation $invitation) => [
-                'code' => $invitation->code,
-                'inviterName' => $invitation->inviter->name,
-                'team' => [
-                    'name' => $invitation->team->name,
-                    'slug' => $invitation->team->slug,
-                ],
-            ]);
+        $acciones = ['widget-productos', 'widget-ganancia', 'widget-ajustes', 'tabla-bodegas', 'chart-categorias', 'chart-top-productos', 'chart-pedidos'];
+        // True when the user may see at least one of the given dashboard parts.
+        $puede = fn (string ...$partes): bool => collect($partes)->contains(fn (string $parte) => $request->user()->can("dashboard.{$parte}"));
 
         return Inertia::render('dashboard', [
-            'pendingInvitations' => $pendingInvitations,
-            'cantidadPorBodega' => $this->cantidadPorBodega($filtros),
-            'resumen' => $this->resumen($filtros),
-            'graficos' => $this->graficos($filtros),
+            'cantidadPorBodega' => $puede('tabla-bodegas') ? $this->cantidadPorBodega($filtros) : null,
+            'resumen' => $puede('widget-productos', 'widget-ganancia', 'widget-ajustes') ? $this->resumen($filtros) : null,
+            'graficos' => $puede('chart-categorias', 'chart-top-productos', 'chart-pedidos') ? $this->graficos($filtros) : null,
+            'permisos' => collect($acciones)->mapWithKeys(fn (string $accion) => [$accion => $puede($accion)])->all(),
             'filtros' => $filtros,
-            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             // Only products that were ever sold or bought, to keep the list small.
             'productosFiltro' => Producto::query()
                 ->where(fn ($query) => $query
@@ -152,7 +135,7 @@ class DashboardController extends Controller
         $vacia = fn (string $almacen): array => ['almacen' => $almacen, 'NUEVO' => 0, 'USADO' => 0, 'SERVICIO' => 0, 'total' => 0, 'valores' => ['NUEVO' => 0.0, 'USADO' => 0.0, 'SERVICIO' => 0.0, 'total' => 0.0]];
 
         $filas = [];
-        $bodegas = Bodega::orderBy('nombre_bodega')
+        $bodegas = Bodega::permitidas()->orderBy('nombre_bodega')
             ->when($filtros['bodega_ids'] !== [], fn ($query) => $query->whereKey(array_filter($filtros['bodega_ids'], fn (string $id) => $id !== 'mayorista')))
             ->get(['id', 'nombre_bodega']);
 

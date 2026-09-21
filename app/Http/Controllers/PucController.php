@@ -50,7 +50,7 @@ class PucController extends Controller
     /**
      * Update the specified puc.
      */
-    public function update(UpdatePucRequest $request, string $current_team, Puc $puc): RedirectResponse
+    public function update(UpdatePucRequest $request, Puc $puc): RedirectResponse
     {
         Gate::authorize('puc.update');
 
@@ -67,7 +67,7 @@ class PucController extends Controller
     /**
      * Remove the specified puc.
      */
-    public function destroy(string $current_team, Puc $puc): RedirectResponse
+    public function destroy(Puc $puc): RedirectResponse
     {
         Gate::authorize('puc.delete');
 

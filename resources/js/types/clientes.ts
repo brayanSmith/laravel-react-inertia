@@ -22,4 +22,6 @@ export type ClientePermissions = {
     canCreate: boolean;
     canUpdate: boolean;
     canDelete: boolean;
+    canViewDeleted: boolean;
+    canRestore: boolean;
 };

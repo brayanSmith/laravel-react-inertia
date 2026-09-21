@@ -3,12 +3,10 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Concerns\HasTeams;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -30,22 +28,15 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $avatar Public URL of the profile picture (the stored path is in the raw attribute).
  * @property string|null $remember_token
- * @property int|null $current_team_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Team|null $currentTeam
- * @property-read Collection<int, Membership> $teamMemberships
- * @property-read Collection<int, Team> $teams
  */
-#[Fillable(['name', 'email', 'password', 'current_team_id'])]
+#[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, HasTeams, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable {
-        HasTeams::teams insteadof HasRoles;
-        HasRoles::teams as permissionTeams;
-    }
+    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * The profile picture as a public URL; the raw attribute is the stored path.
@@ -57,6 +48,24 @@ class User extends Authenticatable implements PasskeyUser
         return Attribute::make(
             get: fn (?string $path) => $path ? Storage::disk('public')->url($path) : null,
         );
+    }
+
+    /**
+     * Ids of the bodegas this user may use in the current team, or null when
+     * there is no restriction: the union of the bodegas selected on their
+     * roles, and roles without any bodega selected do not restrict.
+     *
+     * @return list<int>|null
+     */
+    public function idsBodegasPermitidas(): ?array
+    {
+        $ids = $this->roles
+            ->load('bodegas')
+            ->flatMap(fn (Role $role) => $role->bodegas->pluck('id'))
+            ->unique()
+            ->values();
+
+        return $ids->isEmpty() ? null : $ids->all();
     }
 
     /**

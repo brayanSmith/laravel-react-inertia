@@ -15,7 +15,6 @@ import { update } from '@/routes/productos';
 import type { MarcaOption, Producto } from '@/types';
 
 type Props = {
-    teamSlug: string;
     marcas: MarcaOption[];
     producto: Producto | null;
     open: boolean;
@@ -23,7 +22,6 @@ type Props = {
 };
 
 export default function EditProductoModal({
-    teamSlug,
     marcas,
     producto,
     open,
@@ -57,7 +55,7 @@ export default function EditProductoModal({
             <DialogContent className="max-h-[90vh] w-full overflow-y-auto sm:max-w-3xl lg:max-w-5xl">
                 <Form
                     key={`${producto.id}-${String(open)}`}
-                    {...update.form([teamSlug, producto.id])}
+                    {...update.form([producto.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

@@ -14,14 +14,12 @@ import { destroy } from '@/routes/bodegas';
 import type { Bodega } from '@/types';
 
 type Props = {
-    teamSlug: string;
     bodega: Bodega | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function DeleteBodegaModal({
-    teamSlug,
     bodega,
     open,
     onOpenChange,
@@ -33,7 +31,7 @@ export default function DeleteBodegaModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, bodega.id]), {
+        router.visit(destroy([bodega.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

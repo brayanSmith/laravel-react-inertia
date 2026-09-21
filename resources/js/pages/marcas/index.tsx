@@ -22,13 +22,10 @@ type Props = {
 };
 
 export default function MarcasIndex({ marcas, permissions }: Props) {
-    const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [marcaToEdit, setMarcaToEdit] = useState<Marca | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [marcaToDelete, setMarcaToDelete] = useState<Marca | null>(null);
-
-    const teamSlug = currentTeam?.slug ?? '';
 
     const openEditDialog = (marca: Marca) => {
         setMarcaToEdit(marca);
@@ -122,7 +119,7 @@ export default function MarcasIndex({ marcas, permissions }: Props) {
                     />
 
                     {permissions.canCreate ? (
-                        <CreateMarcaModal teamSlug={teamSlug}>
+                        <CreateMarcaModal>
                             <Button data-test="create-marca-button">
                                 <Plus /> Nueva marca
                             </Button>
@@ -141,14 +138,12 @@ export default function MarcasIndex({ marcas, permissions }: Props) {
             </div>
 
             <EditMarcaModal
-                teamSlug={teamSlug}
                 marca={marcaToEdit}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
             />
 
             <DeleteMarcaModal
-                teamSlug={teamSlug}
                 marca={marcaToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -157,11 +152,11 @@ export default function MarcasIndex({ marcas, permissions }: Props) {
     );
 }
 
-MarcasIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+MarcasIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Marcas',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

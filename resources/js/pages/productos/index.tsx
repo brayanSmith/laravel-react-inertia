@@ -280,8 +280,6 @@ export default function ProductosIndex({
     marcas,
     permissions,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [productoToDelete, setProductoToDelete] = useState<Producto | null>(
         null,
@@ -627,14 +625,11 @@ export default function ProductosIndex({
                     <div className="flex items-center gap-3">
                         <TrashToggle
                             eliminados={eliminados}
-                            visible={permissions.canDelete}
+                            visible={permissions.canViewDeleted}
                         />
 
                         {permissions.canCreate && !eliminados ? (
-                            <CreateProductoModal
-                                teamSlug={teamSlug}
-                                marcas={marcas}
-                            >
+                            <CreateProductoModal marcas={marcas}>
                                 <Button data-test="create-producto-button">
                                     <Plus /> Nuevo producto
                                 </Button>
@@ -842,12 +837,11 @@ export default function ProductosIndex({
                                                 }
                                             >
                                                 {eliminados ? (
-                                                    permissions.canDelete ? (
+                                                    permissions.canRestore ? (
                                                         <div className="flex justify-end">
                                                             <RestoreButton
                                                                 action={restore(
                                                                     [
-                                                                        teamSlug,
                                                                         producto.id,
                                                                     ],
                                                                 )}
@@ -996,14 +990,12 @@ export default function ProductosIndex({
             </div>
 
             <DeleteProductoModal
-                teamSlug={teamSlug}
                 producto={productoToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
             />
 
             <EditProductoModal
-                teamSlug={teamSlug}
                 marcas={marcas}
                 producto={productoToEdit}
                 open={editDialogOpen}
@@ -1043,11 +1035,11 @@ export default function ProductosIndex({
     );
 }
 
-ProductosIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+ProductosIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Productos',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

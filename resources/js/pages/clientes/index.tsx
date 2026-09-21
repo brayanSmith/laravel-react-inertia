@@ -30,15 +30,12 @@ export default function ClientesIndex({
     permissions,
     eliminados,
 }: Props) {
-    const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [clienteToEdit, setClienteToEdit] = useState<Cliente | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(
         null,
     );
-
-    const teamSlug = currentTeam?.slug ?? '';
 
     const openEditDialog = (cliente: Cliente) => {
         setClienteToEdit(cliente);
@@ -106,10 +103,10 @@ export default function ClientesIndex({
                 filter: 'none',
                 render: (cliente) =>
                     eliminados ? (
-                        permissions.canDelete ? (
+                        permissions.canRestore ? (
                             <div className="flex justify-end">
                                 <RestoreButton
-                                    action={restore([teamSlug, cliente.id])}
+                                    action={restore([cliente.id])}
                                     nombre={`el cliente ${cliente.razon_social}`}
                                     dataTest="restore-cliente-button"
                                 />
@@ -163,7 +160,7 @@ export default function ClientesIndex({
             },
         ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [permissions, eliminados, teamSlug],
+        [permissions, eliminados],
     );
 
     return (
@@ -181,11 +178,11 @@ export default function ClientesIndex({
                     <div className="flex items-center gap-3">
                         <TrashToggle
                             eliminados={eliminados}
-                            visible={permissions.canDelete}
+                            visible={permissions.canViewDeleted}
                         />
 
                         {permissions.canCreate && !eliminados ? (
-                            <CreateClienteModal teamSlug={teamSlug}>
+                            <CreateClienteModal>
                                 <Button data-test="create-cliente-button">
                                     <Plus /> Nuevo cliente
                                 </Button>
@@ -205,14 +202,12 @@ export default function ClientesIndex({
             </div>
 
             <EditClienteModal
-                teamSlug={teamSlug}
                 cliente={clienteToEdit}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
             />
 
             <DeleteClienteModal
-                teamSlug={teamSlug}
                 cliente={clienteToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -221,11 +216,11 @@ export default function ClientesIndex({
     );
 }
 
-ClientesIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+ClientesIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Clientes',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

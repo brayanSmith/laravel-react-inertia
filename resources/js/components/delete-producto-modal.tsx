@@ -14,14 +14,12 @@ import { destroy } from '@/routes/productos';
 import type { Producto } from '@/types';
 
 type Props = {
-    teamSlug: string;
     producto: Producto | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function DeleteProductoModal({
-    teamSlug,
     producto,
     open,
     onOpenChange,
@@ -33,7 +31,7 @@ export default function DeleteProductoModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, producto.id]), {
+        router.visit(destroy([producto.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

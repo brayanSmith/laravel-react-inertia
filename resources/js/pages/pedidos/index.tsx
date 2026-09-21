@@ -27,11 +27,11 @@ export default function PedidosIndex({
     );
 }
 
-PedidosIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+PedidosIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Pedidos',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

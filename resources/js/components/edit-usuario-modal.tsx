@@ -15,19 +15,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { update } from '@/routes/usuarios';
-import type { RoleOption, TeamRole, Usuario, UsuarioRoleOption } from '@/types';
+import type { Usuario, UsuarioRoleOption } from '@/types';
 
 type Props = {
-    teamSlug: string;
-    availableTeamRoles: RoleOption[];
     availableRoles: UsuarioRoleOption[];
     usuario: Usuario | null;
     open: boolean;
@@ -35,14 +26,11 @@ type Props = {
 };
 
 export default function EditUsuarioModal({
-    teamSlug,
-    availableTeamRoles,
     availableRoles,
     usuario,
     open,
     onOpenChange,
 }: Props) {
-    const [teamRole, setTeamRole] = useState('member');
     const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
 
     useEffect(() => {
@@ -50,7 +38,6 @@ export default function EditUsuarioModal({
             return;
         }
 
-        setTeamRole(usuario.team_role);
         setSelectedRoles(usuario.roles);
     }, [usuario]);
 
@@ -71,7 +58,7 @@ export default function EditUsuarioModal({
             <DialogContent className="sm:max-w-lg">
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, usuario.id])}
+                    {...update.form([usuario.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >
@@ -138,42 +125,9 @@ export default function EditUsuarioModal({
                                     />
                                 </div>
 
-                                <div className="grid gap-2">
-                                    <Label>Rol del equipo</Label>
-                                    <Select
-                                        value={teamRole}
-                                        onValueChange={(value) =>
-                                            setTeamRole(value as TeamRole)
-                                        }
-                                    >
-                                        <SelectTrigger
-                                            data-test="edit-usuario-team-role"
-                                            className="w-full"
-                                        >
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableTeamRoles.map((role) => (
-                                                <SelectItem
-                                                    key={role.value}
-                                                    value={role.value}
-                                                >
-                                                    {role.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <input
-                                        type="hidden"
-                                        name="team_role"
-                                        value={teamRole}
-                                    />
-                                    <InputError message={errors.team_role} />
-                                </div>
-
                                 {availableRoles.length > 0 ? (
                                     <div className="grid gap-2">
-                                        <Label>Roles personalizados</Label>
+                                        <Label>Roles</Label>
                                         <div className="flex flex-wrap gap-3">
                                             {availableRoles.map((role) => (
                                                 <label

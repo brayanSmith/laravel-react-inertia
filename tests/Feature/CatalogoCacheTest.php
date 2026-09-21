@@ -3,45 +3,43 @@
 use App\Models\Bodega;
 use App\Models\Producto;
 use App\Models\StockBodega;
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
-function catalogoOwner(): array
+function catalogoOwner(): User
 {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    return [$owner, $team];
+    return $owner;
 }
 
 test('the POS catalog is served from cache until a product changes', function () {
-    [$owner, $team] = catalogoOwner();
+    $owner = catalogoOwner();
     $producto = Producto::factory()->create(['inventariable' => true, 'categoria' => 'LLANTA', 'valor_detal' => 100]);
 
-    $this->actingAs($owner)->get(route('pos.index', $team))
+    $this->actingAs($owner)->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page->where('productos.0.valor_detal', '100.00'));
 
     // A change that bypasses the model events is not seen: it is cached.
     DB::table('productos')->where('id', $producto->id)->update(['valor_detal' => 999]);
 
-    $this->actingAs($owner)->get(route('pos.index', $team))
+    $this->actingAs($owner)->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page->where('productos.0.valor_detal', '100.00'));
 
     // Saving through the model drops the cache.
     $producto->refresh()->update(['valor_detal' => 250]);
 
-    $this->actingAs($owner)->get(route('pos.index', $team))
+    $this->actingAs($owner)->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page->where('productos.0.valor_detal', '250.00'));
 });
 
 test('a stock change refreshes the POS catalog and the stock per bodega', function () {
-    [$owner, $team] = catalogoOwner();
+    $owner = catalogoOwner();
     $producto = Producto::factory()->create(['inventariable' => true, 'categoria' => 'LLANTA']);
     $bodega = Bodega::factory()->create();
 
-    $this->actingAs($owner)->get(route('pos.index', $team))
+    $this->actingAs($owner)->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page->where('productos.0.stock_total', 0));
 
     $stock = StockBodega::create([
@@ -53,17 +51,17 @@ test('a stock change refreshes the POS catalog and the stock per bodega', functi
         'stock' => 6,
     ]);
 
-    $this->actingAs($owner)->get(route('pos.index', $team))
+    $this->actingAs($owner)->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page->where('productos.0.stock_total', 6));
 
-    $this->actingAs($owner)->get(route('stock-bodegas.index', $team))
+    $this->actingAs($owner)->get(route('stock-bodegas.index'))
         ->assertInertia(fn ($page) => $page->loadDeferredProps(fn ($loaded) => $loaded
             ->where('stockPorProducto.productos.0.stocks.'.$bodega->id.'.3', 6)
         ));
 
     $stock->update(['stock' => 2]);
 
-    $this->actingAs($owner)->get(route('stock-bodegas.index', $team))
+    $this->actingAs($owner)->get(route('stock-bodegas.index'))
         ->assertInertia(fn ($page) => $page->loadDeferredProps(fn ($loaded) => $loaded
             ->where('stockPorProducto.productos.0.stocks.'.$bodega->id.'.3', 2)
         ));

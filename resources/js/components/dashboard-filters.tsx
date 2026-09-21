@@ -49,7 +49,6 @@ export default function DashboardFilters({
     bodegas,
     productos,
 }: Props) {
-    const { currentTeam } = usePage().props;
     const [borrador, setBorrador] = useState<DashboardFiltros>(filtros);
     const [analizando, setAnalizando] = useState(false);
 
@@ -118,7 +117,7 @@ export default function DashboardFilters({
             Object.entries(aplicados).filter(([, valor]) => !estaVacio(valor)),
         );
 
-        router.get(dashboard.url(currentTeam?.slug ?? ''), query, {
+        router.get(dashboard.url(), query, {
             preserveState: true,
             preserveScroll: true,
             replace: true,

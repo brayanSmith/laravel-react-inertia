@@ -30,13 +30,11 @@ export default function PedidoMayoristaCreate(props: Props) {
     );
 }
 
-PedidoMayoristaCreate.layout = (props: {
-    currentTeam?: { slug: string } | null;
-}) => ({
+PedidoMayoristaCreate.layout = () => ({
     breadcrumbs: [
         {
             title: 'Pedidos Mayorista',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
         {
             title: 'Crear',

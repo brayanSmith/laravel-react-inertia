@@ -6,7 +6,7 @@ import type {
     BodegaOption,
     ClienteOption,
     Pedido,
-    PedidoPermissions,
+    PedidoEditPermissions,
     ProductoPedidoOption,
     PucOption,
     VendedorOption,
@@ -19,7 +19,7 @@ type Props = {
     bodegas: BodegaOption[];
     vendedores: VendedorOption[];
     pucs: PucOption[];
-    permissions: PedidoPermissions;
+    permissions: PedidoEditPermissions;
 };
 
 export default function PedidoEdit(props: Props) {
@@ -32,11 +32,11 @@ export default function PedidoEdit(props: Props) {
     );
 }
 
-PedidoEdit.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+PedidoEdit.layout = () => ({
     breadcrumbs: [
         {
             title: 'Pedidos',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
         {
             title: 'Editar',

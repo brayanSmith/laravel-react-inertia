@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Proveedor;
-use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
@@ -14,12 +13,11 @@ beforeEach(function () {
 
 test('owners can view, create, update and delete proveedores without a custom role', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->get(route('proveedores.index', $team))->assertOk();
+    $this->actingAs($owner)->get(route('proveedores.index'))->assertOk();
 
-    $this->actingAs($owner)->post(route('proveedores.store', $team), [
+    $this->actingAs($owner)->post(route('proveedores.store'), [
         'nombre_proveedor' => 'Proveedor Uno',
         'nit_proveedor' => '900111222-1',
         'tipo_proveedor' => 'REMISIONADO',
@@ -28,7 +26,7 @@ test('owners can view, create, update and delete proveedores without a custom ro
 
     $proveedor = Proveedor::firstOrFail();
 
-    $this->actingAs($owner)->patch(route('proveedores.update', [$team, $proveedor]), [
+    $this->actingAs($owner)->patch(route('proveedores.update', [$proveedor]), [
         'nombre_proveedor' => 'Proveedor Actualizado',
         'nit_proveedor' => '900111222-1',
         'tipo_proveedor' => 'ELECTRONICO',
@@ -38,7 +36,7 @@ test('owners can view, create, update and delete proveedores without a custom ro
     expect($proveedor->fresh()->nombre_proveedor)->toBe('Proveedor Actualizado');
     expect($proveedor->fresh()->tipo_proveedor)->toBe('ELECTRONICO');
 
-    $this->actingAs($owner)->delete(route('proveedores.destroy', [$team, $proveedor]))
+    $this->actingAs($owner)->delete(route('proveedores.destroy', [$proveedor]))
         ->assertRedirect();
 
     expect(Proveedor::withTrashed()->find($proveedor->id)->trashed())->toBeTrue();
@@ -46,20 +44,18 @@ test('owners can view, create, update and delete proveedores without a custom ro
 
 test('members without permission cannot view proveedores', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('proveedores.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('proveedores.index'))->assertForbidden();
 });
 
 test('nit_proveedor must be unique', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     Proveedor::factory()->create(['nit_proveedor' => '900000000-1']);
 
-    $this->actingAs($owner)->post(route('proveedores.store', $team), [
+    $this->actingAs($owner)->post(route('proveedores.store'), [
         'nombre_proveedor' => 'Duplicado',
         'nit_proveedor' => '900000000-1',
         'tipo_proveedor' => 'REMISIONADO',

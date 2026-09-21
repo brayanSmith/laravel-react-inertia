@@ -22,13 +22,10 @@ type Props = {
 };
 
 export default function BodegasIndex({ bodegas, permissions }: Props) {
-    const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [bodegaToEdit, setBodegaToEdit] = useState<Bodega | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [bodegaToDelete, setBodegaToDelete] = useState<Bodega | null>(null);
-
-    const teamSlug = currentTeam?.slug ?? '';
 
     const openEditDialog = (bodega: Bodega) => {
         setBodegaToEdit(bodega);
@@ -122,7 +119,7 @@ export default function BodegasIndex({ bodegas, permissions }: Props) {
                     />
 
                     {permissions.canCreate ? (
-                        <CreateBodegaModal teamSlug={teamSlug}>
+                        <CreateBodegaModal>
                             <Button data-test="create-bodega-button">
                                 <Plus /> Nueva bodega
                             </Button>
@@ -141,14 +138,12 @@ export default function BodegasIndex({ bodegas, permissions }: Props) {
             </div>
 
             <EditBodegaModal
-                teamSlug={teamSlug}
                 bodega={bodegaToEdit}
                 open={editDialogOpen}
                 onOpenChange={setEditDialogOpen}
             />
 
             <DeleteBodegaModal
-                teamSlug={teamSlug}
                 bodega={bodegaToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -157,11 +152,11 @@ export default function BodegasIndex({ bodegas, permissions }: Props) {
     );
 }
 
-BodegasIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+BodegasIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Bodegas',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

@@ -5,26 +5,21 @@ import type { ClienteOption } from '@/types';
 
 type Props = {
     cliente: ClienteOption;
-    teamSlug: string;
     onClose: () => void;
 };
 
 /** A single cliente's order history, filterable by date range. */
-export default function PosClienteHistorialModal({
-    cliente,
-    teamSlug,
-    onClose,
-}: Props) {
+export default function PosClienteHistorialModal({ cliente, onClose }: Props) {
     return (
         <PosPedidosHistorialModal
             title="Historial de pedidos"
             description={cliente.razon_social}
             buildRoute={({ desde, hasta, page }) =>
-                clientePedidos([teamSlug, cliente.id], {
+                clientePedidos([cliente.id], {
                     query: { desde, hasta, page },
                 })
             }
-            buildVoucherRoute={(pedidoId) => voucher([teamSlug, pedidoId])}
+            buildVoucherRoute={(pedidoId) => voucher([pedidoId])}
             onClose={onClose}
         />
     );

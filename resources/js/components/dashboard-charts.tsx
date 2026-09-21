@@ -19,7 +19,7 @@ import {
 } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import type { DashboardGraficos } from '@/types';
+import type { DashboardGraficos, DashboardPermisos } from '@/types';
 
 const numberFormatter = new Intl.NumberFormat('es-CO');
 
@@ -184,8 +184,10 @@ function SinDatos() {
 
 export default function DashboardCharts({
     graficos,
+    permisos,
 }: {
     graficos: DashboardGraficos;
+    permisos: DashboardPermisos;
 }) {
     const [granularidad, setGranularidad] = useState<Granularidad>('dia');
     // Series picked from the legend; null shows all of them.
@@ -233,251 +235,266 @@ export default function DashboardCharts({
 
     return (
         <div className="grid gap-4 lg:grid-cols-2" data-test="dashboard-charts">
-            <ChartCard
-                icon={ChartPie}
-                title="Productos vendidos por categoría"
-                dataTest="chart-categorias"
-            >
-                {graficos.categorias.length === 0 ? (
-                    <SinDatos />
-                ) : (
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Tooltip
-                                    contentStyle={tooltipStyle}
-                                    content={<TooltipCantidadValor />}
-                                />
-                                <Legend />
-                                <Pie
-                                    data={graficos.categorias}
-                                    dataKey="cantidad"
-                                    nameKey="categoria"
-                                    innerRadius="55%"
-                                    outerRadius="80%"
-                                    paddingAngle={2}
-                                    stroke="var(--card)"
-                                >
-                                    {graficos.categorias.map((fila, index) => (
-                                        <Cell
-                                            key={fila.categoria}
-                                            fill={
-                                                COLORES[index % COLORES.length]
-                                            }
-                                        />
-                                    ))}
-                                </Pie>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-            </ChartCard>
-
-            <ChartCard
-                icon={ChartColumn}
-                title="10 productos más vendidos"
-                dataTest="chart-top-productos"
-            >
-                {graficos.topProductos.length === 0 ? (
-                    <SinDatos />
-                ) : (
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={graficos.topProductos}>
-                                <CartesianGrid
-                                    vertical={false}
-                                    stroke="var(--border)"
-                                />
-                                <XAxis
-                                    dataKey="producto"
-                                    tickLine={false}
-                                    interval={0}
-                                    angle={-30}
-                                    textAnchor="end"
-                                    height={70}
-                                    tick={{ fontSize: 10 }}
-                                    tickFormatter={(value: string) =>
-                                        value.length > 14
-                                            ? `${value.slice(0, 13)}…`
-                                            : value
-                                    }
-                                />
-                                <YAxis
-                                    allowDecimals={false}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    width={40}
-                                    tick={{ fontSize: 11 }}
-                                />
-                                <Tooltip
-                                    cursor={{ fill: 'var(--accent)' }}
-                                    contentStyle={tooltipStyle}
-                                    content={<TooltipCantidadValor />}
-                                />
-                                <Bar
-                                    dataKey="cantidad"
-                                    fill="var(--chart-1)"
-                                    radius={[4, 4, 0, 0]}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-            </ChartCard>
-
-            <ChartCard
-                icon={ChartLine}
-                title="Pedidos, gastos + inversión y ganancia por fecha"
-                dataTest="chart-pedidos-fecha"
-                className="lg:col-span-2"
-                action={
-                    <ToggleGroup
-                        type="single"
-                        variant="outline"
-                        size="sm"
-                        value={granularidad}
-                        onValueChange={(value) =>
-                            value && setGranularidad(value as Granularidad)
-                        }
-                    >
-                        {GRANULARIDADES.map((opcion) => (
-                            <ToggleGroupItem
-                                key={opcion.value}
-                                value={opcion.value}
-                                data-test={`chart-granularidad-${opcion.value}`}
-                            >
-                                {opcion.label}
-                            </ToggleGroupItem>
-                        ))}
-                    </ToggleGroup>
-                }
-            >
-                {serie.length === 0 ? (
-                    <SinDatos />
-                ) : (
-                    <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={serie}>
-                                <defs>
-                                    <linearGradient
-                                        id="area-pedidos"
-                                        x1="0"
-                                        y1="0"
-                                        x2="0"
-                                        y2="1"
+            {permisos['chart-categorias'] ? (
+                <ChartCard
+                    icon={ChartPie}
+                    title="Productos vendidos por categoría"
+                    dataTest="chart-categorias"
+                >
+                    {graficos.categorias.length === 0 ? (
+                        <SinDatos />
+                    ) : (
+                        <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Tooltip
+                                        contentStyle={tooltipStyle}
+                                        content={<TooltipCantidadValor />}
+                                    />
+                                    <Legend />
+                                    <Pie
+                                        data={graficos.categorias}
+                                        dataKey="cantidad"
+                                        nameKey="categoria"
+                                        innerRadius="55%"
+                                        outerRadius="80%"
+                                        paddingAngle={2}
+                                        stroke="var(--card)"
                                     >
-                                        <stop
-                                            offset="5%"
-                                            stopColor="var(--chart-1)"
-                                            stopOpacity={0.5}
-                                        />
-                                        <stop
-                                            offset="95%"
-                                            stopColor="var(--chart-1)"
-                                            stopOpacity={0}
-                                        />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid
-                                    vertical={false}
-                                    stroke="var(--border)"
-                                />
-                                <XAxis
-                                    dataKey="periodo"
-                                    tickLine={false}
-                                    minTickGap={24}
-                                    tick={{ fontSize: 11 }}
-                                />
-                                <YAxis
-                                    tickLine={false}
-                                    axisLine={false}
-                                    width={56}
-                                    tick={{ fontSize: 11 }}
-                                    tickFormatter={(value) =>
-                                        compactFormatter.format(Number(value))
-                                    }
-                                />
-                                <Tooltip
-                                    contentStyle={tooltipStyle}
-                                    formatter={(value) =>
-                                        currencyFormatter.format(Number(value))
-                                    }
-                                    labelFormatter={(label, items) => {
-                                        const pedidos = (
-                                            items?.[0]?.payload as
-                                                | { pedidos?: number }
-                                                | undefined
-                                        )?.pedidos;
+                                        {graficos.categorias.map(
+                                            (fila, index) => (
+                                                <Cell
+                                                    key={fila.categoria}
+                                                    fill={
+                                                        COLORES[
+                                                            index %
+                                                                COLORES.length
+                                                        ]
+                                                    }
+                                                />
+                                            ),
+                                        )}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                </ChartCard>
+            ) : null}
 
-                                        return pedidos === undefined
-                                            ? label
-                                            : `${label} · ${numberFormatter.format(pedidos)} pedidos`;
-                                    }}
-                                />
-                                <Legend
-                                    wrapperStyle={{ cursor: 'pointer' }}
-                                    onClick={(item) => {
-                                        const clave = String(item.dataKey);
-                                        setSerieActiva((actual) =>
-                                            actual === clave ? null : clave,
-                                        );
-                                    }}
-                                    formatter={(value, item) => (
-                                        <span
-                                            style={{
-                                                opacity:
-                                                    serieActiva === null ||
-                                                    serieActiva ===
-                                                        String(item.dataKey)
-                                                        ? 1
-                                                        : 0.4,
-                                            }}
+            {permisos['chart-top-productos'] ? (
+                <ChartCard
+                    icon={ChartColumn}
+                    title="10 productos más vendidos"
+                    dataTest="chart-top-productos"
+                >
+                    {graficos.topProductos.length === 0 ? (
+                        <SinDatos />
+                    ) : (
+                        <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={graficos.topProductos}>
+                                    <CartesianGrid
+                                        vertical={false}
+                                        stroke="var(--border)"
+                                    />
+                                    <XAxis
+                                        dataKey="producto"
+                                        tickLine={false}
+                                        interval={0}
+                                        angle={-30}
+                                        textAnchor="end"
+                                        height={70}
+                                        tick={{ fontSize: 10 }}
+                                        tickFormatter={(value: string) =>
+                                            value.length > 14
+                                                ? `${value.slice(0, 13)}…`
+                                                : value
+                                        }
+                                    />
+                                    <YAxis
+                                        allowDecimals={false}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        width={40}
+                                        tick={{ fontSize: 11 }}
+                                    />
+                                    <Tooltip
+                                        cursor={{ fill: 'var(--accent)' }}
+                                        contentStyle={tooltipStyle}
+                                        content={<TooltipCantidadValor />}
+                                    />
+                                    <Bar
+                                        dataKey="cantidad"
+                                        fill="var(--chart-1)"
+                                        radius={[4, 4, 0, 0]}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                </ChartCard>
+            ) : null}
+
+            {permisos['chart-pedidos'] ? (
+                <ChartCard
+                    icon={ChartLine}
+                    title="Pedidos, gastos + inversión y ganancia por fecha"
+                    dataTest="chart-pedidos-fecha"
+                    className="lg:col-span-2"
+                    action={
+                        <ToggleGroup
+                            type="single"
+                            variant="outline"
+                            size="sm"
+                            value={granularidad}
+                            onValueChange={(value) =>
+                                value && setGranularidad(value as Granularidad)
+                            }
+                        >
+                            {GRANULARIDADES.map((opcion) => (
+                                <ToggleGroupItem
+                                    key={opcion.value}
+                                    value={opcion.value}
+                                    data-test={`chart-granularidad-${opcion.value}`}
+                                >
+                                    {opcion.label}
+                                </ToggleGroupItem>
+                            ))}
+                        </ToggleGroup>
+                    }
+                >
+                    {serie.length === 0 ? (
+                        <SinDatos />
+                    ) : (
+                        <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={serie}>
+                                    <defs>
+                                        <linearGradient
+                                            id="area-pedidos"
+                                            x1="0"
+                                            y1="0"
+                                            x2="0"
+                                            y2="1"
                                         >
-                                            {value}
-                                        </span>
-                                    )}
-                                />
-                                <Area
-                                    hide={
-                                        serieActiva !== null &&
-                                        serieActiva !== 'ventas'
-                                    }
-                                    type="monotone"
-                                    dataKey="ventas"
-                                    name="Pedidos"
-                                    stroke="var(--chart-1)"
-                                    strokeWidth={2}
-                                    fill="url(#area-pedidos)"
-                                />
-                                <Line
-                                    hide={
-                                        serieActiva !== null &&
-                                        serieActiva !== 'gastosInversion'
-                                    }
-                                    type="monotone"
-                                    dataKey="gastosInversion"
-                                    name="Gastos + inversión"
-                                    stroke="var(--chart-5)"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                                <Line
-                                    hide={
-                                        serieActiva !== null &&
-                                        serieActiva !== 'ganancia'
-                                    }
-                                    type="monotone"
-                                    dataKey="ganancia"
-                                    name="Ganancia"
-                                    stroke="var(--chart-2)"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                            </ComposedChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-            </ChartCard>
+                                            <stop
+                                                offset="5%"
+                                                stopColor="var(--chart-1)"
+                                                stopOpacity={0.5}
+                                            />
+                                            <stop
+                                                offset="95%"
+                                                stopColor="var(--chart-1)"
+                                                stopOpacity={0}
+                                            />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid
+                                        vertical={false}
+                                        stroke="var(--border)"
+                                    />
+                                    <XAxis
+                                        dataKey="periodo"
+                                        tickLine={false}
+                                        minTickGap={24}
+                                        tick={{ fontSize: 11 }}
+                                    />
+                                    <YAxis
+                                        tickLine={false}
+                                        axisLine={false}
+                                        width={56}
+                                        tick={{ fontSize: 11 }}
+                                        tickFormatter={(value) =>
+                                            compactFormatter.format(
+                                                Number(value),
+                                            )
+                                        }
+                                    />
+                                    <Tooltip
+                                        contentStyle={tooltipStyle}
+                                        formatter={(value) =>
+                                            currencyFormatter.format(
+                                                Number(value),
+                                            )
+                                        }
+                                        labelFormatter={(label, items) => {
+                                            const pedidos = (
+                                                items?.[0]?.payload as
+                                                    | { pedidos?: number }
+                                                    | undefined
+                                            )?.pedidos;
+
+                                            return pedidos === undefined
+                                                ? label
+                                                : `${label} · ${numberFormatter.format(pedidos)} pedidos`;
+                                        }}
+                                    />
+                                    <Legend
+                                        wrapperStyle={{ cursor: 'pointer' }}
+                                        onClick={(item) => {
+                                            const clave = String(item.dataKey);
+                                            setSerieActiva((actual) =>
+                                                actual === clave ? null : clave,
+                                            );
+                                        }}
+                                        formatter={(value, item) => (
+                                            <span
+                                                style={{
+                                                    opacity:
+                                                        serieActiva === null ||
+                                                        serieActiva ===
+                                                            String(item.dataKey)
+                                                            ? 1
+                                                            : 0.4,
+                                                }}
+                                            >
+                                                {value}
+                                            </span>
+                                        )}
+                                    />
+                                    <Area
+                                        hide={
+                                            serieActiva !== null &&
+                                            serieActiva !== 'ventas'
+                                        }
+                                        type="monotone"
+                                        dataKey="ventas"
+                                        name="Pedidos"
+                                        stroke="var(--chart-1)"
+                                        strokeWidth={2}
+                                        fill="url(#area-pedidos)"
+                                    />
+                                    <Line
+                                        hide={
+                                            serieActiva !== null &&
+                                            serieActiva !== 'gastosInversion'
+                                        }
+                                        type="monotone"
+                                        dataKey="gastosInversion"
+                                        name="Gastos + inversión"
+                                        stroke="var(--chart-5)"
+                                        strokeWidth={2}
+                                        dot={false}
+                                    />
+                                    <Line
+                                        hide={
+                                            serieActiva !== null &&
+                                            serieActiva !== 'ganancia'
+                                        }
+                                        type="monotone"
+                                        dataKey="ganancia"
+                                        name="Ganancia"
+                                        stroke="var(--chart-2)"
+                                        strokeWidth={2}
+                                        dot={false}
+                                    />
+                                </ComposedChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                </ChartCard>
+            ) : null}
         </div>
     );
 }

@@ -9,7 +9,7 @@ use App\Models\Marca;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Puc;
-use App\Models\Team;
+use App\Models\User;
 use App\Services\PedidoService;
 use App\Services\PedidoVoucher;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -36,19 +36,18 @@ class PosController extends Controller
     {
         Gate::authorize('pos.view');
 
-        $team = Team::where('slug', $request->route('current_team'))->firstOrFail();
-
         return Inertia::render('pos/index', [
             'clientes' => Cliente::orderBy('razon_social')->get([
                 'id', 'tipo_documento', 'numero_documento', 'razon_social', 'direccion', 'telefono', 'ciudad', 'email',
             ]),
             'productos' => $this->catalogoProductos(),
-            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
-            'vendedores' => $team->members()->get(['users.id', 'users.name']),
+            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'vendedores' => User::orderBy('name')->get(['id', 'name']),
             'pucs' => Puc::orderBy('concatenar_subcuenta_concepto')->get(['id', 'concatenar_subcuenta_concepto']),
             'marcas' => Marca::orderBy('marca')->get(['id', 'marca']),
-            'canCreateProducto' => $request->user()->can('productos.create'),
-            'canCreateCliente' => $request->user()->can('clientes.create'),
+            'canCreateProducto' => $request->user()->can('pos.create-producto'),
+            'canCreateCliente' => $request->user()->can('pos.create-cliente'),
+            'canViewAllPedidos' => $request->user()->can('pos.view-all-pedidos'),
         ]);
     }
 
@@ -64,7 +63,7 @@ class PosController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Pedido created.')]);
         Inertia::flash('pedido_creado', $voucher->toArray($pedido));
 
-        return to_route('pos.index', ['current_team' => $request->route('current_team')]);
+        return to_route('pos.index');
     }
 
     /**
@@ -72,7 +71,7 @@ class PosController extends Controller
      * (`desde` / `hasta`, inclusive) — the POS history modal, so nobody has
      * to leave the POS to look a customer's orders up.
      */
-    public function clientePedidos(Request $request, string $current_team, Cliente $cliente): JsonResponse
+    public function clientePedidos(Request $request, Cliente $cliente): JsonResponse
     {
         Gate::authorize('pos.view');
 
@@ -81,7 +80,7 @@ class PosController extends Controller
             'hasta' => ['nullable', 'date'],
         ]);
 
-        return response()->json($this->historial(Pedido::where('cliente_id', $cliente->id), $filters));
+        return response()->json($this->historial(Pedido::where('cliente_id', $cliente->id), $filters, $request));
     }
 
     /**
@@ -98,16 +97,22 @@ class PosController extends Controller
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
-        return response()->json($this->historial(Pedido::query(), $filters));
+        return response()->json($this->historial(Pedido::query(), $filters, $request));
     }
 
     /**
      * The data of a pedido's payment voucher, so the history can download it
      * again (the PDF itself is rendered in the browser).
      */
-    public function voucher(string $current_team, Pedido $pedido, PedidoVoucher $voucher): JsonResponse
+    public function voucher(Request $request, Pedido $pedido, PedidoVoucher $voucher): JsonResponse
     {
         Gate::authorize('pos.view');
+
+        // Without `pos.view-all-pedidos` only the user's own pedidos.
+        abort_unless(
+            $request->user()->can('pos.view-all-pedidos') || $pedido->user_id === $request->user()->id,
+            403,
+        );
 
         return response()->json($voucher->toArray($pedido));
     }
@@ -119,8 +124,13 @@ class PosController extends Controller
      * @param  Builder<Pedido>  $query
      * @param  array<string, mixed>  $filters
      */
-    private function historial(Builder $query, array $filters): LengthAwarePaginator
+    private function historial(Builder $query, array $filters, Request $request): LengthAwarePaginator
     {
+        // Without `pos.view-all-pedidos` the history is only the user's own pedidos.
+        if (! $request->user()->can('pos.view-all-pedidos')) {
+            $filters['user_id'] = $request->user()->id;
+        }
+
         return $query
             ->when($filters['desde'] ?? null, fn ($query, $desde) => $query->where('fecha', '>=', Carbon::parse($desde, 'America/Bogota')->startOfDay()->utc()))
             ->when($filters['hasta'] ?? null, fn ($query, $hasta) => $query->where('fecha', '<=', Carbon::parse($hasta, 'America/Bogota')->endOfDay()->utc()))

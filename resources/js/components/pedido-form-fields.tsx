@@ -30,6 +30,7 @@ import type {
     BodegaOption,
     ClienteOption,
     Pedido,
+    PedidoEditPermissions,
     ProductoPedidoOption,
     TipoPrecioPedido,
     VendedorOption,
@@ -39,6 +40,8 @@ type FormErrors = Partial<Record<string, string>>;
 
 type Props = {
     pedido?: Pedido | null;
+    /** Edit form only: what the user may change. Omitted on create (everything allowed). */
+    permissions?: PedidoEditPermissions;
     clientes: ClienteOption[];
     productos: ProductoPedidoOption[];
     bodegas: BodegaOption[];
@@ -88,6 +91,7 @@ function productoLabel(producto: ProductoPedidoOption): string {
 
 export default function PedidoFormFields({
     pedido,
+    permissions,
     clientes,
     productos,
     bodegas,
@@ -189,9 +193,23 @@ export default function PedidoFormFields({
         }
     };
 
+    const puedeEditarDatos = permissions?.canUpdateDatos ?? true;
+    const puedeAgregarProductos = permissions?.canCreateDetalle ?? true;
+    const puedeEditarProductos = permissions?.canUpdateDetalle ?? true;
+    const puedeEliminarProductos = permissions?.canDeleteDetalle ?? true;
+    const productosOriginales = new Set(
+        (pedido?.detalles ?? []).map((detalle) => detalle.producto_id),
+    );
+
     const subtotalAddRow =
         (Number(cantidad) || 0) * (Number(precioUnitario) || 0);
-    const canAgregar = Boolean(selectedProductoId) && Number(cantidad) > 0;
+    // Without "agregar productos" the add row only puts back a product
+    // the pedido already had (that is how a line is edited).
+    const canAgregar =
+        Boolean(selectedProductoId) &&
+        Number(cantidad) > 0 &&
+        (puedeAgregarProductos ||
+            productosOriginales.has(Number(selectedProductoId)));
 
     const handleAgregar = () => {
         if (!canAgregar) {
@@ -267,176 +285,186 @@ export default function PedidoFormFields({
                     </Badge>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="grid gap-2">
-                        <Label>Cliente</Label>
-                        <Combobox
-                            options={clienteOptions}
-                            value={clienteId}
-                            onValueChange={setClienteId}
-                            searchPlaceholder="Buscar cliente..."
-                            emptyText="No se encontraron clientes."
-                            dataTest="pedido-cliente"
-                        />
-                        <input
-                            type="hidden"
-                            name="cliente_id"
-                            value={clienteId}
-                        />
-                        <InputError message={errors.cliente_id} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="fecha">Fecha</Label>
-                        <Input
-                            id="fecha"
-                            name="fecha"
-                            type="datetime-local"
-                            data-test="pedido-fecha"
-                            defaultValue={toDatetimeLocal(
-                                pedido?.fecha ?? new Date().toISOString(),
-                            )}
-                            required
-                        />
-                        <InputError message={errors.fecha} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label>Vendedor</Label>
-                        <Combobox
-                            options={vendedorOptions}
-                            value={vendedorId}
-                            onValueChange={setVendedorId}
-                            searchPlaceholder="Buscar vendedor..."
-                            emptyText="No se encontraron vendedores."
-                            dataTest="pedido-vendedor"
-                        />
-                        <input
-                            type="hidden"
-                            name="user_id"
-                            value={vendedorId}
-                        />
-                        <InputError message={errors.user_id} />
-                    </div>
-                </div>
-
-                {clienteSeleccionado ? (
-                    <div className="rounded-md bg-blue-50 p-3 text-sm dark:bg-blue-950/40">
-                        <div className="mb-1 text-center text-xs font-semibold tracking-wide text-blue-700 dark:text-blue-300">
-                            DATOS DEL CLIENTE
+                <div
+                    inert={!puedeEditarDatos}
+                    className={cn(
+                        'space-y-4',
+                        !puedeEditarDatos && 'opacity-60',
+                    )}
+                    data-test="pedido-datos-generales"
+                >
+                    <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="grid gap-2">
+                            <Label>Cliente</Label>
+                            <Combobox
+                                options={clienteOptions}
+                                value={clienteId}
+                                onValueChange={setClienteId}
+                                searchPlaceholder="Buscar cliente..."
+                                emptyText="No se encontraron clientes."
+                                dataTest="pedido-cliente"
+                            />
+                            <input
+                                type="hidden"
+                                name="cliente_id"
+                                value={clienteId}
+                            />
+                            <InputError message={errors.cliente_id} />
                         </div>
-                        <div className="grid gap-2 sm:grid-cols-4">
-                            <div>
-                                <span className="text-muted-foreground">
-                                    Documento:{' '}
-                                </span>
-                                {clienteSeleccionado.numero_documento ?? '—'}
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">
-                                    Teléfono:{' '}
-                                </span>
-                                {clienteSeleccionado.telefono ?? '—'}
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">
-                                    Ciudad:{' '}
-                                </span>
-                                {clienteSeleccionado.ciudad ?? '—'}
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">
-                                    Email:{' '}
-                                </span>
-                                {clienteSeleccionado.email ?? '—'}
-                            </div>
-                            <div className="sm:col-span-4">
-                                <span className="text-muted-foreground">
-                                    Dirección:{' '}
-                                </span>
-                                {clienteSeleccionado.direccion ?? '—'}
-                            </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="fecha">Fecha</Label>
+                            <Input
+                                id="fecha"
+                                name="fecha"
+                                type="datetime-local"
+                                data-test="pedido-fecha"
+                                defaultValue={toDatetimeLocal(
+                                    pedido?.fecha ?? new Date().toISOString(),
+                                )}
+                                required
+                            />
+                            <InputError message={errors.fecha} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label>Vendedor</Label>
+                            <Combobox
+                                options={vendedorOptions}
+                                value={vendedorId}
+                                onValueChange={setVendedorId}
+                                searchPlaceholder="Buscar vendedor..."
+                                emptyText="No se encontraron vendedores."
+                                dataTest="pedido-vendedor"
+                            />
+                            <input
+                                type="hidden"
+                                name="user_id"
+                                value={vendedorId}
+                            />
+                            <InputError message={errors.user_id} />
                         </div>
                     </div>
-                ) : null}
 
-                <div className="grid gap-4 sm:grid-cols-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="placa">Placa</Label>
-                        <Input
-                            id="placa"
-                            name="placa"
-                            data-test="pedido-placa"
-                            defaultValue={pedido?.placa ?? ''}
-                        />
-                        <InputError message={errors.placa} />
-                    </div>
+                    {clienteSeleccionado ? (
+                        <div className="rounded-md bg-blue-50 p-3 text-sm dark:bg-blue-950/40">
+                            <div className="mb-1 text-center text-xs font-semibold tracking-wide text-blue-700 dark:text-blue-300">
+                                DATOS DEL CLIENTE
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-4">
+                                <div>
+                                    <span className="text-muted-foreground">
+                                        Documento:{' '}
+                                    </span>
+                                    {clienteSeleccionado.numero_documento ??
+                                        '—'}
+                                </div>
+                                <div>
+                                    <span className="text-muted-foreground">
+                                        Teléfono:{' '}
+                                    </span>
+                                    {clienteSeleccionado.telefono ?? '—'}
+                                </div>
+                                <div>
+                                    <span className="text-muted-foreground">
+                                        Ciudad:{' '}
+                                    </span>
+                                    {clienteSeleccionado.ciudad ?? '—'}
+                                </div>
+                                <div>
+                                    <span className="text-muted-foreground">
+                                        Email:{' '}
+                                    </span>
+                                    {clienteSeleccionado.email ?? '—'}
+                                </div>
+                                <div className="sm:col-span-4">
+                                    <span className="text-muted-foreground">
+                                        Dirección:{' '}
+                                    </span>
+                                    {clienteSeleccionado.direccion ?? '—'}
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
 
-                    <div className="grid gap-2">
-                        <Label>Tipo Precio</Label>
-                        <Select
-                            value={tipoPrecio}
-                            onValueChange={(value) =>
-                                setTipoPrecio(value as TipoPrecioPedido)
-                            }
-                        >
-                            <SelectTrigger
-                                className="w-full"
-                                data-test="pedido-tipo-precio"
+                    <div className="grid gap-4 sm:grid-cols-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="placa">Placa</Label>
+                            <Input
+                                id="placa"
+                                name="placa"
+                                data-test="pedido-placa"
+                                defaultValue={pedido?.placa ?? ''}
+                            />
+                            <InputError message={errors.placa} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label>Tipo Precio</Label>
+                            <Select
+                                value={tipoPrecio}
+                                onValueChange={(value) =>
+                                    setTipoPrecio(value as TipoPrecioPedido)
+                                }
                             >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="DETAL">DETAL</SelectItem>
-                                <SelectItem value="MAYORISTA">
-                                    MAYORISTA
-                                </SelectItem>
-                                <SelectItem value="OTRO">OTRO</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <input
-                            type="hidden"
-                            name="tipo_precio"
-                            value={tipoPrecio}
-                        />
-                        <InputError message={errors.tipo_precio} />
-                    </div>
+                                <SelectTrigger
+                                    className="w-full"
+                                    data-test="pedido-tipo-precio"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="DETAL">DETAL</SelectItem>
+                                    <SelectItem value="MAYORISTA">
+                                        MAYORISTA
+                                    </SelectItem>
+                                    <SelectItem value="OTRO">OTRO</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <input
+                                type="hidden"
+                                name="tipo_precio"
+                                value={tipoPrecio}
+                            />
+                            <InputError message={errors.tipo_precio} />
+                        </div>
 
-                    <div className="grid gap-2">
-                        <Label>Bodega</Label>
-                        <Combobox
-                            options={bodegaOptions}
-                            value={bodegaId}
-                            onValueChange={setBodegaId}
-                            searchPlaceholder="Buscar bodega..."
-                            emptyText="No se encontraron bodegas."
-                            dataTest="pedido-bodega"
-                        />
-                        <input
-                            type="hidden"
-                            name="bodega_id"
-                            value={bodegaId}
-                        />
-                        <InputError message={errors.bodega_id} />
-                    </div>
+                        <div className="grid gap-2">
+                            <Label>Bodega</Label>
+                            <Combobox
+                                options={bodegaOptions}
+                                value={bodegaId}
+                                onValueChange={setBodegaId}
+                                searchPlaceholder="Buscar bodega..."
+                                emptyText="No se encontraron bodegas."
+                                dataTest="pedido-bodega"
+                            />
+                            <input
+                                type="hidden"
+                                name="bodega_id"
+                                value={bodegaId}
+                            />
+                            <InputError message={errors.bodega_id} />
+                        </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="facturacion_electronica">
-                            Facturación Electrónica
-                        </Label>
-                        <div className="flex h-9 items-center">
-                            <Switch
-                                id="facturacion_electronica"
-                                data-test="pedido-facturacion-electronica"
-                                checked={facturacionElectronica}
-                                onCheckedChange={setFacturacionElectronica}
+                        <div className="grid gap-2">
+                            <Label htmlFor="facturacion_electronica">
+                                Facturación Electrónica
+                            </Label>
+                            <div className="flex h-9 items-center">
+                                <Switch
+                                    id="facturacion_electronica"
+                                    data-test="pedido-facturacion-electronica"
+                                    checked={facturacionElectronica}
+                                    onCheckedChange={setFacturacionElectronica}
+                                />
+                            </div>
+                            <input
+                                type="hidden"
+                                name="facturacion_electronica"
+                                value={facturacionElectronica ? '1' : '0'}
                             />
                         </div>
-                        <input
-                            type="hidden"
-                            name="facturacion_electronica"
-                            value={facturacionElectronica ? '1' : '0'}
-                        />
                     </div>
                 </div>
 
@@ -487,59 +515,63 @@ export default function PedidoFormFields({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow>
-                            <TableCell>
-                                <Combobox
-                                    options={productoOptions}
-                                    value={selectedProductoId}
-                                    onValueChange={handleSelectProducto}
-                                    placeholder="Seleccione un producto..."
-                                    searchPlaceholder="Buscar producto..."
-                                    emptyText="No se encontraron productos."
-                                    dataTest="pedido-producto-select"
-                                />
-                            </TableCell>
-                            <TableCell className="text-center">
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="0"
-                                    className="mx-auto w-24 text-center"
-                                    value={cantidad}
-                                    onChange={(event) =>
-                                        setCantidad(event.target.value)
-                                    }
-                                />
-                            </TableCell>
-                            <TableCell className="text-center">
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="0"
-                                    className="mx-auto w-32 text-center"
-                                    value={precioUnitario}
-                                    onChange={(event) =>
-                                        setPrecioUnitario(event.target.value)
-                                    }
-                                />
-                            </TableCell>
-                            <TableCell className="text-center font-medium">
-                                {currencyFormatter.format(subtotalAddRow)}
-                            </TableCell>
-                            <TableCell className="text-center">
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    data-test="pedido-agregar-detalle"
-                                    disabled={!canAgregar}
-                                    onClick={handleAgregar}
-                                >
-                                    + Agregar
-                                </Button>
-                            </TableCell>
-                        </TableRow>
+                        {puedeAgregarProductos || puedeEditarProductos ? (
+                            <TableRow>
+                                <TableCell>
+                                    <Combobox
+                                        options={productoOptions}
+                                        value={selectedProductoId}
+                                        onValueChange={handleSelectProducto}
+                                        placeholder="Seleccione un producto..."
+                                        searchPlaceholder="Buscar producto..."
+                                        emptyText="No se encontraron productos."
+                                        dataTest="pedido-producto-select"
+                                    />
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="0"
+                                        className="mx-auto w-24 text-center"
+                                        value={cantidad}
+                                        onChange={(event) =>
+                                            setCantidad(event.target.value)
+                                        }
+                                    />
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="0"
+                                        className="mx-auto w-32 text-center"
+                                        value={precioUnitario}
+                                        onChange={(event) =>
+                                            setPrecioUnitario(
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+                                </TableCell>
+                                <TableCell className="text-center font-medium">
+                                    {currencyFormatter.format(subtotalAddRow)}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        data-test="pedido-agregar-detalle"
+                                        disabled={!canAgregar}
+                                        onClick={handleAgregar}
+                                    >
+                                        + Agregar
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ) : null}
                     </TableBody>
                 </Table>
             </div>
@@ -599,29 +631,35 @@ export default function PedidoFormFields({
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <div className="flex justify-center gap-2">
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    data-test="pedido-editar-detalle"
-                                                    onClick={() =>
-                                                        handleEditarFila(row)
-                                                    }
-                                                >
-                                                    Editar
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    variant="destructive"
-                                                    data-test="pedido-eliminar-detalle"
-                                                    onClick={() =>
-                                                        handleEliminarFila(
-                                                            row.producto_id,
-                                                        )
-                                                    }
-                                                >
-                                                    Eliminar
-                                                </Button>
+                                                {puedeEditarProductos ? (
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        data-test="pedido-editar-detalle"
+                                                        onClick={() =>
+                                                            handleEditarFila(
+                                                                row,
+                                                            )
+                                                        }
+                                                    >
+                                                        Editar
+                                                    </Button>
+                                                ) : null}
+                                                {puedeEliminarProductos ? (
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        data-test="pedido-eliminar-detalle"
+                                                        onClick={() =>
+                                                            handleEliminarFila(
+                                                                row.producto_id,
+                                                            )
+                                                        }
+                                                    >
+                                                        Eliminar
+                                                    </Button>
+                                                ) : null}
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -685,6 +723,7 @@ export default function PedidoFormFields({
                         <Input
                             id="flete"
                             name="flete"
+                            readOnly={!puedeEditarDatos}
                             type="number"
                             min="0"
                             step="0.01"
@@ -704,6 +743,7 @@ export default function PedidoFormFields({
                         <Input
                             id="descuento"
                             name="descuento"
+                            readOnly={!puedeEditarDatos}
                             type="number"
                             min="0"
                             step="0.01"
@@ -725,13 +765,12 @@ export default function PedidoFormFields({
                         <Input
                             id="reteica"
                             name="reteica"
+                            readOnly={!puedeEditarDatos}
                             type="number"
                             min="0"
                             step="0.01"
                             value={reteica}
-                            onChange={(event) =>
-                                setReteica(event.target.value)
-                            }
+                            onChange={(event) => setReteica(event.target.value)}
                         />
                         <InputError message={errors.reteica} />
                     </div>
@@ -746,6 +785,7 @@ export default function PedidoFormFields({
                         <Input
                             id="retefuente"
                             name="retefuente"
+                            readOnly={!puedeEditarDatos}
                             type="number"
                             min="0"
                             step="0.01"
@@ -772,9 +812,7 @@ export default function PedidoFormFields({
                                 Abono
                             </span>
                             <span className="font-medium text-emerald-600">
-                                {currencyFormatter.format(
-                                    Number(pedido.abono),
-                                )}
+                                {currencyFormatter.format(Number(pedido.abono))}
                             </span>
                         </div>
                         <div className="grid gap-1">

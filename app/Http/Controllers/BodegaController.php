@@ -48,7 +48,7 @@ class BodegaController extends Controller
     /**
      * Update the specified bodega.
      */
-    public function update(UpdateBodegaRequest $request, string $current_team, Bodega $bodega): RedirectResponse
+    public function update(UpdateBodegaRequest $request, Bodega $bodega): RedirectResponse
     {
         Gate::authorize('bodegas.update');
 
@@ -62,7 +62,7 @@ class BodegaController extends Controller
     /**
      * Remove the specified bodega.
      */
-    public function destroy(string $current_team, Bodega $bodega): RedirectResponse
+    public function destroy(Bodega $bodega): RedirectResponse
     {
         Gate::authorize('bodegas.delete');
 

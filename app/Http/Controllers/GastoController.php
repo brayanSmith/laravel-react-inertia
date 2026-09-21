@@ -31,11 +31,13 @@ class GastoController extends Controller
                 ->when($eliminados, fn ($query) => $query->onlyTrashed())
                 ->get(),
             'eliminados' => $eliminados,
-            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'permissions' => [
                 'canCreate' => $request->user()->can('gastos.create'),
                 'canUpdate' => $request->user()->can('gastos.update'),
                 'canDelete' => $request->user()->can('gastos.delete'),
+                'canViewDeleted' => $request->user()->can('gastos.view-deleted'),
+                'canRestore' => $request->user()->can('gastos.restore'),
             ],
         ]);
     }
@@ -60,7 +62,7 @@ class GastoController extends Controller
     /**
      * Update the specified gasto.
      */
-    public function update(UpdateGastoRequest $request, string $current_team, Gasto $gasto): RedirectResponse
+    public function update(UpdateGastoRequest $request, Gasto $gasto): RedirectResponse
     {
         Gate::authorize('gastos.update');
 
@@ -74,7 +76,7 @@ class GastoController extends Controller
     /**
      * Remove the specified gasto.
      */
-    public function destroy(string $current_team, Gasto $gasto): RedirectResponse
+    public function destroy(Gasto $gasto): RedirectResponse
     {
         Gate::authorize('gastos.delete');
 
@@ -88,7 +90,7 @@ class GastoController extends Controller
     /**
      * Restore a deleted gasto.
      */
-    public function restore(string $current_team, Gasto $gasto): RedirectResponse
+    public function restore(Gasto $gasto): RedirectResponse
     {
         return $this->restaurarRegistro('gastos', $gasto, __('Gasto restored.'));
     }

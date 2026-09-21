@@ -14,14 +14,12 @@ import { destroy } from '@/routes/proveedores';
 import type { Proveedor } from '@/types';
 
 type Props = {
-    teamSlug: string;
     proveedor: Proveedor | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function DeleteProveedorModal({
-    teamSlug,
     proveedor,
     open,
     onOpenChange,
@@ -33,7 +31,7 @@ export default function DeleteProveedorModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, proveedor.id]), {
+        router.visit(destroy([proveedor.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

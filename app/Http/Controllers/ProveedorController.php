@@ -35,6 +35,8 @@ class ProveedorController extends Controller
                 'canCreate' => $request->user()->can('proveedores.create'),
                 'canUpdate' => $request->user()->can('proveedores.update'),
                 'canDelete' => $request->user()->can('proveedores.delete'),
+                'canViewDeleted' => $request->user()->can('proveedores.view-deleted'),
+                'canRestore' => $request->user()->can('proveedores.restore'),
             ],
         ]);
     }
@@ -62,7 +64,7 @@ class ProveedorController extends Controller
     /**
      * Update the specified proveedor.
      */
-    public function update(UpdateProveedorRequest $request, string $current_team, Proveedor $proveedor): RedirectResponse
+    public function update(UpdateProveedorRequest $request, Proveedor $proveedor): RedirectResponse
     {
         Gate::authorize('proveedores.update');
 
@@ -89,7 +91,7 @@ class ProveedorController extends Controller
     /**
      * Remove the specified proveedor.
      */
-    public function destroy(string $current_team, Proveedor $proveedor): RedirectResponse
+    public function destroy(Proveedor $proveedor): RedirectResponse
     {
         Gate::authorize('proveedores.delete');
 
@@ -103,7 +105,7 @@ class ProveedorController extends Controller
     /**
      * Restore a deleted proveedor.
      */
-    public function restore(string $current_team, Proveedor $proveedor): RedirectResponse
+    public function restore(Proveedor $proveedor): RedirectResponse
     {
         return $this->restaurarRegistro('proveedores', $proveedor, __('Proveedor restored.'));
     }

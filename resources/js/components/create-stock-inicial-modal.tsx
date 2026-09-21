@@ -20,13 +20,11 @@ import { store } from '@/routes/stock-iniciales';
 import type { Bodega, ProductoOption } from '@/types';
 
 type Props = PropsWithChildren<{
-    teamSlug: string;
     productos: ProductoOption[];
     bodegas: Bodega[];
 }>;
 
 export default function CreateStockInicialModal({
-    teamSlug,
     productos,
     bodegas,
     children,
@@ -70,7 +68,7 @@ export default function CreateStockInicialModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...store.form(teamSlug)}
+                    {...store.form()}
                     className="space-y-6"
                     onSuccess={() => handleOpenChange(false)}
                 >

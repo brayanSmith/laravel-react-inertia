@@ -28,14 +28,12 @@ import type { Cliente, RetenedorFuente, TipoDocumento } from '@/types';
 const TIPOS_DOCUMENTO: TipoDocumento[] = ['CC', 'NIT', 'CE', 'TI', 'PASAPORTE'];
 
 type Props = {
-    teamSlug: string;
     cliente: Cliente | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function EditClienteModal({
-    teamSlug,
     cliente,
     open,
     onOpenChange,
@@ -83,7 +81,7 @@ export default function EditClienteModal({
             <DialogContent className="sm:max-w-2xl">
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, cliente.id])}
+                    {...update.form([cliente.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

@@ -10,22 +10,16 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { destroy } from '@/routes/teams/roles';
-import type { Role, Team } from '@/types';
+import { destroy } from '@/routes/roles';
+import type { Role } from '@/types';
 
 type Props = {
-    team: Team;
     role: Role | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
-export default function DeleteRoleModal({
-    team,
-    role,
-    open,
-    onOpenChange,
-}: Props) {
+export default function DeleteRoleModal({ role, open, onOpenChange }: Props) {
     const [processing, setProcessing] = useState(false);
 
     const deleteRole = () => {
@@ -33,7 +27,7 @@ export default function DeleteRoleModal({
             return;
         }
 
-        router.visit(destroy([team.slug, role.id]), {
+        router.visit(destroy([role.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

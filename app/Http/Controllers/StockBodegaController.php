@@ -24,6 +24,8 @@ class StockBodegaController extends Controller
     {
         Gate::authorize('stock-bodegas.view');
 
+        $puedeVerInversion = $request->user()->can('stock-bodegas.view-inversion');
+
         // Stock rows whose product no longer exists are orphans: not listed.
         $productosVigentes = Producto::select('id');
 
@@ -43,9 +45,13 @@ class StockBodegaController extends Controller
 
         return Inertia::render('stock-bodegas/index', [
             'stockBodegas' => $conStock,
+            // Costs and prices are only sent to whoever may see the "Inversión" view.
             'productos' => Producto::whereIn('id', $productoIds)
-                ->get(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'costo_producto', 'valor_detal', 'valor_mayorista']),
-            'bodegas' => Bodega::whereIn('id', $bodegaIds)->get(['id', 'nombre_bodega']),
+                ->get($puedeVerInversion
+                    ? ['id', 'referencia_producto', 'concatenar_codigo_nombre', 'costo_producto', 'valor_detal', 'valor_mayorista']
+                    : ['id', 'referencia_producto', 'concatenar_codigo_nombre']),
+            'canViewInversion' => $puedeVerInversion,
+            'bodegas' => Bodega::permitidas()->whereIn('id', $bodegaIds)->get(['id', 'nombre_bodega']),
         ]);
     }
 }

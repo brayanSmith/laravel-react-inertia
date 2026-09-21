@@ -28,7 +28,6 @@ type Props = {
     reservedByProducto: Map<number, number>;
     tipoPrecio: TipoPrecioPedido;
     onAdd: (producto: PosCatalogoProducto) => void;
-    teamSlug: string;
     /** Lets the screen focus the search box (F2). */
     searchRef?: Ref<HTMLInputElement>;
     /** Lets the screen open the new-product form (F4). */
@@ -61,7 +60,6 @@ export default function PosCatalog({
     reservedByProducto,
     tipoPrecio,
     onAdd,
-    teamSlug,
     marcas,
     canCreateProducto,
     searchRef,
@@ -127,11 +125,7 @@ export default function PosCatalog({
                 </div>
 
                 {canCreateProducto ? (
-                    <CreateProductoModal
-                        teamSlug={teamSlug}
-                        marcas={marcas}
-                        stayOnPage
-                    >
+                    <CreateProductoModal marcas={marcas} stayOnPage>
                         <Button
                             ref={nuevoProductoRef}
                             type="button"

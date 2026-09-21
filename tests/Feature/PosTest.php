@@ -6,7 +6,6 @@ use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\Puc;
 use App\Models\StockBodega;
-use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 
@@ -17,8 +16,7 @@ beforeEach(function () {
 
 test('the POS page lists every sellable producto, including out-of-stock ones', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $conStock = Producto::factory()->create(['inventariable' => true, 'categoria' => 'LLANTA']);
     Producto::factory()->create(['inventariable' => true, 'categoria' => 'LLANTA']);
@@ -34,7 +32,7 @@ test('the POS page lists every sellable producto, including out-of-stock ones', 
     ]);
 
     $this->actingAs($owner)
-        ->get(route('pos.index', $team))
+        ->get(route('pos.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('pos/index')
@@ -48,16 +46,14 @@ test('the POS page lists every sellable producto, including out-of-stock ones', 
 
 test('members without pos.view cannot open the POS', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('pos.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('pos.index'))->assertForbidden();
 });
 
 test('checking out from the POS creates the pedido, deducts stock and stays on the POS', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $cliente = Cliente::factory()->create();
     $vendedor = User::factory()->create();
@@ -73,7 +69,7 @@ test('checking out from the POS creates the pedido, deducts stock and stays on t
         'stock' => 10,
     ]);
 
-    $this->actingAs($owner)->post(route('pos.store', $team), [
+    $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => $cliente->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => $vendedor->id,
@@ -84,7 +80,7 @@ test('checking out from the POS creates the pedido, deducts stock and stays on t
         'detalles' => [
             ['producto_id' => $producto->id, 'cantidad' => 2, 'precio_unitario' => 100],
         ],
-    ])->assertRedirect(route('pos.index', $team));
+    ])->assertRedirect(route('pos.index'));
 
     $pedido = Pedido::firstOrFail();
 
@@ -94,11 +90,10 @@ test('checking out from the POS creates the pedido, deducts stock and stays on t
 
 test('members without pos.create cannot check out from the POS', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
     $member->givePermissionTo('pos.view');
 
-    $this->actingAs($member)->post(route('pos.store', $team), [
+    $this->actingAs($member)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => User::factory()->create()->id,
@@ -114,8 +109,7 @@ test('members without pos.create cannot check out from the POS', function () {
 
 test('each POS line can be sold from a different bodega and deducts that bodega', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $bodegaPedido = Bodega::factory()->create();
     $bodegaOtra = Bodega::factory()->create();
@@ -132,7 +126,7 @@ test('each POS line can be sold from a different bodega and deducts that bodega'
         ]);
     }
 
-    $this->actingAs($owner)->post(route('pos.store', $team), [
+    $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => User::factory()->create()->id,
@@ -142,7 +136,7 @@ test('each POS line can be sold from a different bodega and deducts that bodega'
             ['producto_id' => $producto->id, 'bodega_id' => $bodegaOtra->id, 'cantidad' => 3, 'precio_unitario' => 100],
             ['producto_id' => $producto->id, 'cantidad' => 1, 'precio_unitario' => 100],
         ],
-    ])->assertRedirect(route('pos.index', $team));
+    ])->assertRedirect(route('pos.index'));
 
     $detalles = Pedido::firstOrFail()->detalles()->orderBy('id')->get();
 
@@ -153,8 +147,7 @@ test('each POS line can be sold from a different bodega and deducts that bodega'
 
 test('the POS catalog exposes the stock of every bodega', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $producto = Producto::factory()->create(['inventariable' => true, 'categoria' => 'LLANTA']);
     $bodega = Bodega::factory()->create();
@@ -169,7 +162,7 @@ test('the POS catalog exposes the stock of every bodega', function () {
     ]);
 
     $this->actingAs($owner)
-        ->get(route('pos.index', $team))
+        ->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page
             ->where('productos.0.stock_total', 4)
             ->where("productos.0.stock_por_bodega.{$bodega->id}", 4)
@@ -178,10 +171,9 @@ test('the POS catalog exposes the stock of every bodega', function () {
 
 test('the POS stores placa, aplica_turno and facturacion_electronica on the pedido', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->post(route('pos.store', $team), [
+    $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => User::factory()->create()->id,
@@ -193,7 +185,7 @@ test('the POS stores placa, aplica_turno and facturacion_electronica on the pedi
         'detalles' => [
             ['producto_id' => Producto::factory()->create()->id, 'cantidad' => 1, 'precio_unitario' => 100],
         ],
-    ])->assertRedirect(route('pos.index', $team));
+    ])->assertRedirect(route('pos.index'));
 
     $pedido = Pedido::firstOrFail();
 
@@ -204,12 +196,11 @@ test('the POS stores placa, aplica_turno and facturacion_electronica on the pedi
 
 test('checking out with abonos registers the payments and updates the pedido balance', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $puc = Puc::factory()->create();
 
-    $this->actingAs($owner)->post(route('pos.store', $team), [
+    $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => User::factory()->create()->id,
@@ -224,7 +215,7 @@ test('checking out with abonos registers the payments and updates the pedido bal
         'abonos' => [
             ['puc_id' => $puc->id, 'monto' => 60, 'con_cuanto_pago' => 100],
         ],
-    ])->assertRedirect(route('pos.index', $team));
+    ])->assertRedirect(route('pos.index'));
 
     $pedido = Pedido::firstOrFail();
     $abono = $pedido->abonos()->firstOrFail();
@@ -239,10 +230,9 @@ test('checking out with abonos registers the payments and updates the pedido bal
 
 test('an abono needs a valid payment method', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->post(route('pos.store', $team), [
+    $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => User::factory()->create()->id,
@@ -259,14 +249,13 @@ test('an abono needs a valid payment method', function () {
 
 test('the cliente order history is filtered by date range and scoped to the cliente', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $cliente = Cliente::factory()->create();
     $vendedor = User::factory()->create();
     $bodega = Bodega::factory()->create();
 
-    $crear = fn (Cliente $c, string $fecha) => $this->actingAs($owner)->post(route('pos.store', $team), [
+    $crear = fn (Cliente $c, string $fecha) => $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => $c->id,
         'fecha' => $fecha,
         'user_id' => $vendedor->id,
@@ -282,12 +271,12 @@ test('the cliente order history is filtered by date range and scoped to the clie
     $crear(Cliente::factory()->create(), '2026-01-11 10:00:00');
 
     $this->actingAs($owner)
-        ->getJson(route('pos.clientes.pedidos', [$team, $cliente]))
+        ->getJson(route('pos.clientes.pedidos', [$cliente]))
         ->assertOk()
         ->assertJsonCount(2, 'data');
 
     $this->actingAs($owner)
-        ->getJson(route('pos.clientes.pedidos', [$team, $cliente, 'desde' => '2026-02-01', 'hasta' => '2026-03-31']))
+        ->getJson(route('pos.clientes.pedidos', [$cliente, 'desde' => '2026-02-01', 'hasta' => '2026-03-31']))
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.productos.0', fn ($producto) => str_starts_with($producto, '1 x '));
@@ -295,20 +284,18 @@ test('the cliente order history is filtered by date range and scoped to the clie
 
 test('members without pos.view cannot read a cliente order history', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
     $this->actingAs($member)
-        ->getJson(route('pos.clientes.pedidos', [$team, Cliente::factory()->create()]))
+        ->getJson(route('pos.clientes.pedidos', [Cliente::factory()->create()]))
         ->assertForbidden();
 });
 
 test('the POS saves the observacion_pago built from the abono descriptions', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->post(route('pos.store', $team), [
+    $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => '2026-01-10 10:00:00',
         'user_id' => User::factory()->create()->id,
@@ -318,21 +305,20 @@ test('the POS saves the observacion_pago built from the abono descriptions', fun
         'detalles' => [
             ['producto_id' => Producto::factory()->create()->id, 'cantidad' => 1, 'precio_unitario' => 100],
         ],
-    ])->assertRedirect(route('pos.index', $team));
+    ])->assertRedirect(route('pos.index'));
 
     expect(Pedido::firstOrFail()->observacion_pago)->toBe("- Transferencia Bancolombia\n- Efectivo");
 });
 
 test('the POS history lists every pedido and filters by vendedor and date', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $vendedorA = User::factory()->create();
     $vendedorB = User::factory()->create();
     $bodega = Bodega::factory()->create();
 
-    $crear = fn (User $vendedor, string $fecha) => $this->actingAs($owner)->post(route('pos.store', $team), [
+    $crear = fn (User $vendedor, string $fecha) => $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => $fecha,
         'user_id' => $vendedor->id,
@@ -348,35 +334,33 @@ test('the POS history lists every pedido and filters by vendedor and date', func
     $crear($vendedorB, '2026-03-11 10:00:00');
 
     $this->actingAs($owner)
-        ->getJson(route('pos.pedidos', $team))
+        ->getJson(route('pos.pedidos'))
         ->assertOk()
         ->assertJsonCount(3, 'data');
 
     $this->actingAs($owner)
-        ->getJson(route('pos.pedidos', [$team, 'user_id' => $vendedorA->id]))
+        ->getJson(route('pos.pedidos', ['user_id' => $vendedorA->id]))
         ->assertJsonCount(2, 'data')
         ->assertJsonPath('data.0.vendedor', $vendedorA->name);
 
     $this->actingAs($owner)
-        ->getJson(route('pos.pedidos', [$team, 'user_id' => $vendedorA->id, 'desde' => '2026-02-01']))
+        ->getJson(route('pos.pedidos', ['user_id' => $vendedorA->id, 'desde' => '2026-02-01']))
         ->assertJsonCount(1, 'data');
 });
 
 test('members without pos.view cannot read the POS history', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->getJson(route('pos.pedidos', $team))->assertForbidden();
+    $this->actingAs($member)->getJson(route('pos.pedidos'))->assertForbidden();
 });
 
 test('the POS exposes the marcas and whether the user can create productos', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $this->actingAs($owner)
-        ->get(route('pos.index', $team))
+        ->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page
             ->has('marcas')
             ->where('canCreateProducto', true)
@@ -385,15 +369,14 @@ test('the POS exposes the marcas and whether the user can create productos', fun
 
 test('the turno is generated from the bodega name and the pedido number of the day', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $outlet = Bodega::factory()->create(['nombre_bodega' => 'Outlet Norte']);
     $otra = Bodega::factory()->create(['nombre_bodega' => 'ECONOMIC']);
     $cliente = Cliente::factory()->create();
     $vendedor = User::factory()->create();
 
-    $vender = fn (Bodega $bodega, string $fecha, bool $turno = true) => $this->actingAs($owner)->post(route('pos.store', $team), [
+    $vender = fn (Bodega $bodega, string $fecha, bool $turno = true) => $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => $cliente->id,
         'fecha' => $fecha,
         'user_id' => $vendedor->id,
@@ -416,14 +399,13 @@ test('the turno is generated from the bodega name and the pedido number of the d
 
 test('checking out flashes the voucher data with the turno, totals and cliente', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $bodega = Bodega::factory()->create(['nombre_bodega' => 'Outlet Norte']);
     $cliente = Cliente::factory()->create(['razon_social' => 'Cecilia Gonzalez']);
     $producto = Producto::factory()->create(['concatenar_codigo_nombre' => '100/80-17-HEVOS']);
 
-    $response = $this->actingAs($owner)->post(route('pos.store', $team), [
+    $response = $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => $cliente->id,
         'fecha' => '2026-03-10T15:00:00Z',
         'user_id' => User::factory()->create(['name' => 'SuperAdmin'])->id,
@@ -438,7 +420,7 @@ test('checking out flashes the voucher data with the turno, totals and cliente',
 
     $voucher = session('inertia.flash_data')['pedido_creado'] ?? null;
 
-    $response->assertRedirect(route('pos.index', $team));
+    $response->assertRedirect(route('pos.index'));
     expect($voucher)->not->toBeNull()
         ->and($voucher['pedido']['turno'])->toBe('OUT-0001')
         ->and($voucher['pedido']['total_a_pagar'])->toBe(332000.0)
@@ -451,10 +433,9 @@ test('checking out flashes the voucher data with the turno, totals and cliente',
 
 test('the POS history date filter uses the Bogota day, not UTC', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $crear = fn (string $fecha) => $this->actingAs($owner)->post(route('pos.store', $team), [
+    $crear = fn (string $fecha) => $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create()->id,
         'fecha' => $fecha,
         'user_id' => User::factory()->create()->id,
@@ -471,20 +452,19 @@ test('the POS history date filter uses the Bogota day, not UTC', function () {
     $crear('2026-03-11T13:00:00Z');
 
     $this->actingAs($owner)
-        ->getJson(route('pos.pedidos', [$team, 'desde' => '2026-03-10', 'hasta' => '2026-03-10']))
+        ->getJson(route('pos.pedidos', ['desde' => '2026-03-10', 'hasta' => '2026-03-10']))
         ->assertJsonCount(1, 'data');
 
     $this->actingAs($owner)
-        ->getJson(route('pos.pedidos', [$team, 'desde' => '2026-03-11', 'hasta' => '2026-03-11']))
+        ->getJson(route('pos.pedidos', ['desde' => '2026-03-11', 'hasta' => '2026-03-11']))
         ->assertJsonCount(1, 'data');
 });
 
 test('a pedido voucher can be fetched again from the POS history', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->post(route('pos.store', $team), [
+    $this->actingAs($owner)->post(route('pos.store'), [
         'cliente_id' => Cliente::factory()->create(['razon_social' => 'Cecilia Gonzalez'])->id,
         'fecha' => '2026-03-10T15:00:00Z',
         'user_id' => User::factory()->create()->id,
@@ -499,7 +479,7 @@ test('a pedido voucher can be fetched again from the POS history', function () {
     $pedido = Pedido::firstOrFail();
 
     $this->actingAs($owner)
-        ->getJson(route('pos.pedidos.voucher', [$team, $pedido]))
+        ->getJson(route('pos.pedidos.voucher', [$pedido]))
         ->assertOk()
         ->assertJsonPath('pedido.id', $pedido->id)
         ->assertJsonPath('pedido.turno', 'OUT-0001')
@@ -509,25 +489,23 @@ test('a pedido voucher can be fetched again from the POS history', function () {
 
 test('members without pos.view cannot fetch a voucher', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
     $this->actingAs($member)
-        ->getJson(route('pos.pedidos.voucher', [$team, Pedido::factory()->create()]))
+        ->getJson(route('pos.pedidos.voucher', [Pedido::factory()->create()]))
         ->assertForbidden();
 });
 
 test('the sidebar badges count all the pedidos and compras the user can see', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     Pedido::factory()->create(['tipo_precio' => 'DETAL', 'estado' => 'PENDIENTE']);
     Pedido::factory()->create(['tipo_precio' => 'DETAL', 'estado' => 'COMPLETADO']);
     Pedido::factory()->count(2)->create(['tipo_precio' => 'MAYORISTA', 'estado' => 'PENDIENTE']);
 
     $this->actingAs($owner)
-        ->get(route('pos.index', $team))
+        ->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page
             ->where('navCounts.pedidos', 2)
             ->where('navCounts.pedidosMayoristas', 2)
@@ -535,11 +513,11 @@ test('the sidebar badges count all the pedidos and compras the user can see', fu
         );
 
     $member = User::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
     $member->givePermissionTo('pos.view');
 
     $this->actingAs($member)
-        ->get(route('pos.index', $team))
+        ->get(route('pos.index'))
         ->assertInertia(fn ($page) => $page
             ->where('navCounts.pedidos', 0)
             ->where('navCounts.pedidosMayoristas', 0)

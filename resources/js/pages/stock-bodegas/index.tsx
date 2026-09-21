@@ -8,12 +8,14 @@ type Props = {
     stockBodegas: StockBodega[];
     productos: NonNullable<StockBodega['producto']>[];
     bodegas: Bodega[];
+    canViewInversion: boolean;
 };
 
 export default function StockBodegasIndex({
     stockBodegas,
     productos,
     bodegas,
+    canViewInversion,
 }: Props) {
     return (
         <>
@@ -30,19 +32,18 @@ export default function StockBodegasIndex({
                     stockBodegas={stockBodegas}
                     productos={productos}
                     bodegas={bodegas}
+                    canViewInversion={canViewInversion}
                 />
             </div>
         </>
     );
 }
 
-StockBodegasIndex.layout = (props: {
-    currentTeam?: { slug: string } | null;
-}) => ({
+StockBodegasIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Stock por bodega',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

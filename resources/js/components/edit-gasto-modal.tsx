@@ -18,7 +18,6 @@ import { update } from '@/routes/gastos';
 import type { Bodega, Gasto } from '@/types';
 
 type Props = {
-    teamSlug: string;
     bodegas: Bodega[];
     gasto: Gasto | null;
     open: boolean;
@@ -26,7 +25,6 @@ type Props = {
 };
 
 export default function EditGastoModal({
-    teamSlug,
     bodegas,
     gasto,
     open,
@@ -63,7 +61,7 @@ export default function EditGastoModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, gasto.id])}
+                    {...update.form([gasto.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

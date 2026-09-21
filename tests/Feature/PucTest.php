@@ -3,7 +3,6 @@
 use App\Models\Bodega;
 use App\Models\Cliente;
 use App\Models\Puc;
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
@@ -17,12 +16,11 @@ beforeEach(function () {
 
 test('owners can view, create, update and delete pucs without a custom role', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->get(route('pucs.index', $team))->assertOk();
+    $this->actingAs($owner)->get(route('pucs.index'))->assertOk();
 
-    $this->actingAs($owner)->post(route('pucs.store', $team), [
+    $this->actingAs($owner)->post(route('pucs.store'), [
         'tipo' => '1',
         'cuenta' => '11',
         'subcuenta' => '1105',
@@ -32,7 +30,7 @@ test('owners can view, create, update and delete pucs without a custom role', fu
     $puc = Puc::firstOrFail();
     expect($puc->concatenar_subcuenta_concepto)->toBe('1105 - Caja');
 
-    $this->actingAs($owner)->patch(route('pucs.update', [$team, $puc]), [
+    $this->actingAs($owner)->patch(route('pucs.update', [$puc]), [
         'tipo' => '1',
         'cuenta' => '11',
         'subcuenta' => '1105',
@@ -42,7 +40,7 @@ test('owners can view, create, update and delete pucs without a custom role', fu
     expect($puc->fresh()->concepto)->toBe('Caja general');
     expect($puc->fresh()->concatenar_subcuenta_concepto)->toBe('1105 - Caja general');
 
-    $this->actingAs($owner)->delete(route('pucs.destroy', [$team, $puc]))
+    $this->actingAs($owner)->delete(route('pucs.destroy', [$puc]))
         ->assertRedirect();
 
     expect(Puc::find($puc->id))->toBeNull();
@@ -50,18 +48,16 @@ test('owners can view, create, update and delete pucs without a custom role', fu
 
 test('members without permission cannot view pucs', function () {
     $member = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $member, 'Member');
+    asignarRol($member, 'Member');
 
-    $this->actingAs($member)->get(route('pucs.index', $team))->assertForbidden();
+    $this->actingAs($member)->get(route('pucs.index'))->assertForbidden();
 });
 
 test('tipo must be one of the valid puc classes', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
-    $this->actingAs($owner)->post(route('pucs.store', $team), [
+    $this->actingAs($owner)->post(route('pucs.store'), [
         'tipo' => '99',
         'cuenta' => '11',
         'subcuenta' => '1105',
@@ -71,12 +67,11 @@ test('tipo must be one of the valid puc classes', function () {
 
 test('subcuenta must be unique', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     Puc::factory()->create(['subcuenta' => '1105']);
 
-    $this->actingAs($owner)->post(route('pucs.store', $team), [
+    $this->actingAs($owner)->post(route('pucs.store'), [
         'tipo' => '1',
         'cuenta' => '11',
         'subcuenta' => '1105',
@@ -86,8 +81,7 @@ test('subcuenta must be unique', function () {
 
 test('a puc with associated abonos cannot be deleted', function () {
     $owner = User::factory()->create();
-    $team = Team::factory()->create();
-    attachTeamMember($team, $owner, 'Owner');
+    asignarRol($owner, 'Owner');
 
     $puc = Puc::factory()->create();
     $cliente = Cliente::factory()->create();
@@ -112,7 +106,7 @@ test('a puc with associated abonos cannot be deleted', function () {
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    $response = $this->actingAs($owner)->delete(route('pucs.destroy', [$team, $puc]));
+    $response = $this->actingAs($owner)->delete(route('pucs.destroy', [$puc]));
 
     $response->assertRedirect();
     expect(Puc::find($puc->id))->not->toBeNull();

@@ -14,4 +14,6 @@ export type GastoPermissions = {
     canCreate: boolean;
     canUpdate: boolean;
     canDelete: boolean;
+    canViewDeleted: boolean;
+    canRestore: boolean;
 };

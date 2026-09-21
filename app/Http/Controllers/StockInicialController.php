@@ -30,7 +30,7 @@ class StockInicialController extends Controller
                 ->where('inventariable', true)
                 ->orderBy('referencia_producto')
                 ->get(['id', 'referencia_producto', 'concatenar_codigo_nombre', 'costo_producto']),
-            'bodegas' => Bodega::orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
+            'bodegas' => Bodega::permitidas()->orderBy('nombre_bodega')->get(['id', 'nombre_bodega']),
             'permissions' => [
                 'canCreate' => $request->user()->can('stock-iniciales.create'),
                 'canUpdate' => $request->user()->can('stock-iniciales.update'),
@@ -62,7 +62,7 @@ class StockInicialController extends Controller
     /**
      * Update the specified stock inicial.
      */
-    public function update(UpdateStockInicialRequest $request, string $current_team, StockInicial $stock_inicial): RedirectResponse
+    public function update(UpdateStockInicialRequest $request, StockInicial $stock_inicial): RedirectResponse
     {
         Gate::authorize('stock-iniciales.update');
 
@@ -84,7 +84,7 @@ class StockInicialController extends Controller
     /**
      * Remove the specified stock inicial.
      */
-    public function destroy(string $current_team, StockInicial $stock_inicial): RedirectResponse
+    public function destroy(StockInicial $stock_inicial): RedirectResponse
     {
         Gate::authorize('stock-iniciales.delete');
 

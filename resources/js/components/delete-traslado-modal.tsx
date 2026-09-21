@@ -14,14 +14,12 @@ import { destroy } from '@/routes/traslados';
 import type { Traslado } from '@/types';
 
 type Props = {
-    teamSlug: string;
     traslado: Traslado | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
 export default function DeleteTrasladoModal({
-    teamSlug,
     traslado,
     open,
     onOpenChange,
@@ -33,7 +31,7 @@ export default function DeleteTrasladoModal({
             return;
         }
 
-        router.visit(destroy([teamSlug, traslado.id]), {
+        router.visit(destroy([traslado.id]), {
             onStart: () => setProcessing(true),
             onFinish: () => setProcessing(false),
             onSuccess: () => onOpenChange(false),

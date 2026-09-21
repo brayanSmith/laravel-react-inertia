@@ -37,11 +37,9 @@ const TIPOS_PUC: { value: TipoPuc; label: string }[] = [
     { value: '9', label: '9 - Cuentas de orden acreedoras' },
 ];
 
-type Props = PropsWithChildren<{
-    teamSlug: string;
-}>;
+type Props = PropsWithChildren<{}>;
 
-export default function CreatePucModal({ teamSlug, children }: Props) {
+export default function CreatePucModal({ children }: Props) {
     const [open, setOpen] = useState(false);
     const [tipo, setTipo] = useState<TipoPuc>('1');
 
@@ -59,7 +57,7 @@ export default function CreatePucModal({ teamSlug, children }: Props) {
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...store.form(teamSlug)}
+                    {...store.form()}
                     className="space-y-6"
                     onSuccess={() => handleOpenChange(false)}
                 >

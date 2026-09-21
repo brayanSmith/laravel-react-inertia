@@ -2,9 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Team;
 use App\Models\User;
-use App\Support\TeamRoles;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -36,25 +34,6 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
-    }
-
-    /**
-     * Configure the model factory.
-     */
-    public function configure(): static
-    {
-        return $this->afterCreating(function ($user) {
-            $team = Team::factory()->personal()->create([
-                'name' => $user->name."'s Team",
-            ]);
-
-            $team->members()->attach($user);
-
-            TeamRoles::provisionDefaultRoles($team);
-            TeamRoles::assignTier($user, $team, 'Owner');
-
-            $user->switchTeam($team);
-        });
     }
 
     /**

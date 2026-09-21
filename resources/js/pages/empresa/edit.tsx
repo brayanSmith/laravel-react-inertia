@@ -14,8 +14,6 @@ type Props = {
 };
 
 export default function EmpresaEdit({ empresa, permissions }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     return (
         <>
             <Head title="Empresa" />
@@ -29,7 +27,7 @@ export default function EmpresaEdit({ empresa, permissions }: Props) {
                     description="Esta información aparece en tus documentos y facturas"
                 />
 
-                <Form {...update.form(teamSlug)} className="space-y-6">
+                <Form {...update.form()} className="space-y-6">
                     {({ errors, processing }) => (
                         <>
                             <div className="grid gap-4 sm:grid-cols-2">
@@ -146,11 +144,11 @@ export default function EmpresaEdit({ empresa, permissions }: Props) {
     );
 }
 
-EmpresaEdit.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+EmpresaEdit.layout = () => ({
     breadcrumbs: [
         {
             title: 'Empresa',
-            href: props.currentTeam ? edit(props.currentTeam.slug) : '/',
+            href: edit(),
         },
     ],
 });

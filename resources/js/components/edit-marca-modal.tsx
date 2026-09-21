@@ -16,18 +16,12 @@ import { update } from '@/routes/marcas';
 import type { Marca } from '@/types';
 
 type Props = {
-    teamSlug: string;
     marca: Marca | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 };
 
-export default function EditMarcaModal({
-    teamSlug,
-    marca,
-    open,
-    onOpenChange,
-}: Props) {
+export default function EditMarcaModal({ marca, open, onOpenChange }: Props) {
     if (!marca) {
         return null;
     }
@@ -37,7 +31,7 @@ export default function EditMarcaModal({
             <DialogContent>
                 <Form
                     key={String(open)}
-                    {...update.form([teamSlug, marca.id])}
+                    {...update.form([marca.id])}
                     className="space-y-6"
                     onSuccess={() => onOpenChange(false)}
                 >

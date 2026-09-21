@@ -37,13 +37,10 @@ export default function GastosIndex({
     permissions,
     eliminados,
 }: Props) {
-    const { currentTeam } = usePage().props;
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [gastoToEdit, setGastoToEdit] = useState<Gasto | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [gastoToDelete, setGastoToDelete] = useState<Gasto | null>(null);
-
-    const teamSlug = currentTeam?.slug ?? '';
 
     const openEditDialog = (gasto: Gasto) => {
         setGastoToEdit(gasto);
@@ -91,10 +88,10 @@ export default function GastosIndex({
                 filter: 'none',
                 render: (gasto) =>
                     eliminados ? (
-                        permissions.canDelete ? (
+                        permissions.canRestore ? (
                             <div className="flex justify-end">
                                 <RestoreButton
-                                    action={restore([teamSlug, gasto.id])}
+                                    action={restore([gasto.id])}
                                     nombre={`el gasto ${gasto.descripcion}`}
                                     dataTest="restore-gasto-button"
                                 />
@@ -148,7 +145,7 @@ export default function GastosIndex({
             },
         ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [permissions, eliminados, teamSlug],
+        [permissions, eliminados],
     );
 
     return (
@@ -166,14 +163,11 @@ export default function GastosIndex({
                     <div className="flex items-center gap-3">
                         <TrashToggle
                             eliminados={eliminados}
-                            visible={permissions.canDelete}
+                            visible={permissions.canViewDeleted}
                         />
 
                         {permissions.canCreate && !eliminados ? (
-                            <CreateGastoModal
-                                teamSlug={teamSlug}
-                                bodegas={bodegas}
-                            >
+                            <CreateGastoModal bodegas={bodegas}>
                                 <Button data-test="create-gasto-button">
                                     <Plus /> Nuevo gasto
                                 </Button>
@@ -193,7 +187,6 @@ export default function GastosIndex({
             </div>
 
             <EditGastoModal
-                teamSlug={teamSlug}
                 bodegas={bodegas}
                 gasto={gastoToEdit}
                 open={editDialogOpen}
@@ -201,7 +194,6 @@ export default function GastosIndex({
             />
 
             <DeleteGastoModal
-                teamSlug={teamSlug}
                 gasto={gastoToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -210,11 +202,11 @@ export default function GastosIndex({
     );
 }
 
-GastosIndex.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+GastosIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Gastos',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

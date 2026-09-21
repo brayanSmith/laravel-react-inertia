@@ -26,8 +26,6 @@ export default function CompraEdit({
     bodegas,
     permissions,
 }: Props) {
-    const { currentTeam } = usePage().props;
-    const teamSlug = currentTeam?.slug ?? '';
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     return (
@@ -37,7 +35,7 @@ export default function CompraEdit({
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <div className="text-muted-foreground text-sm">
-                        <Link href={index(teamSlug)}>Compras</Link> {'>'}{' '}
+                        <Link href={index()}>Compras</Link> {'>'}{' '}
                         {compra.factura} {'>'} Editar
                     </div>
                     <h1 className="text-2xl font-bold">
@@ -56,7 +54,7 @@ export default function CompraEdit({
                 ) : null}
             </div>
 
-            <Form {...update.form([teamSlug, compra.id])} className="space-y-6">
+            <Form {...update.form([compra.id])} className="space-y-6">
                 {({ errors, processing }) => (
                     <CompraFormFields
                         compra={compra}
@@ -69,9 +67,7 @@ export default function CompraEdit({
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() =>
-                                        router.visit(index(teamSlug))
-                                    }
+                                    onClick={() => router.visit(index())}
                                 >
                                     Cancelar
                                 </Button>
@@ -89,7 +85,6 @@ export default function CompraEdit({
             </Form>
 
             <DeleteCompraModal
-                teamSlug={teamSlug}
                 compra={compra}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -98,11 +93,11 @@ export default function CompraEdit({
     );
 }
 
-CompraEdit.layout = (props: { currentTeam?: { slug: string } | null }) => ({
+CompraEdit.layout = () => ({
     breadcrumbs: [
         {
             title: 'Compras',
-            href: props.currentTeam ? index(props.currentTeam.slug) : '/',
+            href: index(),
         },
     ],
 });

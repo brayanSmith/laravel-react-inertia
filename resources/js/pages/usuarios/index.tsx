@@ -15,25 +15,16 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { index } from '@/routes/usuarios';
-import type {
-    RoleOption,
-    Usuario,
-    UsuarioPermissions,
-    UsuarioRoleOption,
-} from '@/types';
+import type { Usuario, UsuarioPermissions, UsuarioRoleOption } from '@/types';
 
 type Props = {
-    team: { slug: string };
     usuarios: Usuario[];
-    availableTeamRoles: RoleOption[];
     availableRoles: UsuarioRoleOption[];
     permissions: UsuarioPermissions;
 };
 
 export default function UsuariosIndex({
-    team,
     usuarios,
-    availableTeamRoles,
     availableRoles,
     permissions,
 }: Props) {
@@ -75,18 +66,8 @@ export default function UsuariosIndex({
                 render: (usuario) => usuario.email,
             },
             {
-                key: 'rol_equipo',
-                label: 'Rol de equipo',
-                getValue: (usuario) => usuario.team_role_label,
-                render: (usuario) => (
-                    <Badge variant="secondary">
-                        {usuario.team_role_label}
-                    </Badge>
-                ),
-            },
-            {
                 key: 'roles_personalizados',
-                label: 'Roles personalizados',
+                label: 'Roles',
                 getValue: (usuario) => rolesLabel(usuario),
                 render: (usuario) => {
                     const usuarioRoles = availableRoles.filter((role) =>
@@ -113,54 +94,51 @@ export default function UsuariosIndex({
                 label: 'Acciones',
                 align: 'right',
                 filter: 'none',
-                render: (usuario) =>
-                    usuario.is_owner ? (
-                        <Badge variant="outline">Owner</Badge>
-                    ) : (
-                        <TooltipProvider>
-                            <div className="flex justify-end gap-2">
-                                {permissions.canUpdate ? (
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                data-test="edit-usuario-button"
-                                                onClick={() =>
-                                                    openEditDialog(usuario)
-                                                }
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Editar</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                ) : null}
+                render: (usuario) => (
+                    <TooltipProvider>
+                        <div className="flex justify-end gap-2">
+                            {permissions.canUpdate ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="edit-usuario-button"
+                                            onClick={() =>
+                                                openEditDialog(usuario)
+                                            }
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Editar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
 
-                                {permissions.canDelete ? (
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                data-test="delete-usuario-button"
-                                                onClick={() =>
-                                                    openDeleteDialog(usuario)
-                                                }
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Eliminar</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                ) : null}
-                            </div>
-                        </TooltipProvider>
-                    ),
+                            {permissions.canDelete ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            data-test="delete-usuario-button"
+                                            onClick={() =>
+                                                openDeleteDialog(usuario)
+                                            }
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Eliminar</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    </TooltipProvider>
+                ),
             },
         ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -176,15 +154,11 @@ export default function UsuariosIndex({
                     <Heading
                         variant="small"
                         title="Usuarios"
-                        description="Administra las cuentas de acceso de tu equipo"
+                        description="Administra las cuentas de acceso y sus roles"
                     />
 
                     {permissions.canCreate ? (
-                        <CreateUsuarioModal
-                            teamSlug={team.slug}
-                            availableTeamRoles={availableTeamRoles}
-                            availableRoles={availableRoles}
-                        >
+                        <CreateUsuarioModal availableRoles={availableRoles}>
                             <Button data-test="create-usuario-button">
                                 <Plus /> Nuevo usuario
                             </Button>
@@ -203,8 +177,6 @@ export default function UsuariosIndex({
             </div>
 
             <EditUsuarioModal
-                teamSlug={team.slug}
-                availableTeamRoles={availableTeamRoles}
                 availableRoles={availableRoles}
                 usuario={usuarioToEdit}
                 open={editDialogOpen}
@@ -212,7 +184,6 @@ export default function UsuariosIndex({
             />
 
             <DeleteUsuarioModal
-                teamSlug={team.slug}
                 usuario={usuarioToDelete}
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -221,11 +192,11 @@ export default function UsuariosIndex({
     );
 }
 
-UsuariosIndex.layout = (props: { team: { slug: string } }) => ({
+UsuariosIndex.layout = () => ({
     breadcrumbs: [
         {
             title: 'Usuarios',
-            href: index(props.team.slug),
+            href: index(),
         },
     ],
 });

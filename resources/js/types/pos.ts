@@ -18,7 +18,10 @@ export type PosCatalogoProducto = {
 };
 
 export type TipoPagoPedido =
-    'CONTADO' | 'APARTADO' | 'CONTRA_ENTREGA' | 'CREDITO';
+    | 'CONTADO'
+    | 'APARTADO'
+    | 'CONTRA_ENTREGA'
+    | 'CREDITO';
 
 /** One row of a cliente's order history in the POS history modal. */
 export type PosPedidoHistorial = {
