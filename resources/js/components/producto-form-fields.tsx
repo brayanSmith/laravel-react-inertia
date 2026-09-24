@@ -175,6 +175,29 @@ export default function ProductoFormFields({
         }
     };
 
+    // Rines and llantas both say which vehicle they are for.
+    const tipoVehiculoField = (
+        <div className="grid gap-2">
+            <Label>Tipo de Vehículo</Label>
+            <Select
+                value={tipoVehiculo}
+                onValueChange={(value) =>
+                    setTipoVehiculo(value as TipoVehiculo)
+                }
+            >
+                <SelectTrigger className="w-full">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="CARRO">Carro</SelectItem>
+                    <SelectItem value="MOTO">Moto</SelectItem>
+                </SelectContent>
+            </Select>
+            <input type="hidden" name="tipo_vehiculo" value={tipoVehiculo} />
+            <InputError message={errors.tipo_vehiculo} />
+        </div>
+    );
+
     return (
         <div className="space-y-6">
             <div className="bg-card flex flex-wrap items-center gap-8 rounded-lg border p-4">
@@ -320,39 +343,13 @@ export default function ProductoFormFields({
                                 />
                                 <InputError message={errors.rin} />
                             </div>
-                            <div className="grid gap-2">
-                                <Label>Tipo de Vehículo</Label>
-                                <Select
-                                    value={tipoVehiculo}
-                                    onValueChange={(value) =>
-                                        setTipoVehiculo(value as TipoVehiculo)
-                                    }
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="CARRO">
-                                            Carro
-                                        </SelectItem>
-                                        <SelectItem value="MOTO">
-                                            Moto
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <input
-                                    type="hidden"
-                                    name="tipo_vehiculo"
-                                    value={tipoVehiculo}
-                                />
-                                <InputError message={errors.tipo_vehiculo} />
-                            </div>
+                            {tipoVehiculoField}
                         </div>
                     ) : null}
 
                     {categoria === 'RIN' ? (
                         <>
-                            <div className="grid gap-4 sm:grid-cols-4">
+                            <div className="grid gap-4 sm:grid-cols-5">
                                 <div className="grid gap-2">
                                     <Label htmlFor="rin">Rin</Label>
                                     <Input
@@ -428,6 +425,7 @@ export default function ProductoFormFields({
                                     />
                                     <InputError message={errors.marca_id} />
                                 </div>
+                                {tipoVehiculoField}
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-4">

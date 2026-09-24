@@ -208,6 +208,16 @@ function getSortValue(compra: Compra, key: ColumnKey): string | number {
     }
 }
 
+function tiposVehiculo(compra: Compra): string {
+    return Array.from(
+        new Set(
+            (compra.detalles_compra ?? [])
+                .map((detalle) => detalle.producto?.tipo_vehiculo)
+                .filter((tipo): tipo is string => Boolean(tipo)),
+        ),
+    ).join(' ');
+}
+
 function searchableText(compra: Compra): string {
     return [
         compra.id,
@@ -218,6 +228,7 @@ function searchableText(compra: Compra): string {
         compra.descuento,
         compra.total_a_pagar,
         todosLosProductos(compra).join(' '),
+        tiposVehiculo(compra),
     ]
         .filter(Boolean)
         .join(' ')

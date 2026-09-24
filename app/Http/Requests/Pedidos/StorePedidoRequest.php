@@ -24,7 +24,7 @@ class StorePedidoRequest extends FormRequest
             'placa' => ['nullable', 'string', 'max:255'],
             'facturacion_electronica' => ['nullable', 'boolean'],
             'aplica_turno' => ['nullable', 'boolean'],
-            'tipo_pago' => ['nullable', 'string', Rule::in(['CONTADO', 'APARTADO', 'CONTRA_ENTREGA', 'CREDITO'])],
+            'tipo_pago' => ['nullable', 'string', Rule::in(['CONTADO', 'SEPARADO', 'CREDITO'])],
             'observacion' => ['nullable', 'string'],
             'observacion_pago' => ['nullable', 'string'],
             'flete' => ['nullable', 'numeric', 'min:0'],

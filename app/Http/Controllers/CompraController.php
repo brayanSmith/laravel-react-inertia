@@ -40,7 +40,7 @@ class CompraController extends Controller
                     // Only what the listing shows: the table has a column per bodega with its products.
                     'detallesCompra' => fn ($query) => $query->withTrashed()
                         ->select(['id', 'compra_id', 'producto_id', 'bodega_id'])
-                        ->with(['producto:id,referencia_producto,concatenar_codigo_nombre', 'bodega:id,nombre_bodega']),
+                        ->with(['producto:id,referencia_producto,concatenar_codigo_nombre,tipo_vehiculo', 'bodega:id,nombre_bodega']),
                 ])
                 ->when($eliminados, fn ($query) => $query->onlyTrashed())
                 ->orderByDesc('fecha')

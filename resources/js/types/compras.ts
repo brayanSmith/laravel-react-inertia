@@ -10,6 +10,7 @@ export type ProductoOption = {
     referencia_producto: string | null;
     concatenar_codigo_nombre: string | null;
     costo_producto: string;
+    tipo_vehiculo?: string | null;
 };
 
 export type BodegaOption = {

@@ -206,7 +206,7 @@ test('checking out with abonos registers the payments and updates the pedido bal
         'user_id' => User::factory()->create()->id,
         'bodega_id' => Bodega::factory()->create()->id,
         'tipo_precio' => 'DETAL',
-        'tipo_pago' => 'APARTADO',
+        'tipo_pago' => 'SEPARADO',
         'reteica' => 5,
         'retefuente' => 5,
         'detalles' => [
@@ -220,7 +220,7 @@ test('checking out with abonos registers the payments and updates the pedido bal
     $pedido = Pedido::firstOrFail();
     $abono = $pedido->abonos()->firstOrFail();
 
-    expect($pedido->tipo_pago)->toBe('APARTADO');
+    expect($pedido->tipo_pago)->toBe('SEPARADO');
     expect((float) $pedido->total_a_pagar)->toBe(190.0);
     expect((float) $pedido->abono)->toBe(60.0);
     expect((float) $pedido->saldo_pendiente)->toBe(130.0);

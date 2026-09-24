@@ -17,11 +17,7 @@ export type PosCatalogoProducto = {
     stock_por_bodega: Record<string, number>;
 };
 
-export type TipoPagoPedido =
-    | 'CONTADO'
-    | 'APARTADO'
-    | 'CONTRA_ENTREGA'
-    | 'CREDITO';
+export type TipoPagoPedido = 'CONTADO' | 'SEPARADO' | 'CREDITO';
 
 /** One row of a cliente's order history in the POS history modal. */
 export type PosPedidoHistorial = {

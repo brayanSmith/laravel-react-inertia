@@ -1,12 +1,17 @@
 const PRIMARY_KEY = 'primary-color';
+const PRIMARY_DARK_KEY = 'primary-color-dark';
 const NAV_KEY = 'nav-color';
 const STYLE_ID = 'theme-colors-style';
 
 type Preset = { label: string; value: string | null };
 
-/** Main color choices offered in Apariencia; the first one is the original. */
+/**
+ * Color choices offered in Apariencia. "Original" (null) means no override:
+ * the app's own default for that picker, set in app.css — platform color
+ * rgb(37 99 235) in light and rgb(31 41 55) in dark, menu rgb(31 41 55).
+ */
 export const PRIMARY_COLOR_PRESETS: Preset[] = [
-    { label: 'Negro (original)', value: null },
+    { label: 'Original', value: null },
     { label: 'Azul', value: '#2563eb' },
     { label: 'Celeste', value: '#0891b2' },
     { label: 'Verde', value: '#16a34a' },
@@ -16,9 +21,8 @@ export const PRIMARY_COLOR_PRESETS: Preset[] = [
     { label: 'Rosa', value: '#db2777' },
 ];
 
-/** Background choices for the side menu; the first one is the original. */
 export const NAV_COLOR_PRESETS: Preset[] = [
-    { label: 'Blanco (original)', value: null },
+    { label: 'Original', value: null },
     { label: 'Gris claro', value: '#e5e7eb' },
     { label: 'Azul claro', value: '#dbeafe' },
     { label: 'Verde claro', value: '#dcfce7' },
@@ -50,15 +54,33 @@ const read = (key: string): string | null => {
 };
 
 export const getStoredPrimaryColor = (): string | null => read(PRIMARY_KEY);
+export const getStoredPrimaryColorDark = (): string | null =>
+    read(PRIMARY_DARK_KEY);
 export const getStoredNavColor = (): string | null => read(NAV_KEY);
 
+/** The "platform color" bundle (buttons, selected menu item, focus ring). */
+function platformRules(primary: string): string[] {
+    const foreground = contrastColor(primary);
+
+    return [
+        `--primary: ${primary}`,
+        `--primary-foreground: ${foreground}`,
+        `--sidebar-primary: ${primary}`,
+        `--sidebar-primary-foreground: ${foreground}`,
+        `--ring: ${primary}`,
+    ];
+}
+
 /**
- * Writes the chosen colors as light-theme overrides (dark keeps its own).
- * A null color goes back to the original one.
+ * Writes the chosen colors as overrides: platform color and menu color for
+ * the light theme, and platform color for dark (its menu keeps its own —
+ * only the platform color was asked to be changeable there). A null color
+ * goes back to the app's default for that picker.
  */
 export function applyThemeColors(
-    primary: string | null,
+    primaryLight: string | null,
     nav: string | null,
+    primaryDark: string | null,
 ): void {
     if (typeof document === 'undefined') {
         return;
@@ -66,24 +88,12 @@ export function applyThemeColors(
 
     document.getElementById(STYLE_ID)?.remove();
 
-    const rules: string[] = [];
-
-    if (primary) {
-        const foreground = contrastColor(primary);
-
-        rules.push(
-            `--primary: ${primary}`,
-            `--primary-foreground: ${foreground}`,
-            `--sidebar-primary: ${primary}`,
-            `--sidebar-primary-foreground: ${foreground}`,
-            `--ring: ${primary}`,
-        );
-    }
+    const lightRules = primaryLight ? platformRules(primaryLight) : [];
 
     if (nav) {
         const dark = luminance(nav) <= 0.6;
 
-        rules.push(
+        lightRules.push(
             `--sidebar: ${nav}`,
             `--sidebar-foreground: ${contrastColor(nav)}`,
             `--sidebar-accent: ${dark ? 'rgb(255 255 255 / 0.14)' : 'rgb(0 0 0 / 0.07)'}`,
@@ -92,13 +102,25 @@ export function applyThemeColors(
         );
     }
 
-    if (rules.length === 0) {
+    const darkRules = primaryDark ? platformRules(primaryDark) : [];
+
+    const blocks: string[] = [];
+
+    if (lightRules.length > 0) {
+        blocks.push(`:root:not(.dark) { ${lightRules.join('; ')}; }`);
+    }
+
+    if (darkRules.length > 0) {
+        blocks.push(`:root.dark { ${darkRules.join('; ')}; }`);
+    }
+
+    if (blocks.length === 0) {
         return;
     }
 
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = `:root:not(.dark) { ${rules.join('; ')}; }`;
+    style.textContent = blocks.join('\n');
     document.head.appendChild(style);
 }
 
@@ -116,14 +138,23 @@ function save(key: string, value: string | null): void {
 
 export function updatePrimaryColor(hex: string | null): void {
     save(PRIMARY_KEY, hex);
-    applyThemeColors(hex, getStoredNavColor());
+    applyThemeColors(hex, getStoredNavColor(), getStoredPrimaryColorDark());
+}
+
+export function updatePrimaryColorDark(hex: string | null): void {
+    save(PRIMARY_DARK_KEY, hex);
+    applyThemeColors(getStoredPrimaryColor(), getStoredNavColor(), hex);
 }
 
 export function updateNavColor(hex: string | null): void {
     save(NAV_KEY, hex);
-    applyThemeColors(getStoredPrimaryColor(), hex);
+    applyThemeColors(getStoredPrimaryColor(), hex, getStoredPrimaryColorDark());
 }
 
 export function initializeThemeColor(): void {
-    applyThemeColors(getStoredPrimaryColor(), getStoredNavColor());
+    applyThemeColors(
+        getStoredPrimaryColor(),
+        getStoredNavColor(),
+        getStoredPrimaryColorDark(),
+    );
 }

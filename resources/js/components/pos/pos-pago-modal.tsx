@@ -45,8 +45,7 @@ type Props = {
 
 const TIPOS_PAGO: { value: TipoPagoPedido; label: string }[] = [
     { value: 'CONTADO', label: 'Contado' },
-    { value: 'APARTADO', label: 'Apartado' },
-    { value: 'CONTRA_ENTREGA', label: 'Contra entrega' },
+    { value: 'SEPARADO', label: 'Separado' },
     { value: 'CREDITO', label: 'Crédito' },
 ];
 

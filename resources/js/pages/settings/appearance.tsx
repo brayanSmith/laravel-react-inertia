@@ -5,10 +5,12 @@ import Heading from '@/components/heading';
 import {
     getStoredNavColor,
     getStoredPrimaryColor,
+    getStoredPrimaryColorDark,
     NAV_COLOR_PRESETS,
     PRIMARY_COLOR_PRESETS,
     updateNavColor,
     updatePrimaryColor,
+    updatePrimaryColorDark,
 } from '@/hooks/use-theme-color';
 import { edit as editAppearance } from '@/routes/appearance';
 
@@ -36,10 +38,25 @@ export default function Appearance() {
                 />
                 <ColorPicker
                     presets={PRIMARY_COLOR_PRESETS}
-                    originalSwatch="#171717"
+                    originalSwatch="#2563eb"
                     stored={getStoredPrimaryColor()}
                     onChange={updatePrimaryColor}
                     dataTest="primary-color"
+                />
+            </div>
+
+            <div className="mt-10 space-y-6">
+                <Heading
+                    variant="small"
+                    title="Color de la plataforma en modo oscuro"
+                    description="Lo mismo, para cuando el tema oscuro está activo. Se guarda en este navegador."
+                />
+                <ColorPicker
+                    presets={PRIMARY_COLOR_PRESETS}
+                    originalSwatch="#1f2937"
+                    stored={getStoredPrimaryColorDark()}
+                    onChange={updatePrimaryColorDark}
+                    dataTest="primary-color-dark"
                 />
             </div>
 
@@ -51,7 +68,7 @@ export default function Appearance() {
                 />
                 <ColorPicker
                     presets={NAV_COLOR_PRESETS}
-                    originalSwatch="#ffffff"
+                    originalSwatch="#1f2937"
                     stored={getStoredNavColor()}
                     onChange={updateNavColor}
                     dataTest="nav-color"
